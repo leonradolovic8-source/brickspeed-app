@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#04081a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>BrickSpeed</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="ble-web.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#04081a;--p1:#0b1530;--p2:#12224a;--ln:#22386e;--tx:#e3ecfb;--mu:#8ea5cc;--bl:#2f7bff;--cy:#38e1ff;--ye:#ffc400;--or:#ff7a1a;--gr:#1fd38a;--rd:#ff4d5e;--pu:#b46bff}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+.top,.main,.zone,.mid,.abil,.gb,.show,.pedal{touch-action:none}
+body{background:radial-gradient(120% 90% at 50% 120%,#0d2050 0%,var(--bg) 60%) fixed}
+button{font-family:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:none}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));gap:8px}
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:8px;min-width:0}
+.logo{font-weight:900;font-style:italic;font-size:18px;letter-spacing:.02em;color:#fff;white-space:nowrap;padding-right:4px}
+.logo i{color:var(--bl)}
+.chip{display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:12px;background:var(--p1);border:1px solid var(--ln);font:700 13px system-ui;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip small{font:700 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--mu)}
+.led{width:9px;height:9px;border-radius:50%;background:var(--rd);box-shadow:0 0 10px var(--rd)}
+.led.ok{background:var(--gr);box-shadow:0 0 10px var(--gr)}
+.cdot{width:12px;height:12px;border-radius:4px;background:var(--bl)}
+.coin{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,var(--ye) 45%,#b78700);box-shadow:0 0 8px rgba(255,196,0,.5)}
+#tok{color:var(--ye);font-size:15px}
+.x2{background:linear-gradient(90deg,var(--gr),#7dffcf);color:#032014;border:0;font-weight:900;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 16px rgba(31,211,138,.6)}}
+.race{background:var(--rd);border:0;color:#fff}
+.sp{flex:1}
+.ib{width:44px;height:36px;border-radius:12px;background:var(--p1);border:1px solid var(--ln);display:grid;place-items:center}
+.ib svg{width:20px;height:20px}
+.chk{grid-column:1/-1;height:4px;margin:0 -10px;background:repeating-linear-gradient(90deg,#fff 0 8px,#000 8px 16px);opacity:.85;display:none}
+/* ---------- drive area ---------- */
+.main{display:grid;grid-template-columns:1fr minmax(190px,25%) 1fr;gap:10px;min-height:0}
+body.swap .main{direction:rtl}body.swap .main>*{direction:ltr}
+.zone{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(160deg,var(--p2),var(--p1));border:1px solid var(--ln);touch-action:none}
+.zone::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 14px);pointer-events:none}
+.zone.on{border-color:var(--bl);box-shadow:inset 0 0 0 1px var(--bl),0 0 24px rgba(47,123,255,.25)}
+.lab{position:absolute;left:14px;top:12px;font:800 11px ui-monospace,Menlo,monospace;letter-spacing:.18em;color:var(--mu)}
+.read{position:absolute;right:14px;top:9px;font:900 20px system-ui;font-variant-numeric:tabular-nums;color:#fff}
+.read small{font:700 11px ui-monospace,Menlo,monospace;color:var(--mu);margin-left:3px}
+.knob{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;pointer-events:none;
+ background:radial-gradient(circle at 35% 30%,#8fbaff,var(--bl) 55%,#1747a8);box-shadow:0 0 0 5px rgba(47,123,255,.22),0 8px 18px rgba(0,0,0,.5);transition:transform .08s}
+.zone.on .knob{transform:scale(1.08)}
+.hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;font:600 12px system-ui;color:var(--mu);opacity:.8;transition:opacity .3s}
+.zone.used .hint{opacity:0}
+/* throttle meter */
+.meter{position:absolute;left:50%;top:44px;bottom:36px;width:16px;margin-left:-8px;display:flex;flex-direction:column;gap:3px}
+.meter i{flex:1;border-radius:3px;background:rgba(255,255,255,.07);transition:background .06s,box-shadow .06s}
+.meter i.f{box-shadow:0 0 10px currentColor}
+.mid0{position:absolute;left:22%;right:22%;height:2px;top:calc(44px + (100% - 80px) * 12 / 18);background:rgba(255,255,255,.25)}
+/* steering wheel */
+.wheel{position:absolute;left:50%;top:54%;width:min(62%,190px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.wheel svg{width:100%;height:100%;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5));transition:transform .05s linear}
+.arc{position:absolute;left:50%;top:54%;width:min(80%,240px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+/* ---------- centre ---------- */
+.mid{display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:8px;min-height:0;align-items:center}
+.mwheel{display:none;justify-self:center;width:84px;height:84px}
+.abil{position:relative;justify-self:center;align-self:center;height:min(150px,100%);width:auto;max-width:100%;aspect-ratio:1;border-radius:50%;
+ background:radial-gradient(circle at 50% 38%,#ffe27a,var(--ye) 50%,#c98f00);color:#2a1d00;box-shadow:0 0 0 6px rgba(255,196,0,.16),0 0 34px rgba(255,196,0,.35),inset 0 -8px 16px rgba(0,0,0,.18);
+ display:grid;place-items:center;transition:transform .08s,box-shadow .08s}
+.abil::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:2px dashed rgba(255,196,0,.35);animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.abil{container-type:size}.abil b{display:block;font:900 min(22px,15cqh) system-ui;letter-spacing:.06em}
+.abil span{display:block;font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.16em;opacity:.7;text-align:center}
+.abil.hit{transform:scale(.92);box-shadow:0 0 0 14px rgba(255,196,0,.08),0 0 60px rgba(255,196,0,.7)}
+.gears{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.gb{height:52px;border-radius:14px;background:var(--p2);border:1px solid var(--ln);display:grid;place-items:center;font:900 22px system-ui}
+.gb:active,.gb.hit{background:var(--bl);border-color:var(--bl)}
+.gl{font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--mu);text-align:center;line-height:1.3}
+.show{height:46px;border-radius:14px;border:1px solid var(--ln);background:var(--p1);font:800 13px system-ui;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:8px}
+.show .led{background:var(--mu);box-shadow:none}
+.show.on{background:var(--gr);color:#032014;border-color:var(--gr)}.show.on .led{background:#032014}
+/* ---------- modes ---------- */
+.pedal{display:none;position:absolute;inset:44px 18% 18px;border-radius:16px;background:repeating-linear-gradient(0deg,#1c2c55 0 6px,#152446 6px 14px);border:2px solid var(--ln);overflow:hidden}
+.pedal .fill{position:absolute;left:0;right:0;bottom:0;height:0;transition:height .05s}
+.pedal .pl{position:absolute;left:0;right:0;bottom:14px;text-align:center;font:900 18px system-ui;letter-spacing:.1em;color:#fff;text-shadow:0 2px 6px #000}
+#pg .fill{background:linear-gradient(0deg,rgba(31,211,138,.2),rgba(31,211,138,.75))}
+#pb .fill{background:linear-gradient(0deg,rgba(255,77,94,.2),rgba(255,77,94,.75))}
+body.m-tilt .pedal{display:block}
+body.m-tilt .meter,body.m-tilt .mid0,body.m-tilt .knob,body.m-tilt .wheel,body.m-tilt .arc,body.m-tilt .hint{display:none}
+body.m-tilt .mid{grid-template-rows:auto minmax(0,1fr) auto auto}
+body.m-tilt .mwheel{display:block;width:76px;height:76px}
+body.m-tilt .abil{height:min(112px,100%)}
+.base2{display:none;position:absolute;left:50%;top:54%;width:min(74%,220px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--ln);background:radial-gradient(circle,rgba(47,123,255,.12),transparent 70%)}
+body.m-one .main{grid-template-columns:1.2fr minmax(200px,1fr)}
+body.m-one #str{display:none}
+body.m-one #thr .meter,body.m-one #thr .mid0{display:none}
+body.m-one .base2{display:block}
+body.big .gb{height:64px}body.big .show{height:58px}
+/* ---------- tabs & screens ---------- */
+.tabs{display:flex;background:var(--p1);border:1px solid var(--ln);border-radius:12px;padding:3px;gap:2px}
+.tab{height:30px;padding:0 12px;border-radius:9px;font:800 12px system-ui;letter-spacing:.06em;color:var(--mu);display:flex;align-items:center;gap:6px}
+.tab svg{width:16px;height:16px}
+.tab.sel{background:var(--bl);color:#fff;box-shadow:0 0 14px rgba(47,123,255,.4)}
+.coinB{cursor:pointer}
+@media (max-width:820px){.logo{display:none}.tab span{display:none}.tab{padding:0 10px}}
+.scr{display:none;min-height:0}
+body.s-drive .main{display:grid}body:not(.s-drive) .main{display:none}
+body.s-col #col,body.s-whl #whl{display:grid}
+#col{grid-template-columns:minmax(200px,30%) 1fr;gap:10px}
+.panel{border-radius:22px;background:linear-gradient(160deg,var(--p2),var(--p1));border:1px solid var(--ln);padding:16px;min-height:0;position:relative;overflow:hidden}
+.bank{display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:6px;text-align:center}
+.bigcoin{width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c4,var(--ye) 45%,#a87a00);box-shadow:0 0 30px rgba(255,196,0,.45),inset 0 -6px 10px rgba(0,0,0,.2);display:grid;place-items:center;font:900 26px system-ui;color:#5a4000;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-6deg)}}
+.bignum{font:900 44px system-ui;color:var(--ye);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 18px rgba(255,196,0,.35)}
+.sub{font:800 11px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--mu)}
+.x2big{border-radius:999px;padding:6px 12px;font:900 13px system-ui;background:var(--p1);color:var(--mu);border:1px solid var(--ln)}
+.x2big.on{background:var(--gr);color:#032014;border-color:var(--gr)}
+.go{height:46px;padding:0 18px;border-radius:14px;background:var(--ye);color:#2a1d00;font:900 14px system-ui;letter-spacing:.06em}
+.ch{display:grid;grid-template-rows:auto 1fr;gap:10px;overflow:hidden}
+.chh{display:flex;align-items:baseline;gap:10px}.chh b{font:900 18px system-ui}.chh em{font:800 13px ui-monospace,Menlo,monospace;font-style:normal;color:var(--cy)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:8px;min-height:0}
+.card{border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;min-height:0;position:relative;overflow:hidden;border:2px solid transparent}
+.card .cn{font:900 14px system-ui;letter-spacing:.04em}
+.card .ca{font:700 11px ui-monospace,Menlo,monospace;letter-spacing:.08em;opacity:.8}
+.card .cr{font:800 10px system-ui;letter-spacing:.1em;text-transform:uppercase}
+.card.own{color:#0b0f18;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.card.own::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.35),transparent 45%);pointer-events:none}
+.card.lock{background:#0a1226;color:var(--mu)}
+.card.lock .q{position:absolute;right:10px;top:4px;font:900 30px system-ui;opacity:.25}
+#whl{grid-template-columns:minmax(0,1fr) minmax(250px,40%);gap:10px}
+.wbox{padding:0}
+.wwrap{position:absolute;top:12px;bottom:12px;left:50%;transform:translateX(-50%);aspect-ratio:1;max-width:calc(100% - 20px)}
+#wcv{width:100%;height:100%;display:block}
+.ptr{position:absolute;left:50%;top:-4px;width:0;height:0;margin-left:-13px;border:13px solid transparent;border-top:24px solid var(--ye);filter:drop-shadow(0 3px 4px rgba(0,0,0,.6));z-index:2}
+.wside{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:8px;min-height:0}
+.rars{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rb{height:46px;min-width:0;border-radius:12px;background:var(--p1);border:2px solid var(--ln);display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 9px;font:800 11px system-ui;white-space:nowrap;overflow:hidden}
+.rb i{font-style:normal;font:900 13px ui-monospace,Menlo,monospace;color:var(--ye)}
+.rb.sel{background:#173070}
+.rb:disabled{opacity:.4}
+.wmsg{border-radius:14px;background:var(--p1);border:1px solid var(--ln);padding:8px 12px;display:grid;align-content:center;gap:2px;min-height:0;overflow:hidden;text-align:center}
+.wmsg b{font:900 18px system-ui}.wmsg span{font:600 13px system-ui;color:var(--mu)}
+.wmsg.win{border-color:var(--ye);box-shadow:0 0 24px rgba(255,196,0,.3);animation:pop .4s ease-out}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.04)}}
+.spinB{height:58px;border-radius:16px;background:radial-gradient(circle at 50% 30%,#ffe27a,var(--ye) 60%,#c98f00);color:#2a1d00;font:900 17px system-ui;letter-spacing:.06em;box-shadow:0 0 24px rgba(255,196,0,.35)}
+.spinB:disabled{background:var(--p2);color:var(--mu);box-shadow:none}
+@media (max-width:900px){.wide{display:none}}
+@media (max-height:400px){
+ #app{gap:6px}.chip,.ib{height:32px}.tab{height:26px}
+ .gb{height:44px}.show{height:40px}.lab{top:9px}.read{top:6px;font-size:18px}.hint{bottom:8px;font-size:11px}
+ .panel{padding:10px 12px}.cards{gap:6px}
+ .bigcoin{width:52px;height:52px;font-size:20px}.bignum{font-size:34px}.go{height:40px;font-size:13px}.x2big{padding:4px 10px;font-size:12px}
+ .card{padding:6px 8px}.card .ca{display:none}.card .cn{font-size:13px}.card .cr{font-size:9px}.card.lock .q{font-size:22px}
+ .chh b{font-size:16px}.rb{height:38px}.spinB{height:48px;font-size:15px}.wmsg b{font-size:15px}.wmsg span{font-size:12px}
+}
+@media (max-height:320px){
+ .abil span{display:none}.gb{height:38px;font-size:18px}.show{height:36px;font-size:12px}.gl{font-size:9px}
+ .bigcoin{display:none}.bignum{font-size:30px}.card .cr{display:none}.card .cn{font-size:12px}
+ .rb{height:32px}.spinB{height:42px}.wmsg span{display:none}.wside{gap:6px}
+}
+/* ---------- overlays ---------- */
+.ov{position:fixed;inset:0;z-index:20;display:none;place-items:center;text-align:center;padding:24px;background:rgba(4,8,26,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ov.on{display:grid}
+.ov h2{margin:12px 0 6px;font:900 24px system-ui}
+.ov p{margin:0;color:var(--mu);font-size:15px}
+.spin{width:46px;height:46px;border-radius:50%;border:4px solid var(--ln);border-top-color:var(--bl);animation:spin .9s linear infinite;margin:auto}
+#turn{z-index:30;background:var(--bg)}
+@media (orientation:portrait){#turn{display:grid}}
+#toast{position:fixed;left:50%;top:58px;transform:translate(-50%,-10px);background:var(--bl);color:#fff;font:800 14px system-ui;padding:9px 16px;border-radius:999px;opacity:0;transition:.25s;z-index:25;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+/* settings sheet */
+#set{position:fixed;inset:0;z-index:22;display:none;background:rgba(2,5,16,.6)}
+#set.on{display:block}
+.sheet{position:absolute;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--p1);border-left:1px solid var(--ln);padding:max(14px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 18px 18px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;display:grid;gap:14px;align-content:start;animation:slide .22s ease-out}
+@keyframes slide{from{transform:translateX(40px);opacity:0}}
+.sh{display:flex;align-items:center;gap:10px}
+.sh h3{margin:0;font:900 20px system-ui;flex:1}
+.sec{font:800 11px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--mu);margin-top:4px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mc{border-radius:14px;background:var(--p2);border:2px solid var(--ln);padding:10px 8px;display:grid;gap:6px;justify-items:center;font:800 13px system-ui;min-height:96px;align-content:center}
+.mc svg{width:40px;height:40px}
+.mc.sel{border-color:var(--bl);background:#173070;box-shadow:0 0 18px rgba(47,123,255,.3)}
+.row{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 12px;border-radius:12px;background:var(--p2)}
+.row span{flex:1;font:600 15px system-ui}
+.row em{font:800 13px ui-monospace,Menlo,monospace;font-style:normal;color:var(--cy);min-width:46px;text-align:right}
+.row input[type=range]{flex:1.4;accent-color:var(--bl);height:30px;touch-action:pan-x}
+.tg{width:52px;height:30px;border-radius:999px;background:#2a3a63;position:relative;transition:.2s;flex:none}
+.tg::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.tg.on{background:var(--gr)}.tg.on::after{left:25px}
+.acts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.ab{min-height:50px;border-radius:12px;background:var(--p2);border:1px solid var(--ln);font:800 14px system-ui;display:flex;align-items:center;justify-content:center;gap:8px}
+.ab.pri{background:var(--bl);border-color:var(--bl)}
+.ab:disabled{opacity:.4}
+.foot{font:600 12px system-ui;color:var(--mu);text-align:center}
+</style></head><body class="m-sticks s-drive">
+<div id="app">
+<div class="top">
+ <span class="logo">BRICK<i>SPEED</i></span>
+ <span class="chip"><span class="led" id="led"></span><span id="carT">NO CAR</span></span>
+ <div class="tabs" role="tablist">
+  <button class="tab sel" data-s="drive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M3.5 10h6M14.5 10h6M12 14.5V21"/></svg><span>DRIVE</span></button>
+  <button class="tab" data-s="col"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="8" height="11" rx="2"/><rect x="13" y="9" width="8" height="11" rx="2"/></svg><span>COLLECTION</span></button>
+  <button class="tab" data-s="whl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><span>WHEEL</span></button>
+ </div>
+ <button class="chip coinB" id="coinB" aria-label="Tokens"><span class="coin" aria-hidden="true"></span><span id="tok">0</span></button>
+ <span class="chip x2" id="x2" hidden>x2 · 1</span>
+ <span class="chip race" id="race" hidden>RACE ON</span>
+ <span class="sp"></span>
+ <button class="ib" id="scanB" aria-label="Scan for cars"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 12l6-6"/><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/></svg></button>
+ <button class="ib" id="nextB" aria-label="Next car"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg></button>
+ <button class="ib" id="setB" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
+</div>
+<div class="main">
+ <div class="zone" id="thr">
+  <span class="lab" id="thrL">THROTTLE</span><span class="read" id="thrV">0<small>%</small></span>
+  <div class="base2"></div>
+  <div class="meter" id="meter"></div><div class="mid0" id="mid0"></div>
+  <div class="knob" id="kt"></div>
+  <div class="pedal" id="pb"><div class="fill"></div><span class="pl">BRAKE · REV</span></div>
+  <span class="hint" id="thrH">Touch anywhere · slide up to go</span>
+ </div>
+ <div class="mid">
+  <svg class="mwheel" id="mw" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+  <button class="abil" id="ab" aria-label="Use ability"><div><b>ABILITY</b><span>TAP</span></div></button>
+  <div class="gears"><button class="gb" id="dn" aria-label="Gear down">‹</button><span class="gl">GEAR<br>OPTION</span><button class="gb" id="up" aria-label="Gear up">›</button></div>
+  <button class="show" id="bc"><span class="led"></span>HOLD · SHOW CAR</button>
+ </div>
+ <div class="zone" id="str">
+  <span class="lab">STEERING</span><span class="read" id="strV">0<small>°</small></span>
+  <svg class="arc" viewBox="-60 -60 120 120" aria-hidden="true"><path d="M-48 18 A51 51 0 0 1 48 18" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6" stroke-linecap="round"/><path id="arcF" d="M0 -51" fill="none" stroke="#38e1ff" stroke-width="6" stroke-linecap="round"/></svg>
+  <div class="wheel"><svg id="wh" viewBox="-50 -50 100 100" aria-hidden="true"></svg></div>
+  <div class="pedal" id="pg"><div class="fill"></div><span class="pl">GAS</span></div>
+  <span class="hint">Touch anywhere · slide left / right</span>
+ </div>
+</div>
+<section class="scr" id="col">
+ <div class="panel bank">
+  <div class="bigcoin" aria-hidden="true">B</div>
+  <div class="bignum" id="tokBig">0</div><div class="sub">TOKENS</div>
+  <div class="x2big" id="x2Big">No double tokens</div>
+  <button class="go" id="toWheel">SPIN THE WHEEL</button>
+ </div>
+ <div class="panel ch">
+  <div class="chh"><b>Characters</b><em id="ownN">0/8</em><span class="sub wide" style="margin-left:auto">WIN THE MISSING ONES ON THE WHEEL</span></div>
+  <div class="cards" id="cards"></div>
+ </div>
+</section>
+<section class="scr" id="whl">
+ <div class="panel wbox"><div class="wwrap"><div class="ptr" aria-hidden="true"></div><canvas id="wcv" width="600" height="600" aria-label="Brickspeed wheel"></canvas></div></div>
+ <div class="panel wside">
+  <div class="chh"><b>Wheel</b><em id="wTok" style="margin-left:auto">0 TOK</em></div>
+  <div class="rars" id="rars"></div>
+  <div class="wmsg" id="wmsg"><b>Pick a wheel</b><span>Every wedge has the same chance.</span></div>
+  <button class="spinB" id="spinB">SPIN</button>
+ </div>
+</section>
+</div>
+<div id="toast" role="status"></div>
+<div class="ov" id="lost"><div><div class="spin"></div><h2>Connection lost</h2><p>Your car has been stopped. Reconnecting…</p></div></div>
+<div class="ov" id="turn"><div><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#2f7bff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M2 14a8 8 0 0 0 5 6"/></svg><h2>Turn your phone sideways</h2><p>The pad drives in landscape.</p></div></div>
+<div class="ov" id="tiltOv"><div><h2>Steering wheel mode</h2><p>Hold the phone like a wheel and tap to switch tilt on.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="tiltGo" style="padding:0 26px">Enable tilt</button><button class="ab" id="tiltNo" style="padding:0 22px">Use sticks</button></div></div></div>
+<div id="set"><div class="sheet" role="dialog" aria-label="Settings">
+ <div class="sh"><h3>Settings</h3><button class="ib" id="closeB" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+ <div class="sec">CONTROL MODE</div>
+ <div class="modes">
+  <button class="mc" data-m="sticks"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="22" r="8"/><circle cx="28" cy="22" r="8"/><circle cx="12" cy="18" r="3" fill="currentColor"/><circle cx="31" cy="22" r="3" fill="currentColor"/></svg>Two sticks</button>
+  <button class="mc" data-m="tilt"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="14"/><circle cx="20" cy="20" r="4"/><path d="M6 20h10M24 20h10M20 24v10"/></svg>Steering wheel</button>
+  <button class="mc" data-m="one"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="12"/><circle cx="25" cy="15" r="4" fill="currentColor"/><path d="M20 4v4M20 32v4M4 20h4M32 20h4"/></svg>One hand</button>
+ </div>
+ <div class="sec">DRIVING</div>
+ <div class="row"><span>Top speed</span><input type="range" id="sLim" min="30" max="100" step="5"><em id="vLim"></em></div>
+ <div class="row"><span>Steering feel</span><input type="range" id="sSen" min="1" max="10"><em id="vSen"></em></div>
+ <div class="row"><span>Dead zone</span><input type="range" id="sDz" min="0" max="20"><em id="vDz"></em></div>
+ <div class="row"><span>Tilt range</span><input type="range" id="sTlt" min="15" max="60" step="5"><em id="vTlt"></em></div>
+ <div class="sec">PAD</div>
+ <div class="row"><span>Left-handed (swap sides)</span><button class="tg" id="tSwap" aria-label="Swap sides"></button></div>
+ <div class="row"><span>Vibration</span><button class="tg" id="tVib" aria-label="Vibration"></button></div>
+ <div class="row"><span>Big buttons</span><button class="tg" id="tBig" aria-label="Big buttons"></button></div>
+ <div class="sec">CAR &amp; PAD</div>
+ <div class="acts">
+  <button class="ab pri" id="aScan">Scan for cars</button><button class="ab" id="aNext">Next car</button>
+  <button class="ab" id="aCtr">Re-centre tilt</button><button class="ab" id="aFull">Full screen</button>
+  <button class="ab" id="aHub">Hub &amp; updates</button><button class="ab" id="aReset">Reset settings</button>
+ </div>
+ <div class="foot" id="foot">BrickSpeed Pad</div>
+</div></div>
+<script>
+(function(){
+function $(i){return document.getElementById(i)}
+var B=document.body;
+// ---------- settings ----------
+var DEF={mode:'sticks',lim:100,sen:5,dz:6,tlt:35,swap:0,vib:1,big:0},S={};
+function load(){var j={};try{j=JSON.parse(localStorage.getItem('bspad')||'{}')}catch(e){}for(var k in DEF)S[k]=(j[k]!=null?j[k]:DEF[k])}
+function save(){try{localStorage.setItem('bspad',JSON.stringify(S))}catch(e){}}
+load();
+// ---------- link ----------
+var ws=null,ok=false,lostT=0,lastMsg=0,st={c:0,s:-1,sc:0,t:0,x:0,l:0},tokShown=0;
+function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.w!=null){wheelResult(d);return}st=d;status()}
+var T=null;
+function conn(){
+ // inside the BrickSpeed app the link is Bluetooth (src/ble.js sets window.BS_TRANSPORT)
+ if(window.BS_TRANSPORT){T=window.BS_TRANSPORT;T.start({open:function(){ok=true;$('led').className='led ok';lostOv(false)},close:function(){ok=false;$('led').className='led'},msg:handle});return}
+ if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){setTimeout(conn,100);return}
+ try{ws=new WebSocket('ws://'+location.host+'/ws')}catch(e){setTimeout(conn,800);return}
+ ws.onopen=function(){ok=true;$('led').className='led ok';lostOv(false)};
+ ws.onclose=function(){ok=false;$('led').className='led';setTimeout(conn,600)};
+ ws.onerror=function(){try{ws.close()}catch(e){}};
+ ws.onmessage=function(e){handle(e.data)}}
+function send(t){if(!ok)return;if(T){T.send(t);return}if(ws&&ws.readyState==1){try{ws.send(t)}catch(e){}}}
+function lostOv(on){$('lost').classList.toggle('on',on)}
+setInterval(function(){var bad=!ok||(lastMsg&&Date.now()-lastMsg>2000);if(bad){if(!lostT)lostT=Date.now();if(Date.now()-lostT>1200)lostOv(true)}else{lostT=0;lostOv(false)}},300);
+function status(){
+ if(!spinning){colDraw();if(B.classList.contains('s-whl'))whlUI()}
+ var t=st.sc?'SCANNING…':(st.s<0?(st.c?st.c+' FOUND · pick one':'NO CAR'):'CAR '+(st.s+1)+' / '+st.c);
+ $('carT').textContent=t;
+ var x=$('x2');x.hidden=!st.x;x.textContent='x2 · '+st.x;
+ $('race').hidden=!st.l;$('scanB').disabled=$('nextB').disabled=$('aScan').disabled=$('aNext').disabled=!!st.l;
+ $('scanB').style.opacity=$('nextB').style.opacity=st.l?.35:1;
+}
+(function tick(){var d=st.t-tokShown;if(d){tokShown+=Math.sign(d)*Math.max(1,Math.abs(d)/8|0);$('tok').textContent=tokShown;$('tokBig').textContent=tokShown;$('wTok').textContent=tokShown+' TOK'}requestAnimationFrame(tick)})();
+// ---------- feedback ----------
+var tt=0;function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('on')},1700)}
+function buzz(n){if(!S.vib)return;try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}}
+// ---------- graphics ----------
+var M=$('meter');for(var i=0;i<18;i++)M.appendChild(document.createElement('i'));
+var segs=M.children;
+function meter(f){ // f -1..1, 12 forward segments above, 6 reverse below
+ for(var i=0;i<18;i++){var e=segs[i],c='';
+  if(i<12){var k=11-i;if(f>0&&f*12>k+0.2)c=k<6?'#1fd38a':(k<9?'#ffc400':'#ff4d5e')}
+  else{var r=i-12;if(f<0&&-f*6>r+0.2)c='#38e1ff'}
+  e.style.background=c||'';e.style.color=c;e.className=c?'f':''}
+ }
+function wheelSVG(el,big){el.innerHTML='<defs><radialGradient id="g'+(big?1:2)+'" cx="50%" cy="40%"><stop offset="0" stop-color="#3a4f86"/><stop offset="1" stop-color="#121d3d"/></radialGradient></defs>'+
+ '<circle r="44" fill="none" stroke="#0a1022" stroke-width="13"/><circle r="44" fill="none" stroke="#1d2c58" stroke-width="10"/>'+
+ '<path d="M-44 -6 A44 44 0 0 1 -30 -32" stroke="#2f7bff" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M44 -6 A44 44 0 0 0 30 -32" stroke="#2f7bff" stroke-width="10" fill="none" stroke-linecap="round"/>'+
+ '<rect x="-4" y="-49" width="8" height="10" rx="2" fill="#ffc400"/>'+
+ '<path d="M-40 8 L-14 6 L-10 20 L10 20 L14 6 L40 8" fill="none" stroke="#1d2c58" stroke-width="9" stroke-linejoin="round"/><path d="M0 18 L0 40" stroke="#1d2c58" stroke-width="9"/>'+
+ '<circle r="17" fill="url(#g'+(big?1:2)+')" stroke="#2f7bff" stroke-width="2"/><text y="5" text-anchor="middle" font-size="13" font-weight="900" font-style="italic" fill="#fff" font-family="system-ui">BS</text>'}
+wheelSVG($('wh'),1);wheelSVG($('mw'),0);
+function steerGfx(f){var d=f*120;$('wh').style.transform='rotate('+d+'deg)';$('mw').style.transform='rotate('+d+'deg)';
+ var a=f*Math.PI*0.42,x=Math.sin(a)*51,y=-Math.cos(a)*51;$('arcF').setAttribute('d',f?'M0 -51 A51 51 0 0 '+(f>0?1:0)+' '+x.toFixed(1)+' '+y.toFixed(1):'M0 -51');
+ $('strV').innerHTML=Math.round(f*45)+'<small>°</small>'}
+// ---------- input values ----------
+var rawT=0,rawS=0,outT=0,outS=0;
+function shape(v,dz,expo){var a=Math.abs(v);if(a<dz)return 0;a=(a-dz)/(1-dz);return Math.sign(v)*Math.pow(a,expo)}
+function compute(){var dz=S.dz/100,expo=1.9-S.sen*0.11;
+ outT=Math.round(shape(rawT,dz,1)*255*S.lim/100);outS=Math.round(shape(rawS,dz,expo)*100);
+ var p=Math.round(outT/2.55);$('thrV').innerHTML=(p<0?'R ':'')+Math.abs(p)+'<small>%</small>';meter(outT/255);steerGfx(outS/100)}
+var lastSent='',lastAt=0;
+setInterval(function(){compute();var m='J '+outT+' '+outS,n=Date.now();if(m!=lastSent||n-lastAt>90){send(m);lastSent=m;lastAt=n}},20);
+// ---------- touch: floating sticks ----------
+function drag(zone,onMove,onEnd,knob){
+ var two=false,id=null,ox=0,oy=0,R=1;
+ function pos(e){var dx=(e.clientX-ox)/R,dy=(oy-e.clientY)/R,l=Math.hypot(dx,dy);if(two&&l>1){dx/=l;dy/=l}
+  dx=Math.max(-1,Math.min(1,dx));dy=Math.max(-1,Math.min(1,dy));
+  if(knob){var r=zone.getBoundingClientRect();var kx=ox-r.left+(two?dx*R:0),ky=oy-r.top-dy*R;knob.style.left=kx+'px';knob.style.top=ky+'px'}
+  onMove(dx,dy)}
+ zone.addEventListener('pointerdown',function(e){if(id!==null||e.target.closest('.pedal'))return;two=(S.mode=='one');id=e.pointerId;try{zone.setPointerCapture(id)}catch(er){}
+  var r=zone.getBoundingClientRect();R=Math.min(r.width,r.height)*(two?0.3:0.36);ox=e.clientX;oy=e.clientY;zone.classList.add('on','used');pos(e);e.preventDefault()});
+ zone.addEventListener('pointermove',function(e){if(e.pointerId===id)pos(e)});
+ function end(e){if(e.pointerId!==id)return;id=null;zone.classList.remove('on');if(knob){knob.style.left='50%';knob.style.top='50%'}onEnd()}
+ zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
+}
+drag($('thr'),function(dx,dy){if(S.mode=='one'){rawT=dy;rawS=dx}else if(S.mode=='sticks')rawT=dy},function(){if(S.mode!='tilt'){rawT=0;if(S.mode=='one')rawS=0}},$('kt'));
+drag($('str'),function(dx){if(S.mode=='sticks')rawS=dx},function(){if(S.mode=='sticks')rawS=0},null);
+// pedals (tilt mode)
+function pedal(el,sign){var id=null,f=el.querySelector('.fill');
+ function v(e){var r=el.getBoundingClientRect();var k=1-(e.clientY-r.top)/r.height;k=Math.max(0.25,Math.min(1,k*1.15));f.style.height=(k*100)+'%';rawT=sign*k}
+ el.addEventListener('pointerdown',function(e){id=e.pointerId;try{el.setPointerCapture(id)}catch(er){}v(e);buzz(8);e.preventDefault();e.stopPropagation()});
+ el.addEventListener('pointermove',function(e){if(e.pointerId===id)v(e)});
+ function end(e){if(e.pointerId!==id)return;id=null;f.style.height='0';rawT=0}
+ el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end)}
+pedal($('pg'),1);pedal($('pb'),-1);
+// tilt
+var tiltOn=false,tiltZero=0,tiltNow=0;
+function onTilt(e){var ang=(screen.orientation&&screen.orientation.angle)||window.orientation||0;var b=e.beta||0;var v=(ang==90||ang==-270)?b:(ang==270||ang==-90)?-b:(e.gamma||0);tiltNow=v;if(S.mode=='tilt')rawS=Math.max(-1,Math.min(1,(v-tiltZero)/S.tlt))}
+function startTilt(){if(tiltOn)return;var go=function(){window.addEventListener('deviceorientation',onTilt);tiltOn=true;$('tiltOv').classList.remove('on');setTimeout(function(){tiltZero=tiltNow},300);toast('Tilt on · hold straight')};
+ if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission=='function'){DeviceOrientationEvent.requestPermission().then(function(p){if(p=='granted')go();else nope()}).catch(nope)}else go()}
+function nope(){$('tiltOv').classList.remove('on');toast('Tilt not allowed: use Two sticks')}
+$('tiltGo').onclick=startTilt;$('tiltNo').onclick=function(){S.mode='sticks';save();apply()};
+// ---------- buttons ----------
+function hold(el,down,up){var id=null;el.addEventListener('pointerdown',function(e){e.preventDefault();id=e.pointerId;try{el.setPointerCapture(id)}catch(er){}down()});
+ function u(e){if(e.pointerId!==id)return;id=null;up&&up()}el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u)}
+hold($('ab'),function(){send('A');buzz(35);$('ab').classList.add('hit')},function(){$('ab').classList.remove('hit')});
+hold($('up'),function(){send('U');buzz(12);$('up').classList.add('hit')},function(){$('up').classList.remove('hit')});
+hold($('dn'),function(){send('D');buzz(12);$('dn').classList.add('hit')},function(){$('dn').classList.remove('hit')});
+hold($('bc'),function(){send('B1');buzz(15);$('bc').classList.add('on')},function(){send('B0');$('bc').classList.remove('on')});
+function scan(){send('S');toast('Scanning for cars…')}
+function next(){send('N');buzz(10)}
+$('scanB').onclick=scan;$('nextB').onclick=next;$('aScan').onclick=function(){scan();closeSet()};$('aNext').onclick=next;
+$('setB').onclick=function(){$('set').classList.add('on')};
+function closeSet(){$('set').classList.remove('on')}
+$('closeB').onclick=closeSet;$('set').addEventListener('pointerdown',function(e){if(e.target.id=='set')closeSet()});
+$('aCtr').onclick=function(){tiltZero=tiltNow;toast('Straight ahead set')};
+$('aFull').onclick=function(){var d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen){d.requestFullscreen().then(function(){try{screen.orientation.lock('landscape').catch(function(){})}catch(e){}}).catch(function(){toast('Full screen not available')})}else if(document.exitFullscreen)document.exitFullscreen().catch(function(){})};
+$('aHub').onclick=function(){toast(T?'Pad switches to its Hub · join the BrickSpeed-Hub Wi-Fi':'Opening hub · join BrickSpeed-Hub');setTimeout(function(){send('H')},500)};
+$('aReset').onclick=function(){try{localStorage.removeItem('bspad')}catch(e){}load();apply();toast('Settings reset')};
+// ---------- settings UI ----------
+function bindR(id,key,fmt){var r=$(id),v=$('v'+id.slice(1));r.value=S[key];v.textContent=fmt(S[key]);r.oninput=function(){S[key]=+r.value;v.textContent=fmt(S[key]);save()}}
+function bindT(id,key,cls){var b=$(id);b.classList.toggle('on',!!S[key]);b.onclick=function(){S[key]=S[key]?0:1;save();apply()}}
+function apply(){
+ var sc=(B.className.match(/s-\w+/)||['s-drive'])[0];B.className='m-'+S.mode+(S.swap?' swap':'')+(S.big?' big':'')+' '+sc;
+ [].forEach.call(document.querySelectorAll('.mc'),function(m){m.classList.toggle('sel',m.dataset.m==S.mode)});
+ $('thrL').textContent=S.mode=='one'?'DRIVE':(S.mode=='tilt'?'SPEED':'THROTTLE');
+ $('thrH').textContent=S.mode=='one'?'One stick: up to go, sideways to steer':'Touch anywhere · slide up to go';
+ bindR('sLim','lim',function(v){return v+'%'});bindR('sSen','sen',function(v){return v});bindR('sDz','dz',function(v){return v+'%'});bindR('sTlt','tlt',function(v){return '±'+v+'°'});
+ bindT('tSwap','swap');bindT('tVib','vib');bindT('tBig','big');
+ rawT=0;rawS=0;
+ if(S.mode=='tilt'&&!tiltOn)$('tiltOv').classList.add('on');else $('tiltOv').classList.remove('on');
+}
+[].forEach.call(document.querySelectorAll('.mc'),function(m){m.onclick=function(){S.mode=m.dataset.m;save();apply();buzz(10)}});
+apply();
+// ---------- collection & wheel ----------
+var CH=[['SHIFTER','GEARS',2,'#ffb020'],['BLAZE','TURBO',1,'#ff6e14'],['HUNTER','LOCK ON',3,'#3cc864'],['POLICE','SIREN',3,'#285aff'],['TECHNO','FLIP ALL',4,'#00dcc8'],['BOMBER','BOMB',0,'#e11d2e'],['GLIDER','SMOOTH',2,'#8cc8ff'],['REWIND','REWIND',4,'#be78ff']];
+var RN=['Common','Rare','Super rare','Epic','Legendary'],RC=['#9aa7b8','#3cc864','#3b8cff','#b25cff','#ffc400'],COST=[0,20,50,120,300];
+function own(i){return CH[i][2]==0||((st.m||0)>>i)&1}
+function colDraw(){var h='',n=0;CH.forEach(function(c,i){var o=own(i);if(o)n++;
+ h+=o?'<div class="card own" style="background:'+c[3]+'"><span class="cn">'+c[0]+'</span><span class="ca">'+c[1]+'</span><span class="cr">'+RN[c[2]]+'</span></div>'
+  :'<div class="card lock" style="border-color:'+RC[c[2]]+'55"><span class="q">?</span><span class="cn">'+c[0]+'</span><span class="ca">LOCKED</span><span class="cr" style="color:'+RC[c[2]]+'">'+RN[c[2]]+' wheel</span></div>'});
+ $('cards').innerHTML=h;$('ownN').textContent=n+'/'+CH.length;
+ var x=$('x2Big');x.className='x2big'+(st.x?' on':'');x.textContent=st.x?'x2 TOKENS · '+st.x+(st.x>1?' RACES':' RACE'):'No double tokens'}
+function wSegs(r){var a=[];CH.forEach(function(c,i){if(c[2]==r&&!own(i)&&a.length<6)a.push(i)});if(!a.length)return a;for(var k=0;a.length<6;k++)a.push(k%3==0?201:(k%3==1?202:200));return a}
+function segLab(c,r){return c<100?CH[c][0]:(c==200?'+'+(COST[r]/2|0)+' TOK':c==202?'+'+(COST[r]/4|0)+' TOK':'x2 RACE')}
+function segCol(c){return c<100?CH[c][3]:(c==200?'#ffaa00':c==202?'#2e9bff':'#1fd38a')}
+var wr=1,spinning=false,wrot=0,cur=null,wt=0;
+function pickDefault(){for(var r=1;r<=4;r++)if(wSegs(r).length)return r;return 1}
+function whlUI(){var h='';for(var r=1;r<=4;r++){var none=!wSegs(r).length;h+='<button class="rb'+(r==wr?' sel':'')+'" data-r="'+r+'" style="border-color:'+(r==wr?RC[r]:'var(--ln)')+'"'+(none||spinning?' disabled':'')+'><span style="color:'+RC[r]+'">'+RN[r].toUpperCase()+'</span><i>'+(none?'OWNED':COST[r])+'</i></button>'}
+ $('rars').innerHTML=h;[].forEach.call($('rars').children,function(b){b.onclick=function(){wr=+b.dataset.r;cur=null;whlUI();wDraw()}});
+ var sg=wSegs(wr),sb=$('spinB');
+ if(!sg.length){sb.disabled=true;sb.textContent='YOU OWN THEM ALL'}
+ else if(st.l){sb.disabled=true;sb.textContent='WAIT · RACE ON'}
+ else if(st.t<COST[wr]){sb.disabled=true;sb.textContent='NEED '+(COST[wr]-st.t)+' MORE'}
+ else{sb.disabled=spinning;sb.textContent=spinning?'SPINNING…':'SPIN · '+COST[wr]+' TOK'}
+ if(!spinning)wDraw()}
+function wDraw(){var c=$('wcv'),x=c.getContext('2d'),Z=600,R=Z/2-14,sg=cur||wSegs(wr),n=Math.max(sg.length,1),a=2*Math.PI/n;x.clearRect(0,0,Z,Z);
+ x.save();x.translate(Z/2,Z/2);
+ x.beginPath();x.arc(0,0,R+8,0,7);x.fillStyle='#0a1022';x.fill();x.lineWidth=6;x.strokeStyle=RC[wr];x.stroke();
+ x.rotate(wrot);
+ if(!sg.length){x.fillStyle='#12224a';x.beginPath();x.arc(0,0,R,0,7);x.fill()}
+ sg.forEach(function(c,i){var a0=-Math.PI/2+i*a-a/2;x.beginPath();x.moveTo(0,0);x.arc(0,0,R,a0,a0+a);x.closePath();x.fillStyle=segCol(c);x.fill();x.lineWidth=4;x.strokeStyle='#0a1022';x.stroke();
+  x.save();var am=a0+a/2;x.rotate(am);var flip=Math.cos(am+wrot)<0;if(flip)x.rotate(Math.PI);x.textAlign=flip?'left':'right';x.textBaseline='middle';x.font='900 '+(c<100?30:28)+'px system-ui';x.fillStyle=c==202||c==3?'#fff':'#0b0f18';x.fillText(segLab(c,wr),flip?-(R-22):R-22,0);x.restore()});
+ x.restore();
+ x.save();x.translate(Z/2,Z/2);x.beginPath();x.arc(0,0,46,0,7);x.fillStyle='#12224a';x.fill();x.lineWidth=5;x.strokeStyle='#2f7bff';x.stroke();
+ x.fillStyle='#fff';x.font='italic 900 30px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText('BS',0,2);x.restore();
+ // lights round the rim
+ for(var i=0;i<24;i++){var an=i/24*Math.PI*2,on=spinning?((i+(Date.now()/60|0))%3==0):(i%2==0);x.beginPath();x.arc(Z/2+Math.cos(an)*(R+8),Z/2+Math.sin(an)*(R+8),5,0,7);x.fillStyle=on?'#fff6c4':'#3a3420';x.fill()}}
+function msg(t,s,win){var m=$('wmsg');m.className='wmsg'+(win?' win':'');m.innerHTML='<b>'+t+'</b><span>'+(s||'')+'</span>'}
+$('spinB').onclick=function(){if(spinning)return;cur=wSegs(wr);if(!cur.length)return;spinning=true;whlUI();msg('Spinning…','Good luck!');buzz(20);send('W'+wr);
+ clearTimeout(wt);wt=setTimeout(function(){if(spinning&&!anim){spinning=false;cur=null;msg('No answer','Check the pad connection and try again.');whlUI()}},3500);
+ idle()};
+var anim=false,idleOn=false;
+function idle(){if(!spinning||anim)return;wrot+=0.12;wDraw();requestAnimationFrame(idle)}
+function wheelResult(d){
+ if(!d.w){spinning=false;cur=null;msg('Can\'t spin',d.msg||'');whlUI();return}
+ anim=true;cur=d.g;var n=cur.length,a=2*Math.PI/n,start=wrot%(2*Math.PI),target=-(d.i*a)+Math.PI*2*6+(Math.random()-0.5)*a*0.6,t0=performance.now(),dur=4200;
+ (function f(t){var k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,4);wrot=start+(target-start)*e;wDraw();
+  if(k<1){requestAnimationFrame(f);return}
+  anim=false;spinning=false;var c=cur[d.i];st.t=d.t;st.x=d.x;st.m=d.m;
+  if(c<100)msg('NEW: '+CH[c][0]+'!','Ability: '+CH[c][1]+'. It is in your collection.',1);
+  else if(c==201)msg('x2 TOKENS!','Your next '+(d.x>1?d.x+' races pay':'race pays')+' double.',1);
+  else msg(segLab(c,d.r)+'!','Added to your tokens.',1);
+  buzz([40,60,80]);status();setTimeout(function(){cur=null;whlUI()},2600)})(t0)}
+function show(s){B.classList.remove('s-drive','s-col','s-whl');B.classList.add('s-'+s);[].forEach.call(document.querySelectorAll('.tab'),function(t){t.classList.toggle('sel',t.dataset.s==s)});rawT=rawS=0;
+ if(s=='col')colDraw();if(s=='whl'){if(!wSegs(wr).length)wr=pickDefault();whlUI()}}
+[].forEach.call(document.querySelectorAll('.tab'),function(t){t.onclick=function(){show(t.dataset.s);buzz(8)}});
+$('coinB').onclick=function(){show('col')};$('toWheel').onclick=function(){show('whl')};
+// keep the screen on while driving
+var wl=null;function wake(){try{if(navigator.wakeLock&&!document.hidden)navigator.wakeLock.request('screen').then(function(l){wl=l}).catch(function(){})}catch(e){}}
+document.addEventListener('visibilitychange',wake);document.addEventListener('pointerdown',function(){if(!wl)wake()},{once:true});wake();
+// ---------- safety ----------
+document.addEventListener('visibilitychange',function(){if(document.hidden){rawT=rawS=0;send('J 0 0')}});
+window.addEventListener('blur',function(){rawT=0;send('J 0 0')});
+document.addEventListener('contextmenu',function(e){e.preventDefault()});
+conn();
+})();
+</script><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}</script>
+</body></html>
