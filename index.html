@@ -5,7 +5,7 @@
 <title>BrickSpeed</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon.png">
 <script src="ble-web.js"></script>
 <style>
 :root{color-scheme:dark;--bg:#04081a;--p1:#0b1530;--p2:#12224a;--ln:#22386e;--tx:#e3ecfb;--mu:#8ea5cc;--bl:#2f7bff;--cy:#38e1ff;--ye:#ffc400;--or:#ff7a1a;--gr:#1fd38a;--rd:#ff4d5e;--pu:#b46bff}
@@ -86,6 +86,12 @@ body.m-tilt .meter,body.m-tilt .mid0,body.m-tilt .knob,body.m-tilt .wheel,body.m
 body.m-tilt .mid{grid-template-rows:auto minmax(0,1fr) auto auto}
 body.m-tilt .mwheel{display:block;width:76px;height:76px}
 body.m-tilt .abil{height:min(112px,100%)}
+body.m-wheel .meter,body.m-wheel .mid0,body.m-wheel .knob,body.m-wheel .arc,body.m-wheel #thrH{display:none}
+body.m-wheel .pedal{display:block}
+body.m-wheel #pb{inset:44px 52% 16px 5%}body.m-wheel #pg{inset:44px 5% 16px 52%}
+body.m-wheel .pedal .pl{font-size:14px}
+body.m-wheel .wheel{width:min(80%,240px);top:56%}
+body.m-wheel #str.on .wheel svg{filter:drop-shadow(0 0 16px rgba(47,123,255,.6))}
 .base2{display:none;position:absolute;left:50%;top:54%;width:min(74%,220px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--ln);background:radial-gradient(circle,rgba(47,123,255,.12),transparent 70%)}
 body.m-one .main{grid-template-columns:1.2fr minmax(200px,1fr)}
 body.m-one #str{display:none}
@@ -172,7 +178,8 @@ body.s-col #col,body.s-whl #whl{display:grid}
 .sh{display:flex;align-items:center;gap:10px}
 .sh h3{margin:0;font:900 20px system-ui;flex:1}
 .sec{font:800 11px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--mu);margin-top:4px}
-.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:480px){.modes{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mc{border-radius:14px;background:var(--p2);border:2px solid var(--ln);padding:10px 8px;display:grid;gap:6px;justify-items:center;font:800 13px system-ui;min-height:96px;align-content:center}
 .mc svg{width:40px;height:40px}
 .mc.sel{border-color:var(--bl);background:#173070;box-shadow:0 0 18px rgba(47,123,255,.3)}
@@ -254,13 +261,14 @@ body.s-col #col,body.s-whl #whl{display:grid}
 <div id="toast" role="status"></div>
 <div class="ov" id="lost"><div><div class="spin"></div><h2>Connection lost</h2><p>Your car has been stopped. Reconnecting…</p></div></div>
 <div class="ov" id="turn"><div><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#2f7bff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M2 14a8 8 0 0 0 5 6"/></svg><h2>Turn your phone sideways</h2><p>The pad drives in landscape.</p></div></div>
-<div class="ov" id="tiltOv"><div><h2>Steering wheel mode</h2><p>Hold the phone like a wheel and tap to switch tilt on.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="tiltGo" style="padding:0 26px">Enable tilt</button><button class="ab" id="tiltNo" style="padding:0 22px">Use sticks</button></div></div></div>
+<div class="ov" id="tiltOv"><div><h2>Tilt wheel</h2><p id="tiltP">Hold the phone like a wheel and tap to switch tilt on.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="tiltGo" style="padding:0 26px">Enable tilt</button><button class="ab" id="tiltNo" style="padding:0 22px">Use Touch wheel</button></div></div></div>
 <div id="set"><div class="sheet" role="dialog" aria-label="Settings">
  <div class="sh"><h3>Settings</h3><button class="ib" id="closeB" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
  <div class="sec">CONTROL MODE</div>
  <div class="modes">
   <button class="mc" data-m="sticks"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="22" r="8"/><circle cx="28" cy="22" r="8"/><circle cx="12" cy="18" r="3" fill="currentColor"/><circle cx="31" cy="22" r="3" fill="currentColor"/></svg>Two sticks</button>
-  <button class="mc" data-m="tilt"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="14"/><circle cx="20" cy="20" r="4"/><path d="M6 20h10M24 20h10M20 24v10"/></svg>Steering wheel</button>
+  <button class="mc" data-m="tilt"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="14"/><circle cx="20" cy="20" r="4"/><path d="M6 20h10M24 20h10M20 24v10"/></svg>Tilt wheel</button>
+  <button class="mc" data-m="wheel"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="20" cy="20" r="13"/><circle cx="20" cy="20" r="4"/><path d="M7 20h9M24 20h9M20 24v9"/><path d="M33 8a17 17 0 0 1 3 8" /><path d="M36 16l-1-4 -3 2"/></svg>Touch wheel</button>
   <button class="mc" data-m="one"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="12"/><circle cx="25" cy="15" r="4" fill="currentColor"/><path d="M20 4v4M20 32v4M4 20h4M32 20h4"/></svg>One hand</button>
  </div>
  <div class="sec">DRIVING</div>
@@ -357,8 +365,17 @@ function drag(zone,onMove,onEnd,knob){
  function end(e){if(e.pointerId!==id)return;id=null;zone.classList.remove('on');if(knob){knob.style.left='50%';knob.style.top='50%'}onEnd()}
  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
 }
-drag($('thr'),function(dx,dy){if(S.mode=='one'){rawT=dy;rawS=dx}else if(S.mode=='sticks')rawT=dy},function(){if(S.mode!='tilt'){rawT=0;if(S.mode=='one')rawS=0}},$('kt'));
+drag($('thr'),function(dx,dy){if(S.mode=='one'){rawT=dy;rawS=dx}else if(S.mode=='sticks')rawT=dy},function(){if(S.mode=='sticks'||S.mode=='one'){rawT=0;if(S.mode=='one')rawS=0}},$('kt'));
 drag($('str'),function(dx){if(S.mode=='sticks')rawS=dx},function(){if(S.mode=='sticks')rawS=0},null);
+// touch wheel: grab the wheel anywhere and turn it round its centre; it springs back when you let go
+(function(){var z=$('str'),id=null,last=0,acc=0,MAX=2.1;
+ function ang(e){var r=z.querySelector('.wheel').getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))}
+ z.addEventListener('pointerdown',function(e){if(S.mode!='wheel'||id!==null)return;id=e.pointerId;try{z.setPointerCapture(id)}catch(er){}last=ang(e);acc=0;z.classList.add('on');buzz(6);e.preventDefault()});
+ z.addEventListener('pointermove',function(e){if(e.pointerId!==id)return;var a=ang(e),d=a-last;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;last=a;acc=Math.max(-MAX,Math.min(MAX,acc+d));rawS=acc/MAX});
+ function end(e){if(e.pointerId!==id)return;id=null;acc=0;rawS=0;z.classList.remove('on')}
+ z.addEventListener('pointerup',end);z.addEventListener('pointercancel',end)})();
+// pedals sit side by side in the left zone for Touch wheel, GAS on the right zone for Tilt wheel
+function placePedals(){var g=$('pg');if(S.mode=='wheel'){if(g.parentNode!==$('thr'))$('thr').appendChild(g)}else if(g.parentNode!==$('str'))$('str').insertBefore(g,$('str').querySelector('.hint'))}
 // pedals (tilt mode)
 function pedal(el,sign){var id=null,f=el.querySelector('.fill');
  function v(e){var r=el.getBoundingClientRect();var k=1-(e.clientY-r.top)/r.height;k=Math.max(0.25,Math.min(1,k*1.15));f.style.height=(k*100)+'%';rawT=sign*k}
@@ -372,8 +389,8 @@ var tiltOn=false,tiltZero=0,tiltNow=0;
 function onTilt(e){var ang=(screen.orientation&&screen.orientation.angle)||window.orientation||0;var b=e.beta||0;var v=(ang==90||ang==-270)?b:(ang==270||ang==-90)?-b:(e.gamma||0);tiltNow=v;if(S.mode=='tilt')rawS=Math.max(-1,Math.min(1,(v-tiltZero)/S.tlt))}
 function startTilt(){if(tiltOn)return;var go=function(){window.addEventListener('deviceorientation',onTilt);tiltOn=true;$('tiltOv').classList.remove('on');setTimeout(function(){tiltZero=tiltNow},300);toast('Tilt on · hold straight')};
  if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission=='function'){DeviceOrientationEvent.requestPermission().then(function(p){if(p=='granted')go();else nope()}).catch(nope)}else go()}
-function nope(){$('tiltOv').classList.remove('on');toast('Tilt not allowed: use Two sticks')}
-$('tiltGo').onclick=startTilt;$('tiltNo').onclick=function(){S.mode='sticks';save();apply()};
+function nope(){S.mode='wheel';save();apply();toast('Tilt not allowed here: using Touch wheel')}
+$('tiltGo').onclick=startTilt;$('tiltNo').onclick=function(){S.mode='wheel';save();apply()};
 // ---------- buttons ----------
 function hold(el,down,up){var id=null;el.addEventListener('pointerdown',function(e){e.preventDefault();id=e.pointerId;try{el.setPointerCapture(id)}catch(er){}down()});
  function u(e){if(e.pointerId!==id)return;id=null;up&&up()}el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u)}
@@ -397,12 +414,18 @@ function bindT(id,key,cls){var b=$(id);b.classList.toggle('on',!!S[key]);b.oncli
 function apply(){
  var sc=(B.className.match(/s-\w+/)||['s-drive'])[0];B.className='m-'+S.mode+(S.swap?' swap':'')+(S.big?' big':'')+' '+sc;
  [].forEach.call(document.querySelectorAll('.mc'),function(m){m.classList.toggle('sel',m.dataset.m==S.mode)});
- $('thrL').textContent=S.mode=='one'?'DRIVE':(S.mode=='tilt'?'SPEED':'THROTTLE');
+ placePedals();
+ $('str').querySelector('.hint').textContent=S.mode=='wheel'?'Grab the wheel · turn it with your thumb':'Touch anywhere · slide left / right';
+ $('thrL').textContent=S.mode=='one'?'DRIVE':(S.mode=='tilt'||S.mode=='wheel'?'SPEED':'THROTTLE');
  $('thrH').textContent=S.mode=='one'?'One stick: up to go, sideways to steer':'Touch anywhere · slide up to go';
  bindR('sLim','lim',function(v){return v+'%'});bindR('sSen','sen',function(v){return v});bindR('sDz','dz',function(v){return v+'%'});bindR('sTlt','tlt',function(v){return '±'+v+'°'});
  bindT('tSwap','swap');bindT('tVib','vib');bindT('tBig','big');
  rawT=0;rawS=0;
- if(S.mode=='tilt'&&!tiltOn)$('tiltOv').classList.add('on');else $('tiltOv').classList.remove('on');
+ if(S.mode=='tilt'&&!tiltOn){
+  var noSens=!window.isSecureContext&&window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission=='function';
+  $('tiltP').textContent=noSens?'iPhone only allows tilt in secure apps, not on the pad page. Use Touch wheel: turn the wheel on the screen with your thumb.':'Hold the phone like a wheel and tap to switch tilt on.';
+  $('tiltGo').hidden=noSens;$('tiltOv').classList.add('on')}
+ else $('tiltOv').classList.remove('on');
 }
 [].forEach.call(document.querySelectorAll('.mc'),function(m){m.onclick=function(){S.mode=m.dataset.m;save();apply();buzz(10)}});
 apply();

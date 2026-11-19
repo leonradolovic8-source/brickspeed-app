@@ -87,7 +87,12 @@
   }
 
   if (!hasBT) {                          // e.g. iPhone Safari, Firefox
-    window.BS_TRANSPORT = { start: function () { screen(true, 'This browser has no Bluetooth. Use Chrome on Android, or join the pad Wi-Fi (BrickSpeed-Pad-XXXX) and open 192.168.4.1.', false); document.getElementById('bleGo').hidden = true; }, send: function () {} };
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    window.BS_TRANSPORT = { start: function () {
+      screen(true, ios ? 'On iPhone the pad works over its own Wi-Fi: 1) Settings → Wi-Fi → join BrickSpeed-Pad-XXXX (password brickspeed). 2) Tap the button below. 3) Share → Add to Home Screen.'
+                       : 'This browser has no Bluetooth. Use Chrome on Android, or join the pad Wi-Fi (BrickSpeed-Pad-XXXX) and open 192.168.4.1.', false);
+      var b = document.getElementById('bleGo'); b.textContent = 'Open the pad (192.168.4.1)'; b.onclick = function () { location.href = 'http://192.168.4.1/'; };
+    }, send: function () {} };
     return;
   }
   window.BS_TRANSPORT = {
