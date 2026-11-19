@@ -161,6 +161,14 @@ body.s-col #col,body.s-whl #whl{display:grid}
  .bigcoin{display:none}.bignum{font-size:30px}.card .cr{display:none}.card .cn{font-size:12px}
  .rb{height:32px}.spinB{height:42px}.wmsg span{display:none}.wside{gap:6px}
 }
+@media (max-height:420px){body.m-tilt .mwheel{display:none}body.m-tilt .mid{grid-template-rows:minmax(0,1fr) auto auto}body.m-tilt .abil{height:min(150px,100%)}}
+@media (max-height:280px){
+ #app{gap:5px}.chip,.ib{height:30px}.tab{height:24px}.chip{font-size:12px;padding:0 9px}
+ .mid{gap:5px}.gb{height:34px;font-size:18px}.show{height:32px;font-size:11px}.gl{font-size:8px}
+ .read{font-size:16px;top:5px}.lab{top:7px}.hint{display:none}
+ body.m-tilt .pedal{inset:30px 14% 10px}body.m-wheel #pb{inset:30px 52% 10px 5%}body.m-wheel #pg{inset:30px 5% 10px 52%}
+ .pedal .pl{font-size:13px;bottom:8px}
+}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;z-index:20;display:none;place-items:center;text-align:center;padding:24px;background:rgba(4,8,26,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .ov.on{display:grid}
