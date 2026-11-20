@@ -1328,9 +1328,9 @@ $('playB').onclick=function(){if(searching)return;var mc=$('mCar');mc.textConten
 [].forEach.call(document.querySelectorAll('.gm'),function(g){g.onclick=function(){if(g.disabled)return;if(g.dataset.g=='online'){openOnline();return}S.gm=g.dataset.g;save();$('modeOv').classList.remove('on');$('gmChip').textContent=GMN[S.gm];buzz(10);
  if(S.gm=='station')toast('Station race: drive your car, the station runs the race');play()}});
 // ONLINE: the BrickSpeed website. On the pad's own Wi-Fi there is no internet, so tell the player.
-var ONLINE_URL='https://leonradolovic8-source.github.io/brickspeed-app/fun/';
+var ONLINE_URL='https://brickspeed.fun/';   // the BrickSpeed website: #lobby opens the player lobby
 function openOnline(){if(/^192\.168\.4\./.test(location.hostname)){toast('ONLINE needs internet: use the BrickSpeed app or Bluefy');return}
- $('modeOv').classList.remove('on');buzz(15);var w=null;try{w=window.open(ONLINE_URL,'_blank')}catch(e){}if(!w)location.href=ONLINE_URL}
+ $('modeOv').classList.remove('on');buzz(15);var u=ONLINE_URL+(st.nm?'?name='+encodeURIComponent(st.nm):'')+'#lobby',w=null;try{w=window.open(u,'_blank')}catch(e){}if(!w)location.href=u}
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
 $('modeOv').addEventListener('pointerdown',function(e){if(e.target.id=='modeOv')$('modeOv').classList.remove('on')});$('cancelB').onclick=function(){stopSearch()};
 $('tCars').onclick=function(){show('cars')};$('tCol').onclick=function(){show('col')};$('tWhl').onclick=function(){show('box')};
