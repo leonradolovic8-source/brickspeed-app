@@ -496,6 +496,7 @@ body.s-box #box,body.s-upd #upd{display:grid}
 @media (max-height:340px){.modebox{gap:6px}.mhead h2{font-size:19px}.gm{min-height:0;height:calc(100vh - 80px);padding:6px 6px 8px;gap:3px;border-radius:16px}.gm b{font-size:18px}.gmd{font-size:10.5px;min-height:0}.gmgo{padding:4px 18px;font-size:13px}.tape{top:14px;font-size:8px}}
 @media (prefers-reduced-motion:reduce){.gm,.gm *{animation:none!important;opacity:1;transform:none}}
 @media (max-height:340px){.tapui{bottom:30px}.ostage.tapping .otext{font-size:17px;bottom:4px}.ostage.tapping .scene.big{transform:translateY(-22px) scale(calc(.62 + var(--p,0) * .14))}}
+.tape.beta{background:repeating-linear-gradient(45deg,#ff2d3d 0 10px,#b2153f 10px 20px)}
 .tape{position:absolute;top:24px;right:-40px;z-index:2;transform:rotate(35deg);background:repeating-linear-gradient(45deg,#ffc400 0 10px,#1b1f27 10px 20px);color:#fff;font:900 9px system-ui;letter-spacing:.08em;padding:4px 40px;text-shadow:0 1px 2px #000;font-style:normal}
 .gmchip{background:#173070;border-color:#2b4690;font:900 11px system-ui;letter-spacing:.08em}
 /* characters */
@@ -753,8 +754,8 @@ body.s-box #box,body.s-upd #upd{display:grid}
   <b>SINGLE</b><span class="gmd">Free drive · just you and your car</span><span class="gmgo">PLAY</span></button>
  <button class="gm g2" data-g="station"><span class="gmart"><svg viewBox="0 0 120 70" aria-hidden="true"><g class="flag"><rect x="18" y="8" width="3" height="56" fill="#fff"/><path d="M21 9h26v18H21z" fill="#fff"/><path d="M21 9h6.5v6H21zM34 9h6.5v6H34zM27.5 15h6.5v6h-6.5zM40.5 15H47v6h-6.5zM21 21h6.5v6H21zM34 21h6.5v6H34z" fill="#1b1f27"/></g><rect x="56" y="14" width="50" height="34" rx="5" fill="#fff"/><rect x="60" y="18" width="42" height="26" rx="3" fill="#0b1530"/><path d="M64 38l9-9 7 6 12-12" stroke="#ffc400" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="chart"/><rect x="77" y="48" width="8" height="8" fill="#fff"/><rect x="69" y="56" width="24" height="5" rx="2.5" fill="#fff"/></svg></span>
   <b>STATION</b><span class="gmd">Race on the track · laps, abilities, prizes</span><span class="gmgo">PLAY</span></button>
- <button class="gm g3 soon" data-g="online" disabled><span class="gmart"><svg viewBox="0 0 120 70" fill="none" stroke="#fff" stroke-width="3.5" aria-hidden="true"><g class="globe"><circle cx="60" cy="35" r="26"/><path d="M34 35h52M60 9c10 9 10 43 0 52M60 9c-10 9-10 43 0 52M38 22h44M38 48h44"/></g></svg></span>
-  <b>ONLINE</b><span class="gmd">Race friends anywhere</span><span class="gmgo">SOON</span><i class="tape">UNDER CONSTRUCTION</i></button>
+ <button class="gm g3" data-g="online"><span class="gmart"><svg viewBox="0 0 120 70" fill="none" stroke="#fff" stroke-width="3.5" aria-hidden="true"><g class="globe"><circle cx="60" cy="35" r="26"/><path d="M34 35h52M60 9c10 9 10 43 0 52M60 9c-10 9-10 43 0 52M38 22h44M38 48h44"/></g></svg></span>
+  <b>ONLINE</b><span class="gmd">Race in your browser on brickspeed.fun</span><span class="gmgo">OPEN</span><i class="tape beta">BETA</i></button>
 </div></div></div>
 <div class="ov" id="leaveOv"><div class="lvbox" role="alertdialog" aria-labelledby="lvH"><span class="lvic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4L45 42H3z" fill="#ffc400" stroke="#3a2600" stroke-width="3" stroke-linejoin="round"/><rect x="21.5" y="17" width="5" height="14" rx="2" fill="#3a2600"/><circle cx="24" cy="36" r="3" fill="#3a2600"/></svg></span>
  <h2 id="lvH">Leave the race?</h2><p id="lvP"></p><div class="lvbtns"><button class="lvB no" id="lvNo">KEEP DRIVING</button><button class="lvB yes" id="lvYes">LEAVE RACE</button></div></div></div>
@@ -1324,8 +1325,12 @@ function searchTick(){if(!searching)return;
  if(!st.sc&&st.c>0&&!picked){picked=true;send('C0')}}
 var GMN={single:'SINGLE',station:'STATION'};
 $('playB').onclick=function(){if(searching)return;var mc=$('mCar');mc.textContent=st.s>=0?'● CAR '+(st.s+1)+' CONNECTED':'NO CAR YET · WE\'LL FIND ONE';mc.className='mcar'+(st.s>=0?'':' no');$('modeOv').classList.add('on');buzz(8)};
-[].forEach.call(document.querySelectorAll('.gm'),function(g){g.onclick=function(){if(g.disabled)return;S.gm=g.dataset.g;save();$('modeOv').classList.remove('on');$('gmChip').textContent=GMN[S.gm];buzz(10);
+[].forEach.call(document.querySelectorAll('.gm'),function(g){g.onclick=function(){if(g.disabled)return;if(g.dataset.g=='online'){openOnline();return}S.gm=g.dataset.g;save();$('modeOv').classList.remove('on');$('gmChip').textContent=GMN[S.gm];buzz(10);
  if(S.gm=='station')toast('Station race: drive your car, the station runs the race');play()}});
+// ONLINE: the BrickSpeed website. On the pad's own Wi-Fi there is no internet, so tell the player.
+var ONLINE_URL='https://leonradolovic8-source.github.io/brickspeed-app/fun/';
+function openOnline(){if(/^192\.168\.4\./.test(location.hostname)){toast('ONLINE needs internet: use the BrickSpeed app or Bluefy');return}
+ $('modeOv').classList.remove('on');buzz(15);var w=null;try{w=window.open(ONLINE_URL,'_blank')}catch(e){}if(!w)location.href=ONLINE_URL}
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
 $('modeOv').addEventListener('pointerdown',function(e){if(e.target.id=='modeOv')$('modeOv').classList.remove('on')});$('cancelB').onclick=function(){stopSearch()};
 $('tCars').onclick=function(){show('cars')};$('tCol').onclick=function(){show('col')};$('tWhl').onclick=function(){show('box')};
