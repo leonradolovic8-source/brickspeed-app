@@ -460,6 +460,22 @@ body.s-box #box,body.s-upd #upd{display:grid}
 .lights.going .lgo{opacity:1;transform:scale(1)}
 #toast.big{font-size:18px;padding:12px 20px;background:linear-gradient(90deg,#1fd38a,#2f7bff)}
 @media (max-height:340px){.rhead b{font-size:18px}.rc{min-width:92px;padding:3px 8px 3px 3px}.rc .ra{width:26px;height:28px}.rc b{font-size:11px}.rmid .big{max-height:130px}.rmid .nm b{font-size:20px}.rarr{width:42px;height:50px}.rdyB{height:46px;font-size:19px}.lrow i{width:28px;height:28px}.lgo{font-size:34px}}
+/* very short screens (phone sideways inside another app's viewer): everything must still fit */
+@media (max-height:300px){
+ .ostage{height:94vh}
+ .prize{height:min(76vh,200px);gap:3px;padding:6px}
+ .ostage.hyped .prize{margin-top:14px;height:min(62vh,165px)}
+ .ostage.open .prize{height:min(66vh,175px)}
+ .prize .pbig,.prize .pbig .bi{width:44px;height:44px;margin-bottom:0}.prize .pbig.tk{font-size:11px;border-width:2px;border-radius:12px}.prize .pbig.tk b{font-size:17px}
+ .prize b{font-size:19px;line-height:1.05;white-space:nowrap}.prize span{font-size:9px}.prize em{font-size:10px;padding:2px 8px}.prize .stars{font-size:13px}
+ .hype{font-size:24px;-webkit-text-stroke:1.5px #0b0f18}
+ .otext{bottom:8px;font-size:13px}
+ #rdyOv{padding-top:6px;padding-bottom:6px}.rdy{gap:4px}
+ .rhead b{font-size:15px}.rhead span{font-size:9px;padding:2px 8px}
+ .rc{min-width:0;padding:2px 6px 2px 2px;border-radius:10px}.rc .ra{width:22px;height:24px;border-radius:6px}.rc b{font-size:10px}.rc small{font-size:8px}
+ .rmid .big{height:min(46vh,112px);max-height:none}.rmid .nm b{font-size:17px}.rmid .nm span,.rmid .nm em{font-size:9px}.rarr{width:34px;height:40px;font-size:22px;border-radius:10px}
+ .rdyB{height:36px;font-size:16px;box-shadow:0 4px 0 #a57900}.rdyB.on{box-shadow:0 4px 0 #0d7a4d}.rinfo{font-size:11px}
+}
 #toast{position:fixed;left:50%;top:58px;transform:translate(-50%,-10px);background:var(--bl);color:#fff;font:800 14px system-ui;padding:9px 16px;border-radius:999px;opacity:0;transition:.25s;z-index:25;pointer-events:none;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 /* settings sheet */
