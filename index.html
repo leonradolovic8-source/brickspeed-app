@@ -100,6 +100,8 @@ body.big .gb{height:64px}body.big .show{height:58px}
 .tab svg{width:16px;height:16px}
 .tab.sel{background:var(--bl);color:#fff;box-shadow:0 0 14px rgba(47,123,255,.4)}
 .coinB{cursor:pointer}
+.nmIn.apIn{text-transform:none;letter-spacing:.02em;max-width:240px}.apNote{flex:1;font:600 12px/1.3 system-ui;color:var(--mu)}
+#onOv{z-index:32}#onOv .lvbox{border-color:#2f7bff;box-shadow:0 0 0 2px #000,0 0 40px rgba(47,123,255,.45),0 10px 0 #000}.lvB.go{background:linear-gradient(#5d9bff,#2f7bff);color:#fff;box-shadow:0 5px 0 #123c94}#onCnt{font:italic 900 46px system-ui;color:#ffd23a;line-height:1}
 .nmIn{flex:1;min-width:0;max-width:200px;height:40px;border-radius:10px;border:1px solid var(--ln);background:#060c1f;color:#fff;padding:0 10px;font:900 15px system-ui;letter-spacing:.06em;text-transform:uppercase}
 .tbox{display:block;padding:10px 12px;border-radius:12px;background:var(--p2)}.tbox>span{font:600 15px system-ui}.tbox small{color:var(--mu);font-size:12px}
 .titles{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.titles button{padding:6px 10px;border-radius:9px;font:900 11px system-ui;letter-spacing:.05em;background:#14264f;border:1px solid var(--ln);color:var(--mu)}.titles button.on{background:linear-gradient(90deg,#ff5bd1,#b25cff);color:#fff;border-color:transparent}.titles button.lock{opacity:.4}
@@ -760,6 +762,7 @@ body.s-box #box,body.s-upd #upd{display:grid}
 <div class="ov" id="leaveOv"><div class="lvbox" role="alertdialog" aria-labelledby="lvH"><span class="lvic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4L45 42H3z" fill="#ffc400" stroke="#3a2600" stroke-width="3" stroke-linejoin="round"/><rect x="21.5" y="17" width="5" height="14" rx="2" fill="#3a2600"/><circle cx="24" cy="36" r="3" fill="#3a2600"/></svg></span>
  <h2 id="lvH">Leave the race?</h2><p id="lvP"></p><div class="lvbtns"><button class="lvB no" id="lvNo">KEEP DRIVING</button><button class="lvB yes" id="lvYes">LEAVE RACE</button></div></div></div>
 <div class="ov" id="charOv"><button class="ib cback" id="charBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="csheet" id="csheet"></div></div>
+<div class="ov" id="onOv"><div class="lvbox" role="alertdialog" aria-labelledby="onH"><h2 id="onH">Go online</h2><p id="onP">Your phone is on the pad's Wi-Fi, which has no internet. The pad turns its Wi-Fi off for 20 minutes, your phone switches to home Wi-Fi or mobile data, and BrickSpeed Online opens.</p><b id="onCnt" hidden></b><div class="lvbtns"><button class="lvB no" id="onNo">CANCEL</button><button class="lvB go" id="onGo">GO ONLINE</button></div></div></div>
 <div class="ov" id="busyOv"><div><div class="spin"></div><h2 id="busyH">Checking for updates</h2><p id="busyP">The pad joins your home Wi-Fi for about a minute, then restarts. This screen reconnects by itself.</p></div></div>
 <div class="ov" id="updOv"><div style="max-width:440px"><h2>Updates</h2><p>The pad switches to its update hub. On your phone join the Wi-Fi <b>BrickSpeed-Hub</b>, then open <b>192.168.4.1</b> to update the pad and your cars. Driving stops until the pad restarts.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="updGo" style="padding:0 24px">Open the hub</button><button class="ab" id="updNo" style="padding:0 24px">Not now</button></div></div></div>
 <div id="set"><div class="sheet" role="dialog" aria-label="Settings">
@@ -783,6 +786,10 @@ body.s-box #box,body.s-upd #upd{display:grid}
  <div class="row"><span>Left-handed (swap sides)</span><button class="tg" id="tSwap" aria-label="Swap sides"></button></div>
  <div class="row"><span>Vibration</span><button class="tg" id="tVib" aria-label="Vibration"></button></div>
  <div class="row"><span>Big buttons</span><button class="tg" id="tBig" aria-label="Big buttons"></button></div>
+ <div class="sec">PAD WI-FI</div>
+ <div class="row"><span>Wi-Fi name</span><input class="nmIn apIn" id="apN" maxlength="20" autocomplete="off" spellcheck="false" aria-label="Pad Wi-Fi name"></div>
+ <div class="row"><span>Password</span><input class="nmIn apIn" id="apP" type="password" maxlength="63" placeholder="(unchanged)" autocomplete="new-password" aria-label="Pad Wi-Fi password"><button class="ab" id="apEye" style="min-height:40px;padding:0 12px" aria-label="Show password">👁</button></div>
+ <div class="row"><span class="apNote">8+ characters. Saving restarts the pad, then join the new Wi-Fi.</span><button class="ab" id="apDef" style="min-height:40px;padding:0 12px">Default</button><button class="ab pri" id="apSave" style="min-height:40px;padding:0 14px">Save</button></div>
  <div class="sec">TESTING</div>
  <div class="row"><span>Give me tokens</span><button class="ab pri" id="aGift" style="min-height:40px;padding:0 16px">+100 tokens & power</button></div>
  <div class="sec">PAD</div>
@@ -803,7 +810,7 @@ function save(){try{localStorage.setItem('bspad',JSON.stringify(S))}catch(e){}}
 load();
 // ---------- link ----------
 var ws=null,ok=false,lostT=0,lastMsg=0,st={c:0,s:-1,sc:0,t:0,x:0,l:0},tokShown=0;
-function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;shopRefresh();return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
+function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;shopRefresh();return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
 var T=null;
 function conn(){
  // inside the BrickSpeed app the link is Bluetooth (src/ble.js sets window.BS_TRANSPORT)
@@ -939,7 +946,7 @@ hold($('up'),function(){send('U');buzz(12);$('up').classList.add('hit')},functio
 hold($('dn'),function(){send('D');buzz(12);$('dn').classList.add('hit')},function(){$('dn').classList.remove('hit')});
 hold($('bc'),function(){send('B1');buzz(15);$('bc').classList.add('on')},function(){send('B0');$('bc').classList.remove('on')});
 function scan(){send('S');toast('Scanning for cars…')}
-function openSet(){$('set').classList.add('on');var n=$('nmIn');if(document.activeElement!==n)n.value=st.nm||'';titlesDraw()}
+function openSet(){$('set').classList.add('on');send('Z?');var n=$('nmIn');if(document.activeElement!==n)n.value=st.nm||'';titlesDraw()}
 $('setB').onclick=openSet;
 function closeSet(){$('set').classList.remove('on')}
 $('closeB').onclick=closeSet;$('set').addEventListener('pointerdown',function(e){if(e.target.id=='set')closeSet()});
@@ -1329,9 +1336,24 @@ $('playB').onclick=function(){if(searching)return;var mc=$('mCar');mc.textConten
  if(S.gm=='station')toast('Station race: drive your car, the station runs the race');play()}});
 // ONLINE: the BrickSpeed website. On the pad's own Wi-Fi there is no internet, so tell the player.
 var ONLINE_URL='https://leonradolovic8-source.github.io/brickspeed-app/fun/';   // the BrickSpeed game on GitHub: #lobby opens the player lobby
-function openOnline(){if(/^192\.168\.4\./.test(location.hostname)){toast('ONLINE needs internet: use the BrickSpeed app or Bluefy');return}
- $('modeOv').classList.remove('on');buzz(15);var u=ONLINE_URL+(st.nm?'?name='+encodeURIComponent(st.nm):'')+'#lobby',w=null;try{w=window.open(u,'_blank')}catch(e){}if(!w)location.href=u}
+function openOnline(){var u=ONLINE_URL+(st.nm?'?name='+encodeURIComponent(st.nm):'')+'#lobby';
+ if(/^192\.168\.4\./.test(location.hostname)){$('modeOv').classList.remove('on');onU=u;$('onCnt').hidden=true;$('onGo').disabled=false;$('onGo').textContent='GO ONLINE';$('onOv').classList.add('on');buzz(15);return}
+ $('modeOv').classList.remove('on');buzz(15);var w=null;try{w=window.open(u,'_blank')}catch(e){}if(!w)location.href=u}
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
+// ONLINE from the pad's own Wi-Fi: the pad switches its Wi-Fi off, the phone falls back to home Wi-Fi / mobile data, then the game opens
+var onU='',onT=0;
+$('onNo').onclick=function(){clearInterval(onT);onT=0;$('onOv').classList.remove('on')};
+$('onGo').onclick=function(){if(onT){location.href=onU;return}send('O');buzz([20,30,20]);var n=10,c=$('onCnt');c.hidden=false;c.textContent=n;
+ $('onP').textContent='Pad Wi-Fi is turning off. Your phone now joins your home Wi-Fi or mobile data. On iPhone, if nothing happens, open Settings > Wi-Fi once.';$('onGo').textContent='OPEN NOW';
+ onT=setInterval(function(){n--;c.textContent=Math.max(0,n);if(n<=0){clearInterval(onT);onT=0;location.href=onU}},1000)};
+// pad Wi-Fi name / password
+function apGot(d){var n=$('apN');if(d.ap&&document.activeElement!==n)n.value=d.ap;if(d.msg)toast(d.msg);if(d.rs)busy('Pad restarting',d.ap?'Join the Wi-Fi "'+d.ap+'" on your phone, then open 192.168.4.1 again.':'Join the Wi-Fi BrickSpeed-Pad-… (password brickspeed), then open 192.168.4.1 again.')}
+$('apEye').onclick=function(){var p=$('apP');p.type=p.type=='password'?'text':'password'};
+$('apSave').onclick=function(){var n=$('apN').value.trim(),p=$('apP').value;
+ if(!n||n.length>20){toast('The Wi-Fi name needs 1 to 20 letters');return}if(/["\\]|[^\x20-\x7e]/.test(n)){toast('Use only normal letters and numbers in the name');return}
+ if(p&&(p.length<8||p.length>63)){toast('The password needs 8 to 63 characters');return}if(/["\\]|[^\x20-\x7e]/.test(p)){toast('Use only normal characters in the password');return}
+ send('Z'+n+'\t'+p);$('apP').value='';buzz(15)};
+$('apDef').onclick=function(){send('Z!');buzz(15)};
 $('modeOv').addEventListener('pointerdown',function(e){if(e.target.id=='modeOv')$('modeOv').classList.remove('on')});$('cancelB').onclick=function(){stopSearch()};
 $('tCars').onclick=function(){show('cars')};$('tCol').onclick=function(){show('col')};$('tWhl').onclick=function(){show('box')};
 $('tUpd').onclick=function(){show('upd')};$('tSet').onclick=openSet;$('pTag').onclick=function(){openSet();setTimeout(function(){try{$('nmIn').focus()}catch(e){}},250)};

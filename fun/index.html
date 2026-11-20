@@ -3923,8 +3923,24 @@ document.addEventListener('visibilitychange',function(){setRun(vis&&!document.hi
 
 <!-- ================= BRICKSPEED PLAYER LOBBY (phone sideways, or brickspeed.fun/#lobby) ================= -->
 <style>
-#bsl{position:fixed;inset:0;z-index:70;display:none;color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none;touch-action:manipulation;
- background:radial-gradient(120% 90% at 50% 110%,rgba(42,123,255,.25),transparent 60%),linear-gradient(180deg,rgba(4,7,15,.82),rgba(4,7,15,.55) 45%,rgba(4,7,15,.9))}
+#bsl{position:fixed;inset:0;z-index:70;display:none;color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none;touch-action:manipulation;background:#0b0b3a}
+/* neon city behind the lobby (same as the pad lobby) */
+.bsl-city{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.bsl-city svg{position:absolute;left:0;right:0;bottom:0;width:100%;height:118%}
+.bsl-city::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,7,20,.55),transparent 30%,transparent 70%,rgba(4,7,20,.55)),linear-gradient(180deg,rgba(4,7,20,.35),transparent 25%)}
+.bsl-city .blimp{animation:bslcblimp 7s ease-in-out infinite}
+@keyframes bslcblimp{50%{transform:translate(-30px,10px)}}
+.bsl-city .cl{animation:bslccloud 40s linear infinite alternate}
+@keyframes bslccloud{to{transform:translateX(60px)}}
+.bsl-city .win{animation:bslcwflick 7s steps(1) infinite}.bsl-city .win.b{animation-delay:-2.3s}.bsl-city .win.c{animation-delay:-4.6s}
+@keyframes bslcwflick{0%,72%{opacity:1}74%,80%{opacity:.25}82%,100%{opacity:1}}
+.bsl-city .neon{animation:bslcneon 3s ease-in-out infinite}
+@keyframes bslcneon{0%,46%,54%,100%{opacity:1}50%{opacity:.55}}
+.bsl-city .dash{animation:bslcdash 1s linear infinite}
+@keyframes bslcdash{to{stroke-dashoffset:-60}}
+.bsl-city .pulse{animation:bslclp 1.6s ease-in-out infinite}
+@keyframes bslclp{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.bsl-city *{animation:none!important}}
 body.bsl-on #bsl{display:block}
 #bsl [hidden]{display:none!important}
 body.bsl-on{overflow:hidden}
@@ -4077,6 +4093,7 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 </style>
 <button id="bslOpen" type="button">🏁 LOBBY</button>
 <div id="bsl" role="dialog" aria-label="BrickSpeed player lobby">
+ <div class="bsl-city" id="bslCity" aria-hidden="true"></div>
  <div class="bsl-app">
   <div class="bsl-top">
    <span class="bsl-logo" id="bslLogo"></span>
@@ -4150,6 +4167,50 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 <script>
 (function(){
 "use strict";
+// neon city background
+(function(){function R(s){return function(){s=(s*9301+49297)%233280;return s/233280}}
+var r=R(11),o='',HZ=520,VP=800;
+function wins(x,y,w,h,cols){var t='';for(var wy=y+10;wy<y+h-8;wy+=15)for(var wx=x+7;wx<x+w-9;wx+=12)if(r()<.3){var c=cols[(r()*cols.length)|0];t+='<rect class="win '+'abc'[(r()*3)|0]+'" x="'+wx.toFixed(0)+'" y="'+wy.toFixed(0)+'" width="6" height="8" fill="'+c+'"/>'}return t}
+// sky
+o+='<defs><linearGradient id="bslcsk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#090a33"/><stop offset=".45" stop-color="#2a1866"/><stop offset=".62" stop-color="#6b2a9a"/><stop offset=".7" stop-color="#c03c9c"/></linearGradient>'+
+ '<linearGradient id="bslcrd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1460"/><stop offset=".25" stop-color="#1c1030"/><stop offset="1" stop-color="#0d0918"/></linearGradient>'+
+ '<radialGradient id="bslcrf"><stop offset="0" stop-color="#ff2d3d" stop-opacity=".55"/><stop offset="1" stop-color="#ff2d3d" stop-opacity="0"/></radialGradient>'+
+ '<radialGradient id="bslcpf"><stop offset="0" stop-color="#b25cff" stop-opacity=".5"/><stop offset="1" stop-color="#b25cff" stop-opacity="0"/></radialGradient></defs>';
+o+='<rect width="1600" height="900" fill="url(#bslcsk)"/>';
+for(var i=0;i<60;i++)o+='<circle cx="'+(r()*1600).toFixed(0)+'" cy="'+(r()*330).toFixed(0)+'" r="'+(r()*1.6+.4).toFixed(1)+'" fill="#fff" opacity="'+(r()*.7+.3).toFixed(2)+'"/>';
+// clouds
+[[260,150],[640,90],[1180,120],[1450,210],[420,260]].forEach(function(c,k){o+='<g class="cl" style="animation-delay:-'+(k*7)+'s" opacity=".75"><ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="120" ry="34" fill="#3b2d8f"/><ellipse cx="'+(c[0]-50)+'" cy="'+(c[1]-18)+'" rx="60" ry="34" fill="#4a3aa8"/><ellipse cx="'+(c[0]+40)+'" cy="'+(c[1]-26)+'" rx="70" ry="40" fill="#4a3aa8"/><ellipse cx="'+(c[0]+20)+'" cy="'+(c[1]-30)+'" rx="40" ry="20" fill="#6a58c8" opacity=".6"/></g>'});
+// blimp
+o+='<g class="blimp"><g transform="translate(1000 230) rotate(-8)"><ellipse cx="0" cy="0" rx="150" ry="46" fill="#1a1530" stroke="#ff2d3d" stroke-width="3"/><path d="M138 -6 L178 -34 L176 34 L138 6Z" fill="#1a1530" stroke="#ff2d3d" stroke-width="3"/><rect x="-40" y="40" width="70" height="18" rx="5" fill="#2a2440" stroke="#ff2d3d" stroke-width="2"/><text x="10" y="11" text-anchor="middle" font-family="system-ui" font-weight="900" font-style="italic" font-size="34" fill="#ff8be0">BRICKSPEED</text><path d="M-125 -6h16v12h-16zM-109 -18h16v12h-16zM-109 6h16v12h-16z" fill="#fff" opacity=".85"/></g></g>';
+// far center city
+var x=500;while(x<1100){var w=30+r()*40,h=60+r()*150;o+='<rect x="'+x.toFixed(0)+'" y="'+(HZ-h).toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" fill="#2b1f63"/>'+wins(x,HZ-h,w,h,['#ff8a5a','#ffcf7a','#c88cff']);x+=w+3}
+// side towers (bigger to the edges)
+function side(left){var x=left?-20:1600,stop=left?560:1040;while(left?x<stop:x>stop){var t=left?(x+20)/580:(1600-x)/560,w=70+r()*70,h=520-t*330+r()*80;var bx=left?x:x-w,y=HZ+30-h;
+ o+='<rect x="'+bx.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+(h+40).toFixed(0)+'" fill="'+(t<.4?'#191238':'#211a4c')+'" stroke="#0a0718" stroke-width="2"/>'+
+  '<rect x="'+bx.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="8" fill="#ff2d3d" opacity=".7" class="pulse"/>'+wins(bx,y+10,w,h,['#ff5a3d','#ffb35a','#ff2d3d','#5ab4ff','#ffe08a']);
+ if(r()<.4)o+='<rect x="'+(bx+w/2-2).toFixed(0)+'" y="'+(y-50).toFixed(0)+'" width="4" height="50" fill="#191238"/><circle cx="'+(bx+w/2).toFixed(0)+'" cy="'+(y-52).toFixed(0)+'" r="4" fill="#ff2d3d" class="win"/>';
+ x+=left?w+4:-(w+4)}}
+side(true);side(false);
+// road
+o+='<path d="M770 '+HZ+' L830 '+HZ+' L1900 900 L-300 900 Z" fill="url(#bslcrd)"/>';
+o+='<path d="M0 '+(HZ+30)+' L770 '+HZ+' L-300 900Z" fill="#150e27"/><path d="M1600 '+(HZ+30)+' L830 '+HZ+' L1900 900Z" fill="#150e27"/>';
+for(var k=0;k<14;k++){var f=k/14,f2=(k+.5)/14,y1=HZ+Math.pow(f,2)*380,y2=HZ+Math.pow(f2,2)*380;[-1,1].forEach(function(s){var a=VP+s*(30+(f*f)*1100),b=VP+s*(30+(f2*f2)*1100);o+='<path d="M'+a.toFixed(0)+' '+y1.toFixed(0)+' L'+b.toFixed(0)+' '+y2.toFixed(0)+'" stroke="'+(k%2?'#fff':'#ff2d3d')+'" stroke-width="'+(2+f*14).toFixed(1)+'" opacity=".9"/>'})}
+[-1,1].forEach(function(s){o+='<path class="dash" d="M'+(VP+s*12)+' '+HZ+' L'+(VP+s*480)+' 900" stroke="#ff2d3d" stroke-width="5" stroke-dasharray="30 30" opacity=".75"/>'});
+o+='<path class="dash" d="M800 '+HZ+' L800 900" stroke="#ff8be0" stroke-width="3" stroke-dasharray="20 40" opacity=".5"/>';
+// voxel trees
+function tree(x,y,s){var g='#1f6b3a',l='#2f9a52';o+='<g transform="translate('+x+' '+y+') scale('+s+')"><rect x="-4" y="-10" width="8" height="22" fill="#4a2f1a"/><rect x="-22" y="-44" width="44" height="36" fill="'+g+'"/><rect x="-14" y="-62" width="28" height="22" fill="'+l+'"/><rect x="-22" y="-44" width="14" height="12" fill="'+l+'"/></g>'}
+for(var k=1;k<9;k++){var f=k/9,y=HZ+f*f*300,dx=60+f*f*900;tree(VP-dx-30,y,.4+f*1.4);tree(VP+dx+30,y,.4+f*1.4)}
+// reflections
+o+='<ellipse cx="800" cy="700" rx="420" ry="90" fill="url(#bslcrf)"/><ellipse cx="800" cy="600" rx="260" ry="40" fill="url(#bslcpf)"/>';
+// gate
+o+='<g><rect x="565" y="340" width="70" height="300" fill="#1b1628" stroke="#0a0718" stroke-width="3"/><rect x="965" y="340" width="70" height="300" fill="#1b1628" stroke="#0a0718" stroke-width="3"/>'+
+ '<g class="neon"><path d="M580 430h40v10h-15v120h-10v-120h-15z" fill="#ff4f5e"/><path d="M980 430h40v10h-15v120h-10v-120h-15z" fill="#ff4f5e"/><rect x="565" y="320" width="70" height="20" fill="#ff2d3d"/><rect x="965" y="320" width="70" height="20" fill="#ff2d3d"/></g>'+
+ '<rect x="600" y="345" width="400" height="70" fill="#14101f" stroke="#ff2d3d" stroke-width="4"/>';
+for(var cx=0;cx<4;cx++)for(var cy=0;cy<3;cy++)if((cx+cy)%2==0){o+='<rect x="'+(610+cx*15)+'" y="'+(352+cy*19)+'" width="15" height="19" fill="#fff"/><rect x="'+(930+cx*15)+'" y="'+(352+cy*19)+'" width="15" height="19" fill="#fff"/>'}
+o+='<text x="800" y="395" text-anchor="middle" font-family="system-ui" font-weight="900" font-style="italic" font-size="40"><tspan fill="#fff">BRICK</tspan><tspan fill="#ff2d3d">SPEED</tspan></text>'+
+ '<path d="M600 415 L640 440 L960 440 L1000 415" fill="none" stroke="#ff2d3d" stroke-width="4" class="neon"/></g>';
+var svg='<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">'+o+'</svg>';
+document.getElementById('bslCity').innerHTML=svg})();
 var B=document.body,$=function(i){return document.getElementById(i)};
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 var Q=new URLSearchParams(location.search),forced=/lobby/i.test(location.hash)||Q.has('lobby')||Q.has('room')||Q.has('pad');
