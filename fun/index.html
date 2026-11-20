@@ -3137,7 +3137,7 @@ function nameTex2(p,col){return canvasTex(512,128,function(g,w,h){g.clearRect(0,
   var sub=(p.ti?TITLES_[p.ti]||'':'')+(p.lv>1?(p.ti?'  ·  ':'')+'LV '+p.lv:'');if(sub){g.font='800 34px "Chakra Petch", monospace';g.lineWidth=6;g.fillStyle='#ffd23a';g.strokeText(sub,w/2,102);g.fillText(sub,w/2,102)}})}
 function makeHuman(p){
   var ch=charById(p.char)||{col:'#ffffff',body:0xffffff,name:'?'};if(ch.only&&NET.opts&&NET.opts.map!==ch.only)ch=charById('blaze');
-  if(window.BSSkinOf&&p.kk)ch=window.BSSkinOf(ch,(p.kk|0)-1);else if(window.BSPaintSk&&p.sk)ch=window.BSPaintSk(ch,p.sk);
+  if(window.BSSkinOf&&p.kk)ch=window.BSSkinOf(ch,(p.kk|0)-1);if(window.BSPaintSk&&p.sk)ch=window.BSPaintSk(ch,p.sk);
   var model=window.BSMakeCar?window.BSMakeCar(ch):brickCar({style:'gt',color:ch.body,accent:0x111111,num:'P'});
   scene.add(model);
   var c={d:{name:p.name,hex:ch.col},ch:ch,pid:p.pid,remote:true,human:true,model:model,k:0,x:0,z:0,a:0,v:0,steer:0,lap:0,prog:0,lane:0,laneT:0,laneTimer:9,vmax:0,
@@ -3634,7 +3634,7 @@ function setCar(i){table.children.filter(function(o){return o.userData.isCar}).f
 setCar(0);colNow.set(CH[0].col);applyColor(colNow);
 go3d=function(i){nextCar=i;trans=0;colFrom.copy(colNow);colTo.set(CH[i].col);if(reduce){setCar(i);trans=1;colNow.copy(colTo);applyColor(colNow)}};
 lock3d=function(){lockT=0;burst()};
-window.BSMakeCar=function(c){var g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T);return g};mk3d=window.BSMakeCar;
+window.BSMakeCar=function(c){var g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T);if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
 /* after a race: one clean car for the character shown on the card, no half-finished animations */
 window.BSSelectReset=function(){
   clearTimeout(lockIn.tm);lockT=-1;nextCar=null;trans=1;fxT=9;pMat.opacity=0;wave.material.opacity=0;
@@ -4166,7 +4166,7 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
   <div class="bsl-main">
    <div class="bsl-col">
     <button class="bsl-tile" id="bslTMode" type="button" style="--tc:#ff8a1f;flex:1.3"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="4" width="4" height="42" rx="2" fill="#ddd"/><path d="M12 6h30v22H12z" fill="#fff"/><path d="M12 6h7.5v5.5H12zM27 6h7.5v5.5H27zM19.5 11.5H27V17h-7.5zM34.5 11.5H42V17h-7.5zM12 17h7.5v5.5H12zM27 17h7.5v5.5H27zM19.5 22.5H27V28h-7.5zM34.5 22.5H42V28h-7.5z" fill="#111"/></svg></span><span><b>MODE</b><span class="v" id="bslVMode">RACE · BRICK RING · 1 LAP</span></span><i class="chev">›</i></button>
-    <button class="bsl-tile" id="bslTPaint" type="button" style="--tc:#c45bff"><span class="bsl-ic"><span class="sw2" id="bslPaintSw" style="--pc:#8ea5cc"></span></span><span><b>PAINT</b><span class="v" id="bslVPaint">STOCK</span></span><i class="chev">›</i></button>
+    <button class="bsl-tile" id="bslTPaint" type="button" style="--tc:#c45bff"><span class="bsl-ic"><span class="sw2" id="bslPaintSw" style="--pc:#8ea5cc"></span></span><span><b>GLOW</b><span class="v" id="bslVPaint">NO GLOW</span></span><i class="chev">›</i></button>
     <button class="bsl-tile" id="bslTTop" type="button" style="--tc:#ffcf00"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/><path d="M14 11H7v3a7 7 0 0 0 7 7M34 11h7v3a7 7 0 0 1-7 7" fill="none" stroke="#ffcf00" stroke-width="3"/><rect x="21" y="26" width="6" height="8" fill="#e8a400"/><rect x="14" y="34" width="20" height="6" rx="2" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/></svg></span><span><b>TOP 10</b><span class="v">WORLD RANKING</span></span><i class="chev">›</i></button>
     <button class="bsl-tile" id="bslTSync" type="button" style="--tc:#2a7bff"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="14" width="36" height="22" rx="10" fill="#2a7bff" stroke="#fff" stroke-width="2.5"/><circle cx="16" cy="25" r="5" fill="#fff"/><circle cx="32" cy="22" r="2.5" fill="#ffcf00"/><circle cx="36" cy="27" r="2.5" fill="#3dff8a"/></svg></span><span><b>MY PAD</b><span class="v" id="bslVSync">CONNECT YOUR PAD</span></span><i class="chev">›</i></button>
    </div>
@@ -4192,8 +4192,8 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
     <div class="bsl-row" id="bslLapsRow"><span>LAPS</span><div class="bsl-seg" id="bslLaps"></div></div>
     <div class="bsl-row" id="bslArenaRow"><span>TAG MAP</span><div class="bsl-seg" id="bslArena"></div></div>
     <div class="bsl-row" id="bslTeamsRow"><span>TEAMS</span><div class="bsl-seg" id="bslTeams"></div></div><p class="bsl-note" id="bslModeNote"></p></div></div>
-  <div class="bslp" id="bslPPaint"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>Car <i>paint</i></h2><span class="sub">OTHER PLAYERS SEE IT ONLINE</span><span class="bsl-sp"></span><button class="bsl-btn" data-back type="button">DONE</button></div>
-   <div class="bslp-b"><div class="bsl-banner" id="bslPaintBan" hidden></div><div class="bsl-pgrid" id="bslPaints"></div><p class="bsl-note">Get new paints in the pad shop (gems) or in the BrickSpeed Pass.</p></div></div>
+  <div class="bslp" id="bslPPaint"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>Glow &amp; <i>trail</i></h2><span class="sub">OTHER PLAYERS SEE IT ONLINE</span><span class="bsl-sp"></span><button class="bsl-btn" data-back type="button">DONE</button></div>
+   <div class="bslp-b"><div class="bsl-banner" id="bslPaintBan" hidden></div><div class="bsl-pgrid" id="bslPaints"></div><p class="bsl-note">Get new glows in the pad shop (gems) or in the BrickSpeed Pass. The glow shines under your car and leaves a light trail when you drive fast.</p></div></div>
   <div class="bslp" id="bslPTop"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>World <i>top 10</i></h2><span class="sub">BEST LAP PER TRACK</span></div>
    <div class="bslp-b"><div class="bsl-seg" id="bslTopTabs"></div><ol class="bsl-lb" id="bslTop"></ol></div></div>
   <div class="bslp" id="bslPSync"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>My <i>pad</i></h2><span class="sub" id="bslSyncSub"></span></div>
@@ -4473,8 +4473,25 @@ window.BSSkinOf=function(ch,s){return (s>=0&&s<20&&PADIDS[s>>1]===ch.id)?Object.
 function paintHex(i){var p=PAINTS[i];return p&&p.c?parseInt(p.c.slice(1),16):null}
 window.BSMe=function(){return {ti:PROF?PROF.ti:0,sp:PROF?PROF.sp:0,lv:level,kk:function(id){return skinIdx(id)+1}}};
 window.BSLvK=function(id){return 1-0.03*(level(id)-1)};          // LV 10: 27% shorter cooldown
-window.BSPaintSk=function(ch,sk){var h=paintHex(sk);return h==null?ch:Object.assign({},ch,{body:h})};
-window.BSPaint=function(ch){var s=skinIdx(ch.id);if(s>=0)return window.BSSkinOf(ch,s);return window.BSPaintSk(ch,PROF?PROF.sp:0)};
+// paint = the glow under the car + the light trail behind it (the body keeps the driver's own colour or skin)
+window.BSPaintSk=function(ch,sk){var h=paintHex(sk);return h==null?ch:Object.assign({},ch,{glow:h})};
+window.BSPaint=function(ch){var s=skinIdx(ch.id);var b=s>=0?window.BSSkinOf(ch,s):ch;return window.BSPaintSk(b,PROF?PROF.sp:0)};
+var GLOWTEX=null;function glowTex(T){if(GLOWTEX)return GLOWTEX;var c=document.createElement('canvas');c.width=c.height=128;var g=c.getContext('2d'),gr=g.createRadialGradient(64,64,0,64,64,64);
+ gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.45,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);GLOWTEX=new T.CanvasTexture(c);return GLOWTEX}
+var TRAILTEX=null;function trailTex(T){if(TRAILTEX)return TRAILTEX;var c=document.createElement('canvas');c.width=16;c.height=128;var g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,128);
+ gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,16,128);var e=g.createLinearGradient(0,0,16,0);TRAILTEX=new T.CanvasTexture(c);return TRAILTEX}
+window.BSGlow=function(g,col,T){try{
+ var mat=function(tex){return new T.MeshBasicMaterial({color:col,map:tex,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide})};
+ var ug=new T.Mesh(new T.PlaneGeometry(4.2,7),mat(glowTex(T)));ug.rotation.x=-Math.PI/2;ug.position.y=.06;ug.renderOrder=2;g.add(ug);
+ // the trail: two ribbons from the back wheels, as long as the car is fast
+ var tg=new T.PlaneGeometry(.38,1);tg.rotateX(-Math.PI/2);tg.translate(0,0,.5);var tm=mat(trailTex(T));tm.opacity=.85;
+ var hold=new T.Group();hold.position.set(0,.3,2.35);g.add(hold);
+ [-1,1].forEach(function(sd){var m=new T.Mesh(tg,tm);m.position.x=sd*1.05;hold.add(m)});
+ var wp=new T.Vector3(),last=null,lt=0,len=0;hold.scale.z=.001;hold.visible=false;
+ ug.onBeforeRender=function(){var now=performance.now();if(now-lt<12)return;g.getWorldPosition(wp);
+  if(last){var dt=Math.min(.1,(now-lt)/1000),v=wp.distanceTo(last)/Math.max(dt,.001);if(v>200)v=0;var want=Math.min(9,v*.32);len+=(want-len)*Math.min(1,dt*6)}
+  last=(last||new T.Vector3()).copy(wp);lt=now;hold.visible=len>.25;hold.scale.z=Math.max(.001,len)};
+}catch(e){}return g};
 
 // ================= coins + XP won online (go back to the pad) =================
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
@@ -4530,7 +4547,7 @@ function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return
  $('bsl').style.setProperty('--cc',c.col);
  $('bslPlateN').textContent=c.name;$('bslPlateA').textContent=c.ab+' · '+(c.a2||'').toUpperCase();$('bslPlateLv').textContent='LV '+level(c.id);
  $('bslVMode').textContent=modeOf(md).n.toUpperCase()+' · '+(md==='tag'?(o.arena==='city'?'TAG CITY':'TAG FUNPARK'):mapName(o.map).toUpperCase()+(md==='race'?' · '+o.laps+' LAP'+(o.laps>1?'S':''):''))+(+o.teams&&md!=='race'&&md!=='battle'?' · TEAMS':'');
- var sp=PROF?PROF.sp:0;$('bslVPaint').textContent=PAINTS[sp].n;$('bslPaintSw').style.setProperty('--pc',pc);
+ var sp=PROF?PROF.sp:0;$('bslVPaint').textContent=sp?PAINTS[sp].n:'NO GLOW';$('bslPaintSw').style.setProperty('--pc',pc);
  var P=pending();$('bslCoinN').textContent=((PROF?PROF.t:0)).toLocaleString();$('bslCoinP').textContent=P.t?'+'+P.t:'';$('bslGemN').textContent=PROF?PROF.g:0;
  $('bslVSync').textContent=!PROF?'CONNECT YOUR PAD':P.t||P.x?'+'+P.t+' COINS TO SEND':'ALL SENT ✓';
  $('bslNameT').textContent=myName();$('bslTitleT').textContent=TITLES[PROF?PROF.ti:0];$('bslStageName').textContent=myName();
@@ -4592,11 +4609,12 @@ function modeDraw(){var o=gameOpts(),md=o.mode||'race',lock=inRoom()&&!isHost(),
  $('bslMapSub').textContent=inRoom()?(isHost()?'YOU ARE THE HOST':'THE HOST PICKS'):'SOLO AGAINST 5 BOTS';
  $('bslModeNote').textContent=lock?'Only the host can change the game.':''}
 // paints (bought on the pad)
+function glowSvg(c,body){var s=carSvg(body);if(!c)return s;return s.replace('<ellipse cx="60" cy="62" rx="50" ry="5" fill="#000" opacity=".45"/>','<ellipse cx="60" cy="61" rx="56" ry="8" fill="'+c+'" opacity=".55" style="filter:blur(3px)"/><ellipse cx="60" cy="61" rx="40" ry="3.5" fill="'+c+'"/><path d="M2 36h16M0 44h20M4 52h12" stroke="'+c+'" stroke-width="4" stroke-linecap="round" opacity=".9"/>')}
 function carSvg(c){return '<svg viewBox="0 0 120 70" aria-hidden="true"><ellipse cx="60" cy="62" rx="50" ry="5" fill="#000" opacity=".45"/><path d="M10 46c0-8 6-12 14-13l14-13c4-4 9-5 15-5h18c6 0 10 2 14 6l11 12c8 1 14 5 14 13v4H10z" fill="'+c+'" stroke="#000" stroke-width="3" stroke-linejoin="round"/><path d="M42 31l9-9h18l10 9z" fill="#9fe3ff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="32" cy="52" r="10" fill="#111"/><circle cx="32" cy="52" r="4" fill="#9aa4b2"/><circle cx="90" cy="52" r="10" fill="#111"/><circle cx="90" cy="52" r="4" fill="#9aa4b2"/></svg>'}
-function paintDraw(){var sk=PROF?PROF.sk:1,sp=PROF?PROF.sp:0,c=cur(),h='';$('bslPaintBan').hidden=!!PROF;if(!PROF)$('bslPaintBan').textContent='🎨 Paints come from your pad. Press ONLINE on your pad to bring them here.';
- PAINTS.forEach(function(p,i){var own=(sk>>i)&1,col=p.c||c.col;h+='<button class="bsl-pc'+(own?'':' lock')+'" type="button" data-i="'+i+'" style="--pc:'+col+'" aria-pressed="'+(sp===i)+'">'+carSvg(col)+'<b>'+p.n+'</b><small>'+(sp===i?'IN USE':own?'TAP TO USE':'GET IT ON THE PAD')+'</small></button>'});
- var g=$('bslPaints');g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i;if(!PROF||!((PROF.sk>>i)&1)){toast('Buy '+PAINTS[i].n+' in the pad shop');return}
-  PROF.sp=i;jset('bs-prof',PROF);paintDraw();draw();R3&&(R3.id=null);carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()));vib(10);toast(PAINTS[i].n+' paint on (here; the pad keeps its own)')}})}
+function paintDraw(){var sk=PROF?PROF.sk:1,sp=PROF?PROF.sp:0,c=cur(),h='';$('bslPaintBan').hidden=!!PROF;if(!PROF)$('bslPaintBan').textContent='🎨 Glows come from your pad. Press ONLINE on your pad to bring them here.';
+ PAINTS.forEach(function(p,i){var own=(sk>>i)&1,col=p.c||c.col;h+='<button class="bsl-pc'+(own?'':' lock')+'" type="button" data-i="'+i+'" style="--pc:'+col+'" aria-pressed="'+(sp===i)+'">'+glowSvg(p.c,c.col)+'<b>'+(i?p.n:'NO GLOW')+'</b><small>'+(sp===i?'IN USE':own?'TAP TO USE':'GET IT ON THE PAD')+'</small></button>'});
+ var g=$('bslPaints');g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i;if(!PROF||!((PROF.sk>>i)&1)){toast('Buy the '+PAINTS[i].n+' glow in the pad shop');return}
+  PROF.sp=i;jset('bs-prof',PROF);paintDraw();draw();R3&&(R3.id=null);carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()));vib(10);toast((i?PAINTS[i].n+' glow on':'Glow off')+' (here; the pad keeps its own)')}})}
 // top 10
 var topMap=null;
 function topLoad(){var o=gameOpts();if(!topMap)topMap=MAPS.some(function(m){return m.id===o.map})?o.map:'ring';
@@ -4699,6 +4717,5 @@ if(Q.get('room')){var code=Q.get('room');var tries=0;(function tj(){if(window.BS
 sync();draw();
 })();
 </script>
-
 </body>
 </html>

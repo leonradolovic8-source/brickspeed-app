@@ -804,7 +804,7 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
  <div class="shrow" id="shrow">
   <div class="shsec" data-s="boxes"><div class="shh">BOXES</div><div class="bxgrid" id="bxgrid"></div></div>
   <div class="shsec" data-s="skins"><div class="shh">SKINS <small>ONE PER DRIVER · BRICKSPEED ONLINE</small></div><div class="ptgrid" id="skgrid"></div></div>
-  <div class="shsec" data-s="paints"><div class="shh">PAINTS <small>FOR BRICKSPEED ONLINE</small></div><div class="ptgrid" id="ptgrid"></div></div>
+  <div class="shsec" data-s="paints"><div class="shh">GLOW &amp; TRAIL <small>UNDER YOUR CAR IN BRICKSPEED ONLINE</small></div><div class="ptgrid" id="ptgrid"></div></div>
   <div class="shsec" data-s="gems"><div class="shh">GEMS <small>COINS → GEMS · CAN'T GO BACK</small></div><div class="gemgrid" id="gemgrid"></div></div>
  </div>
 </section>
@@ -1331,7 +1331,7 @@ var PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[2,25],[1,40],[4,2],[2,30],[8,1],[1,50]
 var PP=[[3,10],[6,2],[8,3],[4,2],[1,80],[5,1],[4,3],[6,4],[2,60],[8,5],[4,3],[1,120],[6,5],[2,80],[5,1],[4,4],[8,4],[6,6],[4,4],[6,7]];
 function chestI(r){var c=RC[r];return '<svg viewBox="0 0 40 34" aria-hidden="true"><rect x="3" y="13" width="34" height="18" rx="3" fill="'+c+'" stroke="#15171f" stroke-width="2"/><rect x="2" y="6" width="36" height="9" rx="3" fill="'+shade(c,1.3)+'" stroke="#15171f" stroke-width="2"/><rect x="8" y="6" width="3" height="25" fill="#15171f"/><rect x="29" y="6" width="3" height="25" fill="#15171f"/><rect x="15" y="16" width="10" height="9" rx="2" fill="#15171f"/><rect x="18" y="11" width="4" height="6" fill="#15171f"/></svg>'}
 function rwIcon(t,a){return t==1?'<span class="coin"></span>':t==2?BOLTI.replace('class="bi"','class="bi" style="width:100%;height:100%"'):t==3?GEMI:t==4?chestI(a):t==5?'<span class="tkI">LV<b>+1</b></span>':t==6?'<span class="ttI">'+TITLES[a]+'</span>':t==8?'<span class="pnI" style="--pc:'+PAINTS[a].c+'"></span>':'<span class="x2I">x2</span>'}
-function rwText(t,a){return t==1?'+'+a+' TOKENS':t==2?'+'+a+' POWER':t==3?'+'+a+' GEMS':t==4?RN[a].toUpperCase()+' BOX':t==5?'LEVEL UP':t==6?'TITLE':t==8?PAINTS[a].n:'x2 RACE'}
+function rwText(t,a){return t==1?'+'+a+' TOKENS':t==2?'+'+a+' POWER':t==3?'+'+a+' GEMS':t==4?RN[a].toUpperCase()+' BOX':t==5?'LEVEL UP':t==6?'TITLE':t==8?PAINTS[a].n+' GLOW':'x2 RACE'}
 function tierNow(){return Math.min(20,Math.floor((PS.xp||0)/TIER_XP))}
 function canClaim(){var n=tierNow(),k=0;for(var i=0;i<n;i++){if(!((PS.cf>>>i)&1))k++;if(PS.pr&&!((PS.cp>>>i)&1))k++}return k}
 function shopTab(t){if(t=='pass'){show('pass');return}shopT=t;shopRefresh();var r=$('shrow'),sec=r&&r.querySelector('.shsec[data-s="'+t+'"]');if(r&&sec)r.scrollTo({left:sec.offsetLeft-r.offsetLeft-6,behavior:t=='boxes'?'auto':'smooth'})}
@@ -1352,12 +1352,13 @@ function kbResult(d){if(!d.kb){toast(d.msg||'Could not buy');return}
  if(d.kb==1){PS.kn=d.kn;if(d.g!=null)st.g=d.g;ks[d.s>>1]=String(d.s%2+1);PS.ks=ks.join('');status();confetti([SKN[d.s][2],SKN[d.s][3],'#ffffff'],120);buzz([30,30,90]);bigToast('NEW SKIN: '+SKN[d.s][0]+'!')}
  else{ks[d.c]=String(d.k);PS.ks=ks.join('');toast(d.k?SKN[d.c*2+d.k-1][0]+' on':CH[d.c][0]+': normal car')}
  $('skgrid').__h='';shopRefresh()}
+function glowSvg(c,on){var s=carSvg('#2b3555');if(!on)return s;return s.replace('<ellipse cx="60" cy="62" rx="50" ry="5" fill="#000" opacity=".45"/>','<ellipse cx="60" cy="61" rx="56" ry="8" fill="'+c+'" opacity=".55" style="filter:blur(3px)"/><ellipse cx="60" cy="61" rx="40" ry="3.5" fill="'+c+'"/><path d="M2 36h16M0 44h20M4 52h12" stroke="'+c+'" stroke-width="4" stroke-linecap="round" opacity=".9"/>')}
 function paintsDraw(){var h='',sk=PS.sk||1,sp=PS.sp||0;PAINTS.forEach(function(p,i){var own=(sk>>i)&1,poor=!own&&(st.g||0)<PAINT_COST[i];
-  h+='<button class="ptc'+(own?' own':'')+(sp==i?' on':'')+(poor?' poor':'')+'" data-i="'+i+'" style="--pc:'+p.c+'">'+carSvg(p.c)+'<b>'+p.n+'</b><span class="pb2">'+(sp==i?'IN USE':own?'USE':PAINT_COST[i]+' '+GEMI)+'</span></button>'});
+  h+='<button class="ptc'+(own?' own':'')+(sp==i?' on':'')+(poor?' poor':'')+'" data-i="'+i+'" style="--pc:'+p.c+'">'+glowSvg(p.c,i>0)+'<b>'+(i?p.n:'NO GLOW')+'</b><span class="pb2">'+(sp==i?'IN USE':own?'USE':PAINT_COST[i]+' '+GEMI)+'</span></button>'});
  var g=$('ptgrid');if(g.__h===h)return;g.__h=h;g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i,own=((PS.sk||1)>>i)&1;
   if((PS.sp||0)==i)return;if(own){send('I'+i);buzz(8);return}if((st.g||0)<PAINT_COST[i]){toast('You need '+(PAINT_COST[i]-(st.g||0))+' more gems');shopTab('gems');return}send('F'+i);buzz(12)}})}
 function ptResult(d){if(!d.pt){toast(d.msg||'Could not buy');return}PS.sk=d.sk;PS.sp=d.i;if(d.g!=null)st.g=d.g;status();$('ptgrid').__h='';shopRefresh();lobbyDraw();
- if(d.pt==1){confetti([PAINTS[d.i].c,'#ffffff'],90);buzz([30,30,90]);bigToast('NEW PAINT: '+PAINTS[d.i].n+'!')}else toast(PAINTS[d.i].n+' paint on')}
+ if(d.pt==1){confetti([PAINTS[d.i].c,'#ffffff'],90);buzz([30,30,90]);bigToast('NEW GLOW: '+PAINTS[d.i].n+'!')}else toast(d.i?PAINTS[d.i].n+' glow on':'Glow off')}
 window.BSShop=function(t){show('box');shopTab(t)};window.BSShowPass=function(){show('pass')};
 function passDraw(){var n=tierNow(),xp=PS.xp||0,h='';
  $('pTierB').setAttribute('data-n',n);var into=n>=20?TIER_XP:xp%TIER_XP;$('pXpF').style.width=(into/TIER_XP*100)+'%';$('pXpT').textContent=n>=20?'MAX TIER':into+'/'+TIER_XP+' XP';
@@ -1376,7 +1377,7 @@ function exResult(d){if(!d.ex){toast(d.msg||'Could not change');return}st.g=d.g;
 function pbResult(d){if(!d.pb){toast(d.msg||'Could not buy the pass');return}PS.pr=1;shopRefresh();flash();confetti(['#ffd23a','#ff8a00','#ffffff','#ff8be0'],200);buzz([60,40,200]);bigToast('BRICKSPEED PASS UNLOCKED!')}
 function clResult(d){if(!d.cl){toast(d.msg||'Could not claim');return}var t=d.rt,a=d.ra;if(d.pr)PS.cp|=1<<d.i;else PS.cf|=1<<d.i;if(t==6)PS.tm|=1<<a;if(t==8)PS.sk=(PS.sk||1)|1<<a;if(t==4)PS.fb[a-1]=(PS.fb[a-1]||0)+1;$('ptrack').__h='';shopRefresh();
  confetti(t==6||t==5||(t==4&&a>=3)?['#ffd23a','#ff8be0','#ffffff']:['#38e1ff','#ffffff'],t==6?140:70);buzz([30,30,90]);
- bigToast(t==8?'NEW PAINT: '+PAINTS[a].n+'!':t==6?'NEW TITLE: '+TITLES[a]+'!':t==4?'FREE '+RN[a].toUpperCase()+' BOX! OPEN IT IN BOXES':rwText(t,a)+'!')}
+ bigToast(t==8?'NEW GLOW: '+PAINTS[a].n+'!':t==6?'NEW TITLE: '+TITLES[a]+'!':t==4?'FREE '+RN[a].toUpperCase()+' BOX! OPEN IT IN BOXES':rwText(t,a)+'!')}
 function titlesDraw(){var h='';TITLES.forEach(function(n,i){var o=(PS.tm>>i)&1;h+='<button class="'+(o?'':'lock')+((st.ti||0)==i?' on':'')+'" data-i="'+i+'">'+(o?'':'🔒 ')+n+'</button>'});var e=$('titles');if(e.__h===h)return;e.__h=h;e.innerHTML=h;
  [].forEach.call(e.children,function(b){b.onclick=function(){var i=+b.dataset.i;if(!((PS.tm>>i)&1)){toast('Unlock it in the BrickSpeed Pass');return}send('R'+i);st.ti=i;titlesDraw();status();buzz(8)}})}
 $('nmSave').onclick=function(){var v=$('nmIn').value.toUpperCase().replace(/[^A-Z0-9 ._-]/g,'').trim().slice(0,10);if(!v){toast('Type a name');return}$('nmIn').value=v;send('M'+v);st.nm=v;status();toast('Name saved: '+v);buzz(10)};
@@ -1730,6 +1731,7 @@ var css=document.createElement('style');css.textContent=`
 #bnOv h2{margin:0;font:italic 900 24px system-ui;color:#fff}#bnOv .bntg{font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.08em;color:var(--bc)}#bnOv p{margin:4px 0 8px;font:600 13px/1.35 system-ui;color:#c9d4f2}
 .bnl{display:grid;gap:6px}.bnl button{display:flex;align-items:center;gap:8px;text-align:left;border-radius:12px;padding:6px 8px;background:#0e1730;border:3px solid var(--fr)}.bnl button.on{box-shadow:0 0 0 2px #fff}
 .bnl button b{font:italic 900 14px system-ui;color:#fff;display:block}.bnl button small{font:800 9px ui-monospace,Menlo,monospace;color:var(--fr);letter-spacing:.05em}.bnl .sw{width:26px;height:26px;border-radius:8px;flex:none;border:2px solid #fff}
+.bnl .bnw{font:800 11px/1.3 system-ui;color:#ffb347;background:#3a2408;border:2px solid #ff9f1a;border-radius:10px;padding:6px 8px}.bnbuy.warn{background:linear-gradient(180deg,#ffb347,#ff7a1a);box-shadow:0 4px 0 #8a3d00}
 .bnl .xt{font:800 12px system-ui;color:#ffd23a;padding:4px 8px}
 .bnbuy{margin-top:8px;width:100%;height:50px;border-radius:14px;font:italic 900 18px system-ui;color:#fff;background:linear-gradient(180deg,#d07bff,#9b3dff);box-shadow:0 4px 0 #4a1a8c;display:flex;align-items:center;justify-content:center;gap:8px}.bnbuy .gem{width:18px;height:18px}.bnbuy[disabled]{filter:grayscale(.8);opacity:.7}
 .bnx{position:absolute;top:8px;right:8px}
@@ -1773,10 +1775,13 @@ function bnShow(b,si){var old=$('bnCv'),cv=document.createElement('canvas');cv.i
 function bnOpen(b){cur=b;var p=price(b),f=full(b);$('bnB').style.setProperty('--bc',b.col);$('bnTg').textContent=b.tag+' · ENDS IN '+left();$('bnH').textContent=b.name;$('bnP').textContent=b.why;
  var h='';b.sk.forEach(function(i){var c=i>>1;h+='<button data-s="'+i+'" style="--fr:'+FRC[SKN[i][1]]+'"><span class="sw" style="background:'+hx(SKN[i][2])+'"></span><span><b>'+SKN[i][0]+(ownSkin(i)?' ✓':'')+'</b><small>'+NAMES[c]+' · '+RNM[SKN[i][1]]+'</small></span></button>'});
  if(b.pp)h+='<span class="xt">+ '+b.pp+' ⚡ POWER POINTS</span>';if(b.coins)h+='<span class="xt">+ '+b.coins+' 🪙 COINS</span>';
- $('bnL').innerHTML=h;[].forEach.call($('bnL').querySelectorAll('button'),function(x){x.onclick=function(){bnShow(b,+x.dataset.s)}});
+ var miss=[];b.sk.forEach(function(i){var c=i>>1;if(!own(c)&&!ownSkin(i)&&miss.indexOf(c)<0)miss.push(c)});
+ if(miss.length)h+='<span class="bnw">⚠ You don\'t have '+miss.map(function(c){return NAMES[c]}).join(' &amp; ')+' yet. '+(miss.length>1?'Their skins wait':'The skin waits')+' in your collection until you get '+(miss.length>1?'them':'that driver')+'.</span>';
+ $('bnL').innerHTML=h;[].forEach.call($('bnL').querySelectorAll('button'),function(x){x.onclick=function(){bnShow(b,+x.dataset.s)}});var sure=!miss.length;
  var bb=$('bnBuy');bb.disabled=!p;bb.innerHTML=p?'BUY BUNDLE · <s style="opacity:.6;font-size:13px">'+f+'</s> '+p+' '+GEM:'YOU OWN IT ✓';
  bb.onclick=function(){var s=S();if((s.g||0)<p){toast('You need '+(p-(s.g||0))+' more gems');show('box');shopTab('gems');ov.classList.remove('on');return}
-  bb.disabled=true;send('b'+today()+','+todays().indexOf(b));buzz(15)};
+  if(!sure){sure=true;bb.innerHTML='TAP AGAIN TO BUY · '+p+' '+GEM;bb.classList.add('warn');buzz(8);return}
+  bb.disabled=true;send('b'+today()+','+todays().indexOf(b));buzz(15)};bb.classList.remove('warn');
  ov.classList.add('on');bnShow(b,b.sk[0])}
 
 // ---------- every driver's page: the character + the car in 3D, arrows change the skin ----------
