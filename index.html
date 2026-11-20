@@ -287,6 +287,14 @@ body.s-box #box,body.s-upd #upd,body.s-pass #pass{display:grid}
 .ptc .pb2{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:11px;padding:6px;background:linear-gradient(180deg,#d07bff,#9b3dff);font:900 13px system-ui;color:#fff;box-shadow:0 3px 0 #4a1a8c}
 .ptc .pb2 .gem{width:15px;height:15px}.ptc.own .pb2{background:#14264f;box-shadow:none;color:var(--mu)}.ptc.on .pb2{background:linear-gradient(180deg,#5dffb0,#1fd38a);color:#04140d;box-shadow:0 3px 0 #0d7a4d}.ptc.poor .pb2{filter:grayscale(.6) brightness(.75)}
 .ptc:active{transform:translateY(3px)}
+.skc{position:relative;border-radius:18px;border:4px solid var(--fr);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--c1) 45%,#0a0f22),#0a0f22 75%);display:grid;grid-template-rows:minmax(0,1fr) auto auto auto;justify-items:center;align-items:center;padding:8px;gap:2px;min-height:0;box-shadow:0 0 16px color-mix(in srgb,var(--fr) 45%,transparent),0 5px 0 #050814}
+.skc svg.skcar{width:100%;height:100%;max-height:84px;min-height:0}.skc b{font:italic 900 clamp(12px,1.9vw,16px) system-ui;color:#fff;white-space:nowrap}
+.skc small{font:800 9px ui-monospace,Menlo,monospace;letter-spacing:.04em;white-space:nowrap;color:var(--fr)}
+.skc .who{position:absolute;top:4px;left:4px;width:34px;height:34px;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.35)}.skc .who svg{width:100%;height:100%}
+.skc .pb2{width:100%;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:11px;padding:6px;background:linear-gradient(180deg,#d07bff,#9b3dff);font:900 13px system-ui;color:#fff;box-shadow:0 3px 0 #4a1a8c}
+.skc .pb2 .gem{width:15px;height:15px}.skc.own .pb2{background:#14264f;box-shadow:none;color:var(--mu)}.skc.on .pb2{background:linear-gradient(180deg,#5dffb0,#1fd38a);color:#04140d;box-shadow:0 3px 0 #0d7a4d}.skc.nod{filter:grayscale(.5) brightness(.75)}
+.skc:active{transform:translateY(3px)}
+.card.own,.card.lock{border-width:3px!important}
 .pnI{display:block;width:34px;height:22px;border-radius:7px;background:var(--pc);border:2px solid #fff;box-shadow:0 0 10px var(--pc);transform:rotate(-8deg)}
 @media (max-height:340px){.shrow .bxgrid{grid-auto-columns:clamp(130px,20vw,170px);padding-top:26px}.shh{font-size:12px}.ptc svg{max-height:60px}}
 .dotN{position:absolute;top:2px;right:3px;width:9px;height:9px;border-radius:50%;background:#ff2d4a;box-shadow:0 0 6px #ff2d4a}
@@ -795,6 +803,7 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
  <div class="chead"><b>Shop</b><span class="shint" aria-hidden="true">SLIDE ›</span></div>
  <div class="shrow" id="shrow">
   <div class="shsec" data-s="boxes"><div class="shh">BOXES</div><div class="bxgrid" id="bxgrid"></div></div>
+  <div class="shsec" data-s="skins"><div class="shh">SKINS <small>ONE PER DRIVER · BRICKSPEED ONLINE</small></div><div class="ptgrid" id="skgrid"></div></div>
   <div class="shsec" data-s="paints"><div class="shh">PAINTS <small>FOR BRICKSPEED ONLINE</small></div><div class="ptgrid" id="ptgrid"></div></div>
   <div class="shsec" data-s="gems"><div class="shh">GEMS <small>COINS → GEMS · CAN'T GO BACK</small></div><div class="gemgrid" id="gemgrid"></div></div>
  </div>
@@ -910,7 +919,7 @@ function save(){try{localStorage.setItem('bspad',JSON.stringify(S))}catch(e){}}
 load();
 // ---------- link ----------
 var ws=null,ok=false,lostT=0,lastMsg=0,st={c:0,s:-1,sc:0,t:0,x:0,l:0},tokShown=0;
-function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();syncOut();return}if(d.pt!=null){ptResult(d);return}if(d.onl!=null){onlAck(d);return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
+function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();syncOut();return}if(d.pt!=null){ptResult(d);return}if(d.kb!=null){kbResult(d);return}if(d.onl!=null){onlAck(d);return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
 var T=null;
 function conn(){
  // inside the BrickSpeed app the link is Bluetooth (src/ble.js sets window.BS_TRANSPORT)
@@ -1095,9 +1104,9 @@ function lvl(i){var v=st.v&&st.v[i];return v>=1&&v<=10?v:1}
 function canUp(i){var L=lvl(i);return own(i)&&L<10&&(st.p||0)>=UPG[L+1]}
 var RN=['Common','Rare','Super rare','Epic','Legendary'],RC=['#9aa7b8','#3cc864','#3b8cff','#b25cff','#ffc400'],COST=[0,20,50,120,300];
 function own(i){return CH[i][2]==0||((st.m||0)>>i)&1}
-function colDraw(){var h='',n=0;CH.forEach(function(c,i){var o=own(i);if(o)n++;
- h+=o?'<button class="card own" data-i="'+i+'" style="background:radial-gradient(circle at 50% 30%,'+shade(c[3],1.25)+','+c[3]+' 60%,'+shade(c[3],.7)+')"><span class="lv'+(canUp(i)?' up':'')+'">'+(canUp(i)?'▲ ':'')+'LV '+lvl(i)+'</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="ca">'+c[1]+'</span><span class="cr">'+RN[c[2]]+'</span></button>'
-  :'<button class="card lock" data-i="'+i+'" style="border-color:'+RC[c[2]]+'55"><span class="q">?</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="cr" style="color:'+RC[c[2]]+'">'+RN[c[2]]+' box</span></button>'});
+function colDraw(){var h='',n=0;CH.map(function(c,i){return i}).sort(function(a,b){return CH[a][2]-CH[b][2]||a-b}).forEach(function(i){var c=CH[i],o=own(i);if(o)n++;
+ h+=o?'<button class="card own" data-i="'+i+'" style="border-color:'+FRC[c[2]]+';background:radial-gradient(circle at 50% 30%,'+shade(c[3],1.25)+','+c[3]+' 60%,'+shade(c[3],.7)+')"><span class="lv'+(canUp(i)?' up':'')+'">'+(canUp(i)?'▲ ':'')+'LV '+lvl(i)+'</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="ca">'+c[1]+'</span><span class="cr">'+RN[c[2]]+'</span></button>'
+  :'<button class="card lock" data-i="'+i+'" style="border-color:'+FRC[c[2]]+'99"><span class="q">?</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="cr" style="color:'+RC[c[2]]+'">'+RN[c[2]]+' box</span></button>'});
  if($('cards').__h!==h){$('cards').__h=h;$('cards').innerHTML=h;[].forEach.call($('cards').children,function(b){b.onclick=function(){charInfo(+b.dataset.i)}})}$('ownN').textContent=n+'/'+CH.length;
  var lb=$('ltBig');lb.hidden=!st.lt;lb.textContent='LEVEL UP TICKET'+(st.lt>1?'S × '+st.lt:'')}
 var FILL=[203,201,203,202,203,200],FILL4=[203,204,201,203,202,200],BPP=[[0,0],[10,20],[25,45],[60,100],[150,250]];
@@ -1312,6 +1321,11 @@ function driversDraw(){var h='';CH.forEach(function(c,i){var o=own(i);h+='<butto
 var GEMI='<svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l5 6-10 12L2 9z" fill="#c45bff" stroke="#5a1a8c" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 9h20M7 3l5 18M17 3l-5 18M7 3l5 6 5-6" fill="none" stroke="#f1c9ff" stroke-width="1" stroke-linejoin="round" opacity=".8"/></svg>',PS={xp:0,pr:0,cf:0,cp:0,tm:1,fb:[0,0,0,0]},RNM=[],shopT='boxes';
 var TITLES=['ROOKIE','SPEEDY','TURBO','BRICK BOSS','DRIFT KING','NO BRAKES','BRICK LEGEND','CHAMPION'];
 var PASS_PRICE=120,TIER_XP=100,GEM_TOK=[50,200,500],GEM_GET=[5,22,60];
+// SKINS (index = driver * 2 + 0/1): name, rarity, body colour, accent colour  · frame colours: green, blue, purple, yellow
+var SKN=[['RALLY LEGEND',2,'#f5f6fa','#143cc8'],['TAXI TURBO',1,'#ffc814','#141418'],['SUNRISE',1,'#ffb43c','#ff3c78'],['MAGMA BEAST',4,'#1c1616','#ff7814'],['ARCTIC OPS',2,'#ebf0f5','#8cdcff'],['JUNGLE PREDATOR',3,'#3c5a28','#ff2828'],
+ ['SWAT',2,'#2a2d35','#ff1e1e'],['INTERCEPTOR',3,'#f5f7fc','#1e78ff'],['MAINFRAME',3,'#0a1628','#28ff8c'],['HOLOGRAM',4,'#50e6ff','#c8ffff'],['FIRECRACKER',1,'#dc141e','#ffd228'],['NUCLEAR',4,'#465a32','#78ff3c'],
+ ['PAPER PLANE',2,'#fafaf5','#3c78e6'],['SKY KING',4,'#6ebeff','#ffcd3c'],['CLOCKWORK',3,'#be8c3c','#ffe6a0'],['GLITCH',4,'#0c0c10','#ff28c8'],['CHECKERED',1,'#f0f0f0','#141418'],['PIT BOSS',3,'#b6f22e','#141418'],['CHEER SQUAD',2,'#ff8cc8','#ffffff'],['HYPE',4,'#7828c8','#ff4fd8']];
+var SKIN_GEMS=[0,25,50,90,150],FRC=['#3cc864','#3cc864','#3b8cff','#b25cff','#ffc400'];
 var PAINTS=[{n:'STOCK',c:'#8ea5cc'},{n:'FIRE RED',c:'#ff3b30'},{n:'OCEAN',c:'#1e90ff'},{n:'LIME',c:'#7dff3a'},{n:'GOLD',c:'#ffc400'},{n:'GALAXY',c:'#8a3dff'},{n:'CARBON',c:'#3a3f4d'},{n:'NEON PINK',c:'#ff4fd8'}],PAINT_COST=[0,15,15,15,40,60,30,40];
 var PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[2,25],[1,40],[4,2],[2,30],[8,1],[1,50],[4,1],[2,40],[7,1],[6,3],[1,60],[4,2],[2,50],[1,80],[4,3]];
 var PP=[[3,10],[6,2],[8,3],[4,2],[1,80],[5,1],[4,3],[6,4],[2,60],[8,5],[4,3],[1,120],[6,5],[2,80],[5,1],[4,4],[8,4],[6,6],[4,4],[6,7]];
@@ -1322,8 +1336,22 @@ function tierNow(){return Math.min(20,Math.floor((PS.xp||0)/TIER_XP))}
 function canClaim(){var n=tierNow(),k=0;for(var i=0;i<n;i++){if(!((PS.cf>>>i)&1))k++;if(PS.pr&&!((PS.cp>>>i)&1))k++}return k}
 function shopTab(t){if(t=='pass'){show('pass');return}shopT=t;shopRefresh();var r=$('shrow'),sec=r&&r.querySelector('.shsec[data-s="'+t+'"]');if(r&&sec)r.scrollTo({left:sec.offsetLeft-r.offsetLeft-6,behavior:t=='boxes'?'auto':'smooth'})}
 function passOpen(){passDraw();setTimeout(function(){var tr=$('ptrack'),c=tr.querySelector('.rw.ready')||tr.querySelector('.tcol.cur');if(c){c=c.closest('.tcol');tr.scrollLeft=Math.max(0,c.offsetLeft-tr.offsetLeft-4)}},30)}
-function shopRefresh(){if(curScr=='pass'){passDraw();return}if(curScr!='box')return;if(!spinning)boxesDraw();paintsDraw();gemsDraw()}
+function shopRefresh(){if(curScr=='pass'){passDraw();return}if(curScr!='box')return;if(!spinning)boxesDraw();skinsDraw();paintsDraw();gemsDraw()}
 function carSvg(c){return '<svg viewBox="0 0 120 70" aria-hidden="true"><ellipse cx="60" cy="62" rx="50" ry="5" fill="#000" opacity=".45"/><path d="M10 46c0-8 6-12 14-13l14-13c4-4 9-5 15-5h18c6 0 10 2 14 6l11 12c8 1 14 5 14 13v4H10z" fill="'+c+'" stroke="#000" stroke-width="3" stroke-linejoin="round"/><path d="M42 31l9-9h18l10 9z" fill="#9fe3ff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M14 40h92" stroke="#fff" stroke-opacity=".35" stroke-width="3"/><circle cx="32" cy="52" r="10" fill="#111" stroke="#000" stroke-width="2"/><circle cx="32" cy="52" r="4" fill="#9aa4b2"/><circle cx="90" cy="52" r="10" fill="#111" stroke="#000" stroke-width="2"/><circle cx="90" cy="52" r="4" fill="#9aa4b2"/></svg>'}
+function skUse(c){return +String(PS.ks||'0000000000').charAt(c)||0}
+function skinsDraw(){var h='',kn=PS.kn||0;var L=SKN.map(function(s,i){return i}).sort(function(a,b){return SKN[a][1]-SKN[b][1]||a-b});
+ L.forEach(function(i){var s=SKN[i],c=i>>1,ow=(kn>>>i)&1,use=skUse(c)==(i%2)+1,hd=own(c),poor=!ow&&(st.g||0)<SKIN_GEMS[s[1]];
+  h+='<button class="skc'+(ow?' own':'')+(use?' on':'')+(!hd&&!ow?' nod':'')+'" data-i="'+i+'" style="--fr:'+FRC[s[1]]+';--c1:'+s[2]+'"><span class="who">'+charArt(c)+'</span>'+carSvg2(s[2],s[3])+'<b>'+s[0]+'</b><small>'+CH[c][0]+' · '+RN[s[1]].toUpperCase()+'</small><span class="pb2">'+(use?'IN USE':ow?'USE':!hd?'🔒 LOCKED':(poor?'🔒 ':'')+SKIN_GEMS[s[1]]+' '+GEMI)+'</span></button>'});
+ var g=$('skgrid');if(!g||g.__h===h)return;g.__h=h;g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i,c=i>>1,ow=((PS.kn||0)>>>i)&1;
+  if(ow){send('j'+c+','+(skUse(c)==(i%2)+1?0:(i%2)+1));buzz(8);return}
+  if(!own(c)){toast('Get '+CH[c][0]+' first (boxes)');return}
+  if((st.g||0)<SKIN_GEMS[SKN[i][1]]){toast('You need '+(SKIN_GEMS[SKN[i][1]]-(st.g||0))+' more gems');shopTab('gems');return}send('k'+i);buzz(12)}})}
+function carSvg2(a,b){return carSvg(a).replace('<svg ','<svg class="skcar" ').replace('<path d="M14 40h92" stroke="#fff" stroke-opacity=".35" stroke-width="3"/>','<path d="M14 40h92" stroke="'+b+'" stroke-width="5"/><path d="M58 22v18" stroke="'+b+'" stroke-width="4"/>')}
+function kbResult(d){if(!d.kb){toast(d.msg||'Could not buy');return}
+ var ks=String(PS.ks||'0000000000').split('');
+ if(d.kb==1){PS.kn=d.kn;if(d.g!=null)st.g=d.g;ks[d.s>>1]=String(d.s%2+1);PS.ks=ks.join('');status();confetti([SKN[d.s][2],SKN[d.s][3],'#ffffff'],120);buzz([30,30,90]);bigToast('NEW SKIN: '+SKN[d.s][0]+'!')}
+ else{ks[d.c]=String(d.k);PS.ks=ks.join('');toast(d.k?SKN[d.c*2+d.k-1][0]+' on':CH[d.c][0]+': normal car')}
+ $('skgrid').__h='';shopRefresh()}
 function paintsDraw(){var h='',sk=PS.sk||1,sp=PS.sp||0;PAINTS.forEach(function(p,i){var own=(sk>>i)&1,poor=!own&&(st.g||0)<PAINT_COST[i];
   h+='<button class="ptc'+(own?' own':'')+(sp==i?' on':'')+(poor?' poor':'')+'" data-i="'+i+'" style="--pc:'+p.c+'">'+carSvg(p.c)+'<b>'+p.n+'</b><span class="pb2">'+(sp==i?'IN USE':own?'USE':PAINT_COST[i]+' '+GEMI)+'</span></button>'});
  var g=$('ptgrid');if(g.__h===h)return;g.__h=h;g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i,own=((PS.sk||1)>>i)&1;
@@ -1448,7 +1476,7 @@ var ONLINE_URL='https://leonradolovic8-source.github.io/brickspeed-app/fun/';   
 function b64u(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function unb64u(s){s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
 // your pad progress for BrickSpeed Online (coins, gems, drivers, levels, name, title, paints)
-function exportP(){return b64u(JSON.stringify({v:1,id:PS.id||'',nm:st.nm||'PLAYER',ti:st.ti||0,tm:PS.tm||1,t:st.t||0,g:st.g||0,p:st.p||0,lt:st.lt||0,m:st.m||0,lv:st.v||[],sk:PS.sk||1,sp:PS.sp||0,xp:PS.xp||0,pr:PS.pr||0,on:PS.on||[]}))}
+function exportP(){return b64u(JSON.stringify({v:1,id:PS.id||'',nm:st.nm||'PLAYER',ti:st.ti||0,tm:PS.tm||1,t:st.t||0,g:st.g||0,p:st.p||0,lt:st.lt||0,m:st.m||0,lv:st.v||[],sk:PS.sk||1,sp:PS.sp||0,kn:PS.kn||0,ks:PS.ks||'',xp:PS.xp||0,pr:PS.pr||0,on:PS.on||[]}))}
 // coins + XP won online come back: from the link the game opens (#sync=...) or, in the BrickSpeed app, from the game's storage
 function onlSum(id,b,t,x){var s='BSK1|'+id+'|'+b+'|'+t+'|'+x,h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return (h>>>0).toString(16)}
 var SYNC=[],syncSent={};
