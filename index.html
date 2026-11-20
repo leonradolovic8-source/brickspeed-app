@@ -363,6 +363,17 @@ body.s-box #box,body.s-upd #upd{display:grid}
 .lightup{position:absolute;left:50%;bottom:40%;width:150px;height:340px;transform:translateX(-50%) scaleY(0);transform-origin:50% 100%;background:linear-gradient(0deg,var(--hc,#fff),transparent 85%);-webkit-mask:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent);opacity:0;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.4,.4,1),opacity .4s}
 .ostage.burst .lightup,.ostage.open .lightup{transform:translateX(-50%) scaleY(1);opacity:.75}
 .ostage.charge .scene.big .jmp{animation:shake2 .12s linear infinite}
+.ostage.crazy .scene.big .jmp.jhop{animation:jhop .32s cubic-bezier(.3,1.5,.5,1)}
+.ostage.crazy .scene.big .jmp.jspin{animation:jspin .42s cubic-bezier(.3,1.4,.5,1)}
+@keyframes jhop{0%{transform:translateY(0) scale(1.15,.82)}40%{transform:translateY(calc(var(--jh,40px) * -1)) scale(.9,1.12) rotate(-8deg)}75%{transform:translateY(0) scale(1.2,.8) rotate(4deg)}100%{transform:none}}
+@keyframes jspin{0%{transform:scale(1.2,.8)}45%{transform:translateY(calc(var(--jh,40px) * -1.3)) rotate(200deg) scale(.95)}80%{transform:translateY(0) rotate(360deg) scale(1.2,.82)}100%{transform:rotate(360deg)}}
+.ostage.crazy .halo{opacity:calc(.4 + var(--glow,0) * .6);transform:scale(calc(.9 + var(--glow,0) * .9))}
+.ostage.crazy .beams{opacity:calc(var(--glow,0) * .6);animation-duration:.9s}
+.ostage.crazy .lightup{transform:translateX(-50%) scaleY(calc(var(--glow,0) * .6));opacity:calc(var(--glow,0) * .7)}
+.ostage.crazy{animation:rumble .16s linear infinite}
+@keyframes rumble{25%{transform:translate(-2px,1px)}75%{transform:translate(2px,-1px)}}
+.ostage.crazy .otext{font:italic 900 22px system-ui;letter-spacing:.04em;text-shadow:0 3px 0 #000,0 0 18px var(--hc,#fff);animation:nudge .5s ease-in-out infinite}
+@media (max-height:300px){.ostage.crazy .otext{font-size:16px}}
 .scene{position:relative;perspective:700px;display:grid;place-items:center;flex:none}
 .scene.mini{width:min(78%,120px);aspect-ratio:1}
 .rig{position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(var(--ry,-30deg))}
@@ -573,6 +584,18 @@ body.s-box #box,body.s-upd #upd{display:grid}
  .rmid .big{height:min(46vh,112px);max-height:none}.rmid .nm b{font-size:17px}.rmid .nm span,.rmid .nm em{font-size:9px}.rarr{width:34px;height:40px;font-size:22px;border-radius:10px}
  .rdyB{height:36px;font-size:16px;box-shadow:0 4px 0 #a57900}.rdyB.on{box-shadow:0 4px 0 #0d7a4d}.rinfo{font-size:11px}
 }
+#leaveOv{z-index:30}
+.lvbox{width:min(92vw,440px);border-radius:22px;padding:18px 18px 16px;background:linear-gradient(170deg,#24204a,#110e26);border:3px solid #ff2d3d;box-shadow:0 0 0 2px #000,0 0 40px rgba(255,45,61,.45),0 10px 0 #000;text-align:center;display:grid;gap:8px;justify-items:center;animation:lvin .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes lvin{from{transform:scale(.6);opacity:0}}
+.lvic svg{width:52px;height:52px;animation:nudge 1s ease-in-out infinite}
+.lvbox h2{margin:0;font:italic 900 26px system-ui;letter-spacing:.03em}
+.lvbox p{margin:0;font:600 14px/1.4 system-ui;color:var(--mu)}
+.lvbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:6px}
+.lvB{height:52px;border-radius:14px;font:italic 900 16px system-ui;letter-spacing:.04em}
+.lvB.no{background:linear-gradient(#5dffb0,#1fd38a);color:#04140d;box-shadow:0 5px 0 #0d7a4d}
+.lvB.yes{background:linear-gradient(#ff6a76,#e11d2e);color:#fff;box-shadow:0 5px 0 #7a0d16}
+.lvB:active{transform:translateY(3px)}
+@media (max-height:300px){.lvbox{padding:10px 14px;gap:4px}.lvic svg{width:32px;height:32px}.lvbox h2{font-size:19px}.lvbox p{font-size:12px}.lvB{height:40px;font-size:14px}}
 #toast{position:fixed;left:50%;top:58px;transform:translate(-50%,-10px);background:var(--bl);color:#fff;font:800 14px system-ui;padding:9px 16px;border-radius:999px;opacity:0;transition:.25s;z-index:25;pointer-events:none;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 /* settings sheet */
@@ -733,6 +756,8 @@ body.s-box #box,body.s-upd #upd{display:grid}
  <button class="gm g3 soon" data-g="online" disabled><span class="gmart"><svg viewBox="0 0 120 70" fill="none" stroke="#fff" stroke-width="3.5" aria-hidden="true"><g class="globe"><circle cx="60" cy="35" r="26"/><path d="M34 35h52M60 9c10 9 10 43 0 52M60 9c-10 9-10 43 0 52M38 22h44M38 48h44"/></g></svg></span>
   <b>ONLINE</b><span class="gmd">Race friends anywhere</span><span class="gmgo">SOON</span><i class="tape">UNDER CONSTRUCTION</i></button>
 </div></div></div>
+<div class="ov" id="leaveOv"><div class="lvbox" role="alertdialog" aria-labelledby="lvH"><span class="lvic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4L45 42H3z" fill="#ffc400" stroke="#3a2600" stroke-width="3" stroke-linejoin="round"/><rect x="21.5" y="17" width="5" height="14" rx="2" fill="#3a2600"/><circle cx="24" cy="36" r="3" fill="#3a2600"/></svg></span>
+ <h2 id="lvH">Leave the race?</h2><p id="lvP"></p><div class="lvbtns"><button class="lvB no" id="lvNo">KEEP DRIVING</button><button class="lvB yes" id="lvYes">LEAVE RACE</button></div></div></div>
 <div class="ov" id="charOv"><button class="ib cback" id="charBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="csheet" id="csheet"></div></div>
 <div class="ov" id="busyOv"><div><div class="spin"></div><h2 id="busyH">Checking for updates</h2><p id="busyP">The pad joins your home Wi-Fi for about a minute, then restarts. This screen reconnects by itself.</p></div></div>
 <div class="ov" id="updOv"><div style="max-width:440px"><h2>Updates</h2><p>The pad switches to its update hub. On your phone join the Wi-Fi <b>BrickSpeed-Hub</b>, then open <b>192.168.4.1</b> to update the pad and your cars. Driving stops until the pad restarts.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="updGo" style="padding:0 24px">Open the hub</button><button class="ab" id="updNo" style="padding:0 24px">Not now</button></div></div></div>
@@ -1039,6 +1064,17 @@ function confetti(cols,n){var cv=$('confetti'),d=Math.min(2,window.devicePixelRa
  if(CF.length>n)return;(function f(){g.clearRect(0,0,W,H);CF.forEach(function(p){p.vy+=.35*d;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.l-=.006;g.save();g.globalAlpha=Math.max(0,p.l);g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore()});
   CF=CF.filter(function(p){return p.l>0&&p.y<H+40});if(CF.length)requestAnimationFrame(f);else g.clearRect(0,0,W,H)})()}
 function flash(){var f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
+// The long "something great is inside" build-up: the chest goes crazy (more and longer for rarer loot).
+function crazy(os,rr,done){var rg=$('bigRig'),jm=$('jmp'),n=0,steps=5+rr*3,lines=['Something special…','It is shaking!','WHAT IS IN THERE?!','HOLD ON…!','HERE IT COMES!'];
+ os.className='ostage charge crazy';$('otext').textContent=lines[0];
+ (function step(){n++;var k=n/steps;
+  jm.classList.remove('hop','jhop','jspin');void jm.offsetWidth;jm.classList.add(n%3==0?'jspin':'jhop');jm.style.setProperty('--jh',(30+k*70)+'px');
+  rg.style.setProperty('--lid',(8+Math.random()*30*k+10*k)+'deg');setTimeout(function(){rg.style.setProperty('--lid',(4*k)+'deg')},150);
+  os.style.setProperty('--glow',k);buzz(20+Math.round(k*60));
+  $('otext').textContent=lines[Math.min(lines.length-1,Math.floor(k*lines.length))];
+  if(rr>=3&&n%2==0)confetti([RC[rr],'#ffffff'],10+Math.round(k*20));
+  if(n%4==0)flash();
+  if(n<steps)setTimeout(step,Math.max(170,380-k*200));else setTimeout(function(){os.classList.remove('crazy');done()},260)})()}
 function wheelResult(d){clearTimeout(ot);
  if(!d.w){spinning=false;closeOpen();toast(d.msg||'Could not open the box');return}
  var wait=Math.max(0,1100-(Date.now()-(opening?opening.t0:0))),os=$('ostage');
@@ -1048,12 +1084,11 @@ function wheelResult(d){clearTimeout(ot);
    var rr=CH[c][2],rc=RC[rr];col=CH[c][3];os.style.setProperty('--hc',rc);
    h='<span class="av">'+charArt(c)+'</span><b>'+CH[c][0]+'</b><em>'+CH[c][1]+'</em><span class="stars">'+'★★★★★'.slice(0,rr+1)+'</span>';
    pz.innerHTML=h;pz.style.background='radial-gradient(circle at 50% 30%,'+shade(col,1.35)+','+col+' 55%,'+shade(col,.6)+')';pz.style.setProperty('--pc',col);
-   os.className='ostage charge';$('otext').textContent='Something special…';buzz([30,40,30,40,30,40]);
-   setTimeout(function(){flash();os.className='ostage charge open burst';lidOff();buzz([80,40,250]);
+   crazy(os,rr,function(){flash();os.className='ostage charge open burst';lidOff();buzz([80,40,250]);
     confetti([rc,col,'#ffffff','#ffc400'],rr>=4?260:rr>=3?200:150);
     setTimeout(function(){os.className='ostage open hyped';$('hype').textContent=rr>=4?'LEGENDARY!':rr>=3?'EPIC DRIVER!':'NEW CHARACTER!';$('otext').textContent='Tap to continue';
      if(rr>=4)setTimeout(function(){confetti(['#ffc400','#fff6c4','#ffffff'],180);flash()},700)},420);
-    setTimeout(function(){spinning=false},1800)},1100)}
+    setTimeout(function(){spinning=false},1800)})}
   else{ // tokens or x2: quick reveal
    var big=c==204||(c==203&&r>=3);
    if(c==201){col='#1fd38a';h='<span>BOOST</span><b>x2 TOKENS</b><em>'+(d.x>1?d.x+' RACES':'NEXT RACE')+'</em>'}
@@ -1061,8 +1096,8 @@ function wheelResult(d){clearTimeout(ot);
    else if(c==204){col='#d14bff';h='<span class="pbig tk">LV<b>+1</b></span><span>LEGENDARY PRIZE</span><b>LEVEL UP</b><em>ONE FREE LEVEL</em>'}
    else{col=c==200?'#ffaa00':'#2e9bff';h='<span>TOKENS</span><b>'+segLab(c,r)+'</b><em>ADDED</em>'}
    pz.innerHTML=h;pz.style.background='linear-gradient(160deg,'+col+','+col+'cc)';pz.style.setProperty('--pc',col);
-   lidOff();os.className='ostage burst';setTimeout(function(){if(big)flash();os.className='ostage open'},520);$('otext').textContent='Tap to continue';buzz(big?[60,40,160]:[40,60,80]);confetti([col,'#ffffff','#ffd23a'],big?180:60);
-   setTimeout(function(){spinning=false},700)}
+   var reveal=function(){lidOff();os.className='ostage burst';setTimeout(function(){if(big)flash();os.className='ostage open'},520);$('otext').textContent='Tap to continue';buzz(big?[60,40,160]:[40,60,80]);confetti([col,'#ffffff','#ffd23a'],big?180:60);
+   setTimeout(function(){spinning=false},700)};if(big)crazy(os,1,reveal);else reveal()}
   status()},wait)}
 // ---------- character artwork (original designs, plain SVG) ----------
 function charArt(i){var c=CH[i][3],dk=shade(c,.62),lt=shade(c,1.3),x='';
@@ -1298,7 +1333,13 @@ $('tUpd').onclick=function(){show('upd')};$('tSet').onclick=openSet;$('pTag').on
 $('updNo').onclick=function(){$('updOv').classList.remove('on')};
 $('updGo').onclick=function(){$('updOv').classList.remove('on');toast('Pad is switching to its hub · join BrickSpeed-Hub');setTimeout(function(){send('H')},500)};
 $('scanB2').onclick=function(){scan();setTimeout(carsDraw,100)};
-$('backB').onclick=function(){show(curScr=='whl'||curScr=='col'||curScr=='cars'||curScr=='drive'?'lobby':'lobby')};
+$('backB').onclick=function(){if(curScr=='drive'&&st.s>=0){askLeave();return}show('lobby')};
+function askLeave(){var race=!!st.l;$('lvH').textContent=race?'Leave the race?':'Stop driving?';
+ $('lvP').textContent=race?'Your car stops right away and you drop out of this race. You can come back while it is still running.':'Your car stops and you go back to the lobby.';
+ $('lvYes').textContent=race?'LEAVE RACE':'LEAVE';$('leaveOv').classList.add('on');rawT=rawS=0;buzz(20)}
+$('lvNo').onclick=function(){$('leaveOv').classList.remove('on');buzz(6)};
+$('lvYes').onclick=function(){$('leaveOv').classList.remove('on');show('lobby');buzz([20,30,20])};
+$('leaveOv').addEventListener('pointerdown',function(e){if(e.target.id=='leaveOv')$('leaveOv').classList.remove('on')});
 $('coinB').onclick=function(){show('col')};$('toWheel').onclick=function(){show('box')};
 apply();lobbyDraw();try{if(localStorage.getItem('bsscr')=='upd')show('upd')}catch(e){}
 // keep the screen on while driving
