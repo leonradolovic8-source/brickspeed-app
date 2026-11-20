@@ -267,13 +267,28 @@ body.shf .abil{display:none}body.shf .mid{grid-template-rows:minmax(0,1fr) auto}
 .abil .aart{display:block;width:44%;margin:0 auto -2px;aspect-ratio:100/106}.abil .aart svg{width:100%;height:100%}
 @media (max-height:340px){.tile b{font-size:12px}.tile svg{width:24px;height:24px}.tile.big svg{width:46px;height:30px}.play{height:52px}.play span{font-size:22px}.cancel{height:52px}.plate{padding:3px 10px}.plate span{display:none}}
 /* ---------- boxes ---------- */
-body.s-box #box,body.s-upd #upd{display:grid}
+body.s-box #box,body.s-upd #upd,body.s-pass #pass{display:grid}
+#pass{grid-template-rows:auto minmax(0,1fr);gap:8px;min-height:0}
 #box{grid-template-rows:auto minmax(0,1fr);gap:10px;min-height:0}
 .spane{min-height:0;min-width:0;display:grid}#sp-pass>*{min-width:0}.spane[hidden]{display:none!important}
 #sp-boxes{grid-template-rows:minmax(0,1fr)}
 .stabs{display:flex;gap:6px;margin-left:auto;background:#060c1f;border:1px solid var(--ln);border-radius:14px;padding:4px}
 .stabs button{position:relative;padding:7px 14px;border-radius:10px;font:italic 900 13px system-ui;letter-spacing:.05em;color:var(--mu)}
 .stabs button.on{background:linear-gradient(180deg,#ffe066,#ffc400);color:#3a2600;box-shadow:0 3px 0 #a57900}
+.shint{margin-left:auto;font:italic 900 12px system-ui;letter-spacing:.08em;color:#ffd23a;animation:shint 1.4s ease-in-out infinite}@keyframes shint{50%{transform:translateX(6px);opacity:.6}}
+.shrow{display:flex;gap:22px;overflow-x:auto;overflow-y:hidden;min-height:0;min-width:0;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:0 6px 8px;scrollbar-width:none}
+.shrow::-webkit-scrollbar{display:none}
+.shsec{display:grid;grid-template-rows:auto minmax(0,1fr);gap:4px;min-height:0;flex:none;scroll-snap-align:start}
+.shh{font:italic 900 15px system-ui;letter-spacing:.08em;color:#ffd23a;text-shadow:0 2px 0 #000;white-space:nowrap}.shh small{font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.06em;color:var(--mu);margin-left:6px}
+.shrow .bxgrid{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:clamp(150px,22vw,205px);padding-top:30px}
+.shrow .gemgrid,.ptgrid{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(128px,18vw,170px);gap:12px;min-height:0;padding-top:6px}
+.ptc{position:relative;border-radius:18px;border:3px solid var(--pc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--pc) 45%,#0a0f22),#0a0f22 72%);display:grid;grid-template-rows:minmax(0,1fr) auto auto;justify-items:center;align-items:center;padding:8px;gap:4px;min-height:0;box-shadow:0 0 16px color-mix(in srgb,var(--pc) 40%,transparent),0 5px 0 #050814}
+.ptc svg{width:100%;height:100%;max-height:90px;min-height:0}.ptc b{font:italic 900 clamp(13px,2vw,17px) system-ui;color:#fff;white-space:nowrap}
+.ptc .pb2{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:11px;padding:6px;background:linear-gradient(180deg,#d07bff,#9b3dff);font:900 13px system-ui;color:#fff;box-shadow:0 3px 0 #4a1a8c}
+.ptc .pb2 .gem{width:15px;height:15px}.ptc.own .pb2{background:#14264f;box-shadow:none;color:var(--mu)}.ptc.on .pb2{background:linear-gradient(180deg,#5dffb0,#1fd38a);color:#04140d;box-shadow:0 3px 0 #0d7a4d}.ptc.poor .pb2{filter:grayscale(.6) brightness(.75)}
+.ptc:active{transform:translateY(3px)}
+.pnI{display:block;width:34px;height:22px;border-radius:7px;background:var(--pc);border:2px solid #fff;box-shadow:0 0 10px var(--pc);transform:rotate(-8deg)}
+@media (max-height:340px){.shrow .bxgrid{grid-auto-columns:clamp(130px,20vw,170px);padding-top:26px}.shh{font-size:12px}.ptc svg{max-height:60px}}
 .dotN{position:absolute;top:2px;right:3px;width:9px;height:9px;border-radius:50%;background:#ff2d4a;box-shadow:0 0 6px #ff2d4a}
 /* pass */
 #sp-pass{grid-template-rows:auto minmax(0,1fr);gap:8px}
@@ -627,6 +642,7 @@ body.s-box #box,body.s-upd #upd{display:grid}
 .ab:disabled{opacity:.4}
 .foot{font:600 12px system-ui;color:var(--mu);text-align:center}
 /* neon city lobby */
+#tPass.claim{animation:nudge 1.3s ease-in-out infinite}
 /* ===== SIM ONLY: race-city lobby (like the reference picture) ===== */
 .scene2{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .5s;background:#0b0b3a}
 body.s-lobby .scene2{opacity:1}
@@ -723,7 +739,7 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
  <div class="lcol">
   <button class="tile big" id="tCars"><svg viewBox="0 0 48 32" aria-hidden="true"><rect x="4" y="9" width="40" height="14" rx="4" fill="#e5492b"/><rect x="13" y="3" width="18" height="9" rx="3" fill="#e5492b"/><rect x="16" y="5" width="12" height="6" rx="2" fill="#0b1530"/><circle cx="13" cy="24" r="5" fill="#111"/><circle cx="35" cy="24" r="5" fill="#111"/><circle cx="13" cy="24" r="2" fill="#9aa"/><circle cx="35" cy="24" r="2" fill="#9aa"/></svg><b>CARS</b><span id="lCars">NO CARS</span></button>
   <button class="tile" id="tCol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="8" height="11" rx="2"/><rect x="13" y="9" width="8" height="11" rx="2"/></svg><b>COLLECTION</b><span id="lCol">0/8</span></button>
-  <button class="tile" id="tWhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5 11h-13z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg><b>SHOP</b><span id="lShop">BOXES · PASS</span></button>
+  <button class="tile" id="tWhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5 11h-13z"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg><b>SHOP</b><span id="lShop">BOXES · PAINTS · GEMS</span></button>
  </div>
  <div class="stage">
   <div class="glow" aria-hidden="true"></div>
@@ -776,13 +792,19 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
  </div>
 </section>
 <section class="scr" id="box">
- <div class="chead"><b>Shop</b><div class="stabs" role="tablist"><button class="on" data-t="boxes" role="tab">BOXES</button><button data-t="pass" role="tab">BRICKSPEED PASS<i class="dotN" id="passDot" hidden></i></button><button data-t="gems" role="tab">GEMS</button></div></div>
- <div class="spane" id="sp-boxes"><div class="bxgrid" id="bxgrid"></div></div>
- <div class="spane" id="sp-pass" hidden>
+ <div class="chead"><b>Shop</b><span class="shint" aria-hidden="true">SLIDE ›</span></div>
+ <div class="shrow" id="shrow">
+  <div class="shsec" data-s="boxes"><div class="shh">BOXES</div><div class="bxgrid" id="bxgrid"></div></div>
+  <div class="shsec" data-s="paints"><div class="shh">PAINTS <small>FOR BRICKSPEED ONLINE</small></div><div class="ptgrid" id="ptgrid"></div></div>
+  <div class="shsec" data-s="gems"><div class="shh">GEMS <small>COINS → GEMS · CAN'T GO BACK</small></div><div class="gemgrid" id="gemgrid"></div></div>
+ </div>
+</section>
+<section class="scr" id="pass">
+ <div class="chead"><b>BrickSpeed Pass</b></div>
+ <div class="spane" id="sp-pass">
   <div class="phead"><div class="pinfo"><b>SEASON 1</b><span class="tierB" id="pTierB" data-n="0"></span><div class="pbar"><i id="pXpF"></i></div><em id="pXpT">0/100 XP</em></div><span class="phow">+40 XP per race · +10 XP per box</span><button class="buyP" id="buyP">GET PASS · 120 <svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l5 6-10 12L2 9z" fill="#c45bff" stroke="#5a1a8c" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 9h20M7 3l5 18M17 3l-5 18M7 3l5 6 5-6" fill="none" stroke="#f1c9ff" stroke-width="1" stroke-linejoin="round" opacity=".8"/></svg></button></div>
   <div class="pwrap"><div class="plabs"><span class="lp">PASS</span><i></i><span class="lf">FREE</span></div><div class="ptrack" id="ptrack"></div></div>
  </div>
- <div class="spane" id="sp-gems" hidden><div class="gemgrid" id="gemgrid"></div><p class="gnote">Change coins into gems. Gems buy the BrickSpeed Pass. Gems can't be changed back into coins.</p></div>
 </section>
 <section class="scr" id="upd">
  <div class="panel ucol">
@@ -840,7 +862,7 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
 <div class="ov" id="leaveOv"><div class="lvbox" role="alertdialog" aria-labelledby="lvH"><span class="lvic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 4L45 42H3z" fill="#ffc400" stroke="#3a2600" stroke-width="3" stroke-linejoin="round"/><rect x="21.5" y="17" width="5" height="14" rx="2" fill="#3a2600"/><circle cx="24" cy="36" r="3" fill="#3a2600"/></svg></span>
  <h2 id="lvH">Leave the race?</h2><p id="lvP"></p><div class="lvbtns"><button class="lvB no" id="lvNo">KEEP DRIVING</button><button class="lvB yes" id="lvYes">LEAVE RACE</button></div></div></div>
 <div class="ov" id="charOv"><button class="ib cback" id="charBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="csheet" id="csheet"></div></div>
-<div class="ov" id="onOv"><div class="lvbox" role="alertdialog" aria-labelledby="onH"><h2 id="onH">Go online</h2><p id="onP">Your phone is on the pad's Wi-Fi, which has no internet. The pad turns its Wi-Fi off for 20 minutes, your phone switches to home Wi-Fi or mobile data, and BrickSpeed Online opens.</p><b id="onCnt" hidden></b><div class="lvbtns"><button class="lvB no" id="onNo">CANCEL</button><button class="lvB go" id="onGo">GO ONLINE</button></div></div></div>
+<div class="ov" id="onOv"><div class="lvbox" role="alertdialog" aria-labelledby="onH"><h2 id="onH">Go online</h2><p id="onP">Your phone is on the pad's Wi-Fi, which has no internet. The pad turns its Wi-Fi off for 15 seconds, your phone switches to home Wi-Fi or mobile data, and BrickSpeed Online opens.</p><b id="onCnt" hidden></b><div class="lvbtns"><button class="lvB no" id="onNo">CANCEL</button><button class="lvB go" id="onGo">GO ONLINE</button></div></div></div>
 <div class="ov" id="busyOv"><div><div class="spin"></div><h2 id="busyH">Checking for updates</h2><p id="busyP">The pad joins your home Wi-Fi for about a minute, then restarts. This screen reconnects by itself.</p></div></div>
 <div class="ov" id="updOv"><div style="max-width:440px"><h2>Updates</h2><p>The pad switches to its update hub. On your phone join the Wi-Fi <b>BrickSpeed-Hub</b>, then open <b>192.168.4.1</b> to update the pad and your cars. Driving stops until the pad restarts.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="updGo" style="padding:0 24px">Open the hub</button><button class="ab" id="updNo" style="padding:0 24px">Not now</button></div></div></div>
 <div id="set"><div class="sheet" role="dialog" aria-label="Settings">
@@ -888,7 +910,7 @@ function save(){try{localStorage.setItem('bspad',JSON.stringify(S))}catch(e){}}
 load();
 // ---------- link ----------
 var ws=null,ok=false,lostT=0,lastMsg=0,st={c:0,s:-1,sc:0,t:0,x:0,l:0},tokShown=0;
-function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
+function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();syncOut();return}if(d.pt!=null){ptResult(d);return}if(d.onl!=null){onlAck(d);return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}st=d;status()}
 var T=null;
 function conn(){
  // inside the BrickSpeed app the link is Bluetooth (src/ble.js sets window.BS_TRANSPORT)
@@ -909,8 +931,8 @@ function status(){
  var t=st.sc?'SCANNING…':(st.s<0?(st.c?st.c+' FOUND · pick one':'NO CAR'):'CAR '+(st.s+1)+' / '+st.c);
  $('carT').textContent=t;
  var x=$('x2');x.hidden=!st.x;x.textContent='x2 · '+st.x;$('ppN').textContent=st.p||0;$('gemN').textContent=st.g||0;
- $('pTagN').textContent=st.nm||'PLAYER';$('pTagT').textContent=TITLES[st.ti||0]||'ROOKIE';var fbn=(PS.fb||[]).reduce(function(a,b){return a+(b||0)},0);$('lShop').textContent=fbn?fbn+' FREE BOX'+(fbn>1?'ES':''):(canClaim()?'REWARDS READY':'BOXES · PASS');
- if(curScr=='box'&&shopT=='gems')gemsDraw();if($('set').classList.contains('on'))titlesDraw();
+ $('pTagN').textContent=st.nm||'PLAYER';$('pTagT').textContent=TITLES[st.ti||0]||'ROOKIE';var fbn=(PS.fb||[]).reduce(function(a,b){return a+(b||0)},0);$('lShop').textContent=fbn?fbn+' FREE BOX'+(fbn>1?'ES':''):'BOXES · PAINTS · GEMS';
+ if(curScr=='box'){gemsDraw();paintsDraw()}if($('set').classList.contains('on'))titlesDraw();
  if(curCh>=0&&$('charOv').classList.contains('on')&&$('csheet').__k!==chKey())charInfo(curCh);
  $('race').hidden=!st.l;
  var g=st.ch===0;if(B.classList.contains('shf')!==g)B.classList.toggle('shf',g);
@@ -1290,16 +1312,25 @@ function driversDraw(){var h='';CH.forEach(function(c,i){var o=own(i);h+='<butto
 var GEMI='<svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l5 6-10 12L2 9z" fill="#c45bff" stroke="#5a1a8c" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 9h20M7 3l5 18M17 3l-5 18M7 3l5 6 5-6" fill="none" stroke="#f1c9ff" stroke-width="1" stroke-linejoin="round" opacity=".8"/></svg>',PS={xp:0,pr:0,cf:0,cp:0,tm:1,fb:[0,0,0,0]},RNM=[],shopT='boxes';
 var TITLES=['ROOKIE','SPEEDY','TURBO','BRICK BOSS','DRIFT KING','NO BRAKES','BRICK LEGEND','CHAMPION'];
 var PASS_PRICE=120,TIER_XP=100,GEM_TOK=[50,200,500],GEM_GET=[5,22,60];
-var PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[2,25],[1,40],[4,2],[2,30],[3,10],[1,50],[4,1],[2,40],[7,1],[6,3],[1,60],[4,2],[2,50],[1,80],[4,3]];
-var PP=[[3,10],[6,2],[2,40],[4,2],[1,80],[5,1],[4,3],[6,4],[2,60],[3,20],[4,3],[1,120],[6,5],[2,80],[5,1],[4,4],[3,30],[6,6],[4,4],[6,7]];
+var PAINTS=[{n:'STOCK',c:'#8ea5cc'},{n:'FIRE RED',c:'#ff3b30'},{n:'OCEAN',c:'#1e90ff'},{n:'LIME',c:'#7dff3a'},{n:'GOLD',c:'#ffc400'},{n:'GALAXY',c:'#8a3dff'},{n:'CARBON',c:'#3a3f4d'},{n:'NEON PINK',c:'#ff4fd8'}],PAINT_COST=[0,15,15,15,40,60,30,40];
+var PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[2,25],[1,40],[4,2],[2,30],[8,1],[1,50],[4,1],[2,40],[7,1],[6,3],[1,60],[4,2],[2,50],[1,80],[4,3]];
+var PP=[[3,10],[6,2],[8,3],[4,2],[1,80],[5,1],[4,3],[6,4],[2,60],[8,5],[4,3],[1,120],[6,5],[2,80],[5,1],[4,4],[8,4],[6,6],[4,4],[6,7]];
 function chestI(r){var c=RC[r];return '<svg viewBox="0 0 40 34" aria-hidden="true"><rect x="3" y="13" width="34" height="18" rx="3" fill="'+c+'" stroke="#15171f" stroke-width="2"/><rect x="2" y="6" width="36" height="9" rx="3" fill="'+shade(c,1.3)+'" stroke="#15171f" stroke-width="2"/><rect x="8" y="6" width="3" height="25" fill="#15171f"/><rect x="29" y="6" width="3" height="25" fill="#15171f"/><rect x="15" y="16" width="10" height="9" rx="2" fill="#15171f"/><rect x="18" y="11" width="4" height="6" fill="#15171f"/></svg>'}
-function rwIcon(t,a){return t==1?'<span class="coin"></span>':t==2?BOLTI.replace('class="bi"','class="bi" style="width:100%;height:100%"'):t==3?GEMI:t==4?chestI(a):t==5?'<span class="tkI">LV<b>+1</b></span>':t==6?'<span class="ttI">'+TITLES[a]+'</span>':'<span class="x2I">x2</span>'}
-function rwText(t,a){return t==1?'+'+a+' TOKENS':t==2?'+'+a+' POWER':t==3?'+'+a+' GEMS':t==4?RN[a].toUpperCase()+' BOX':t==5?'LEVEL UP':t==6?'TITLE':'x2 RACE'}
+function rwIcon(t,a){return t==1?'<span class="coin"></span>':t==2?BOLTI.replace('class="bi"','class="bi" style="width:100%;height:100%"'):t==3?GEMI:t==4?chestI(a):t==5?'<span class="tkI">LV<b>+1</b></span>':t==6?'<span class="ttI">'+TITLES[a]+'</span>':t==8?'<span class="pnI" style="--pc:'+PAINTS[a].c+'"></span>':'<span class="x2I">x2</span>'}
+function rwText(t,a){return t==1?'+'+a+' TOKENS':t==2?'+'+a+' POWER':t==3?'+'+a+' GEMS':t==4?RN[a].toUpperCase()+' BOX':t==5?'LEVEL UP':t==6?'TITLE':t==8?PAINTS[a].n:'x2 RACE'}
 function tierNow(){return Math.min(20,Math.floor((PS.xp||0)/TIER_XP))}
 function canClaim(){var n=tierNow(),k=0;for(var i=0;i<n;i++){if(!((PS.cf>>>i)&1))k++;if(PS.pr&&!((PS.cp>>>i)&1))k++}return k}
-function shopTab(t){shopT=t;[].forEach.call(document.querySelectorAll('.stabs button'),function(b){b.classList.toggle('on',b.dataset.t==t)});['boxes','pass','gems'].forEach(function(k){$('sp-'+k).hidden=k!=t});shopRefresh();if(t=='pass')setTimeout(function(){var tr=$('ptrack'),c=tr.querySelector('.rw.ready')||tr.querySelector('.tcol.cur');if(c){c=c.closest('.tcol');tr.scrollLeft=Math.max(0,c.offsetLeft-tr.offsetLeft-4)}},30)}
-[].forEach.call(document.querySelectorAll('.stabs button'),function(b){b.onclick=function(){shopTab(b.dataset.t);buzz(6)}});
-function shopRefresh(){var d=$('passDot');if(d)d.hidden=!canClaim();if(curScr!='box')return;if(shopT=='boxes'&&!spinning)boxesDraw();if(shopT=='pass')passDraw();if(shopT=='gems')gemsDraw()}
+function shopTab(t){if(t=='pass'){show('pass');return}shopT=t;shopRefresh();var r=$('shrow'),sec=r&&r.querySelector('.shsec[data-s="'+t+'"]');if(r&&sec)r.scrollTo({left:sec.offsetLeft-r.offsetLeft-6,behavior:t=='boxes'?'auto':'smooth'})}
+function passOpen(){passDraw();setTimeout(function(){var tr=$('ptrack'),c=tr.querySelector('.rw.ready')||tr.querySelector('.tcol.cur');if(c){c=c.closest('.tcol');tr.scrollLeft=Math.max(0,c.offsetLeft-tr.offsetLeft-4)}},30)}
+function shopRefresh(){if(curScr=='pass'){passDraw();return}if(curScr!='box')return;if(!spinning)boxesDraw();paintsDraw();gemsDraw()}
+function carSvg(c){return '<svg viewBox="0 0 120 70" aria-hidden="true"><ellipse cx="60" cy="62" rx="50" ry="5" fill="#000" opacity=".45"/><path d="M10 46c0-8 6-12 14-13l14-13c4-4 9-5 15-5h18c6 0 10 2 14 6l11 12c8 1 14 5 14 13v4H10z" fill="'+c+'" stroke="#000" stroke-width="3" stroke-linejoin="round"/><path d="M42 31l9-9h18l10 9z" fill="#9fe3ff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M14 40h92" stroke="#fff" stroke-opacity=".35" stroke-width="3"/><circle cx="32" cy="52" r="10" fill="#111" stroke="#000" stroke-width="2"/><circle cx="32" cy="52" r="4" fill="#9aa4b2"/><circle cx="90" cy="52" r="10" fill="#111" stroke="#000" stroke-width="2"/><circle cx="90" cy="52" r="4" fill="#9aa4b2"/></svg>'}
+function paintsDraw(){var h='',sk=PS.sk||1,sp=PS.sp||0;PAINTS.forEach(function(p,i){var own=(sk>>i)&1,poor=!own&&(st.g||0)<PAINT_COST[i];
+  h+='<button class="ptc'+(own?' own':'')+(sp==i?' on':'')+(poor?' poor':'')+'" data-i="'+i+'" style="--pc:'+p.c+'">'+carSvg(p.c)+'<b>'+p.n+'</b><span class="pb2">'+(sp==i?'IN USE':own?'USE':PAINT_COST[i]+' '+GEMI)+'</span></button>'});
+ var g=$('ptgrid');if(g.__h===h)return;g.__h=h;g.innerHTML=h;[].forEach.call(g.children,function(b){b.onclick=function(){var i=+b.dataset.i,own=((PS.sk||1)>>i)&1;
+  if((PS.sp||0)==i)return;if(own){send('I'+i);buzz(8);return}if((st.g||0)<PAINT_COST[i]){toast('You need '+(PAINT_COST[i]-(st.g||0))+' more gems');shopTab('gems');return}send('F'+i);buzz(12)}})}
+function ptResult(d){if(!d.pt){toast(d.msg||'Could not buy');return}PS.sk=d.sk;PS.sp=d.i;if(d.g!=null)st.g=d.g;status();$('ptgrid').__h='';shopRefresh();lobbyDraw();
+ if(d.pt==1){confetti([PAINTS[d.i].c,'#ffffff'],90);buzz([30,30,90]);bigToast('NEW PAINT: '+PAINTS[d.i].n+'!')}else toast(PAINTS[d.i].n+' paint on')}
+window.BSShop=function(t){show('box');shopTab(t)};window.BSShowPass=function(){show('pass')};
 function passDraw(){var n=tierNow(),xp=PS.xp||0,h='';
  $('pTierB').setAttribute('data-n',n);var into=n>=20?TIER_XP:xp%TIER_XP;$('pXpF').style.width=(into/TIER_XP*100)+'%';$('pXpT').textContent=n>=20?'MAX TIER':into+'/'+TIER_XP+' XP';
  var bp=$('buyP');bp.className='buyP'+(PS.pr?' own':'');bp.innerHTML=PS.pr?'PASS ACTIVE ★':'GET PASS · '+PASS_PRICE+' '+GEMI;
@@ -1310,14 +1341,14 @@ function passDraw(){var n=tierNow(),xp=PS.xp||0,h='';
  [].forEach.call(tr.querySelectorAll('.rw'),function(b){b.onclick=function(){var i=+b.dataset.i,p=b.dataset.tr=='p';
   if(b.classList.contains('done'))return;if(i>=tierNow()){toast('Reach tier '+(i+1)+' first');return}if(p&&!PS.pr){toast('Get the BrickSpeed Pass to claim this');return}
   send('Q'+(p?'p':'f')+i);buzz(12)}})}
-$('buyP').onclick=function(){if(PS.pr)return;if((st.g||0)<PASS_PRICE){toast('You need '+(PASS_PRICE-(st.g||0))+' more gems');shopTab('gems');return}send('P');buzz(15)};
+$('buyP').onclick=function(){if(PS.pr)return;if((st.g||0)<PASS_PRICE){toast('You need '+(PASS_PRICE-(st.g||0))+' more gems');show('box');shopTab('gems');return}send('P');buzz(15)};
 function gemsDraw(){var h='';for(var k=0;k<3;k++){var poor=(st.t||0)<GEM_TOK[k];h+='<div class="gp">'+(k==2?'<span class="best">BEST VALUE</span>':'')+'<span class="gpile">'+GEMI.repeat(k+1>3?3:k+1)+'</span><b>'+GEM_GET[k]+' GEMS</b><button class="gbuy'+(poor?' poor':'')+'" data-k="'+k+'"><span class="coin"></span>'+GEM_TOK[k]+'</button></div>'}
  var g=$('gemgrid');if(g.__h===h)return;g.__h=h;g.innerHTML=h;[].forEach.call(g.querySelectorAll('.gbuy'),function(b){b.onclick=function(){var k=+b.dataset.k;if((st.t||0)<GEM_TOK[k]){toast('You need '+(GEM_TOK[k]-(st.t||0))+' more tokens');return}send('E'+k);buzz(12)}})}
 function exResult(d){if(!d.ex){toast(d.msg||'Could not change');return}st.g=d.g;st.t=d.t;status();confetti(['#c45bff','#f1c9ff','#ffffff'],70);bigToast('+'+GEM_GET[d.k]+' GEMS')}
 function pbResult(d){if(!d.pb){toast(d.msg||'Could not buy the pass');return}PS.pr=1;shopRefresh();flash();confetti(['#ffd23a','#ff8a00','#ffffff','#ff8be0'],200);buzz([60,40,200]);bigToast('BRICKSPEED PASS UNLOCKED!')}
-function clResult(d){if(!d.cl){toast(d.msg||'Could not claim');return}var t=d.rt,a=d.ra;if(d.pr)PS.cp|=1<<d.i;else PS.cf|=1<<d.i;if(t==6)PS.tm|=1<<a;if(t==4)PS.fb[a-1]=(PS.fb[a-1]||0)+1;$('ptrack').__h='';shopRefresh();
+function clResult(d){if(!d.cl){toast(d.msg||'Could not claim');return}var t=d.rt,a=d.ra;if(d.pr)PS.cp|=1<<d.i;else PS.cf|=1<<d.i;if(t==6)PS.tm|=1<<a;if(t==8)PS.sk=(PS.sk||1)|1<<a;if(t==4)PS.fb[a-1]=(PS.fb[a-1]||0)+1;$('ptrack').__h='';shopRefresh();
  confetti(t==6||t==5||(t==4&&a>=3)?['#ffd23a','#ff8be0','#ffffff']:['#38e1ff','#ffffff'],t==6?140:70);buzz([30,30,90]);
- bigToast(t==6?'NEW TITLE: '+TITLES[a]+'!':t==4?'FREE '+RN[a].toUpperCase()+' BOX! OPEN IT IN BOXES':rwText(t,a)+'!')}
+ bigToast(t==8?'NEW PAINT: '+PAINTS[a].n+'!':t==6?'NEW TITLE: '+TITLES[a]+'!':t==4?'FREE '+RN[a].toUpperCase()+' BOX! OPEN IT IN BOXES':rwText(t,a)+'!')}
 function titlesDraw(){var h='';TITLES.forEach(function(n,i){var o=(PS.tm>>i)&1;h+='<button class="'+(o?'':'lock')+((st.ti||0)==i?' on':'')+'" data-i="'+i+'">'+(o?'':'🔒 ')+n+'</button>'});var e=$('titles');if(e.__h===h)return;e.__h=h;e.innerHTML=h;
  [].forEach.call(e.children,function(b){b.onclick=function(){var i=+b.dataset.i;if(!((PS.tm>>i)&1)){toast('Unlock it in the BrickSpeed Pass');return}send('R'+i);st.ti=i;titlesDraw();status();buzz(8)}})}
 $('nmSave').onclick=function(){var v=$('nmIn').value.toUpperCase().replace(/[^A-Z0-9 ._-]/g,'').trim().slice(0,10);if(!v){toast('Type a name');return}$('nmIn').value=v;send('M'+v);st.nm=v;status();toast('Name saved: '+v);buzz(10)};
@@ -1379,13 +1410,13 @@ function carSVG(col){return '<rect x="34" y="66" width="252" height="44" rx="12"
  '<circle cx="234" cy="112" r="26" fill="#111"/><circle cx="234" cy="112" r="13" fill="#9aa4b2"/><circle cx="234" cy="112" r="5" fill="#333"/></g>'+
  '<text x="160" y="96" text-anchor="middle" font-size="15" font-weight="900" font-style="italic" fill="#fff" font-family="system-ui,sans-serif" opacity=".9">BRICKSPEED</text>'}
 var curScr='lobby',searching=false,picked=false,srchT=0;
-function show(s){var was=curScr;curScr=s;B.classList.remove('s-lobby','s-cars','s-drive','s-col','s-box','s-upd');B.classList.add('s-'+s);rawT=rawS=0;
+function show(s){var was=curScr;curScr=s;B.classList.remove('s-lobby','s-cars','s-drive','s-col','s-box','s-upd','s-pass');B.classList.add('s-'+s);rawT=rawS=0;
  if(was=='upd'&&s!='upd')send('Y0');
  if(s=='upd'){send('Y1');updDraw()}
  try{localStorage.setItem('bsscr',s=='upd'?'upd':'')}catch(e){}
- if(s=='col')colDraw();if(s=='box')shopTab(shopT);if(s=='cars')carsDraw();if(s=='drive'){apply();$('gmChip').hidden=!S.gm;$('gmChip').textContent=GMN[S.gm]||''}buzz(8)}
+ if(s=='col')colDraw();if(s=='box')shopTab(shopT);if(s=='pass')passOpen();if(s=='cars')carsDraw();if(s=='drive'){apply();$('gmChip').hidden=!S.gm;$('gmChip').textContent=GMN[S.gm]||''}buzz(8)}
 function lobbyDraw(){var has=st.s>=0,col=has?CARC[st.s%CARC.length]:'#5b6b8c';
- heroCol=has?hexA(col,.6):'rgba(91,107,140,.45)';$('pDot').style.background=has?col:'';
+ if(has&&PS.sp)col=PAINTS[PS.sp].c;heroCol=has?hexA(col,.6):'rgba(91,107,140,.45)';$('pDot').style.background=has?col:'';
  $('pName').textContent=has?'CAR '+(st.s+1):(st.c?st.c+' CAR'+(st.c>1?'S':'')+' FOUND':'NO CAR YET');
  $('pSub').textContent=has?'Ready to race':'Press PLAY to find your car';
  $('lCars').textContent=st.sc?'SCANNING…':(st.c?st.c+' FOUND':'NO CARS');
@@ -1414,7 +1445,22 @@ $('playB').onclick=function(){if(searching)return;var mc=$('mCar');mc.textConten
  if(S.gm=='station')toast('Station race: drive your car, the station runs the race');play()}});
 // ONLINE: the BrickSpeed website. On the pad's own Wi-Fi there is no internet, so tell the player.
 var ONLINE_URL='https://leonradolovic8-source.github.io/brickspeed-app/fun/';   // the BrickSpeed game on GitHub: #lobby opens the player lobby
-function openOnline(){var u=ONLINE_URL+(st.nm?'?name='+encodeURIComponent(st.nm):'')+'#lobby';
+function b64u(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function unb64u(s){s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))}
+// your pad progress for BrickSpeed Online (coins, gems, drivers, levels, name, title, paints)
+function exportP(){return b64u(JSON.stringify({v:1,id:PS.id||'',nm:st.nm||'PLAYER',ti:st.ti||0,tm:PS.tm||1,t:st.t||0,g:st.g||0,p:st.p||0,lt:st.lt||0,m:st.m||0,lv:st.v||[],sk:PS.sk||1,sp:PS.sp||0,xp:PS.xp||0,pr:PS.pr||0,on:PS.on||[]}))}
+// coins + XP won online come back: from the link the game opens (#sync=...) or, in the BrickSpeed app, from the game's storage
+function onlSum(id,b,t,x){var s='BSK1|'+id+'|'+b+'|'+t+'|'+x,h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return (h>>>0).toString(16)}
+var SYNC=[],syncSent={};
+(function(){var m=/[#&]sync=([^&]+)/.exec(location.hash);if(!m)return;try{var j=JSON.parse(unb64u(m[1]));(j.b||[]).forEach(function(x){SYNC.push(x)});SYNC.pid=j.id||''}catch(e){}try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}})();
+function earnLS(){try{return JSON.parse(localStorage.getItem('bs-earn')||'null')}catch(e){return null}}
+function syncOut(){if(!PS.id)return;var on=PS.on||[],L=SYNC.slice(),E=earnLS();
+ if(E&&E.pad==PS.id){if(E.cur&&(E.cur.t||E.cur.x)){var c=E.cur;c.k=onlSum(PS.id,c.b,c.t,c.x);E.sent=(E.sent||[]).concat([c]);E.cur={b:Math.floor(Math.random()*2147483646)+1,t:0,x:0};try{localStorage.setItem('bs-earn',JSON.stringify(E))}catch(e){}}(E.sent||[]).forEach(function(x){L.push(x)})}
+ if(SYNC.pid&&SYNC.pid!=PS.id)L=L.filter(function(x){return SYNC.indexOf(x)<0});
+ L.forEach(function(x){if(!x||!x.b||on.indexOf(x.b)>=0||syncSent[x.b])return;syncSent[x.b]=1;send('V'+x.b+','+(x.t|0)+','+(x.x|0)+','+x.k)})}
+function onlAck(d){var E=earnLS();if(E&&E.sent){E.sent=E.sent.filter(function(x){return x.b!=d.onl});try{localStorage.setItem('bs-earn',JSON.stringify(E))}catch(e){}}
+ if(d.t!=null){confetti(['#ffd23a','#38e1ff','#ffffff'],80);bigToast('+'+d.t+' COINS · +'+d.xp+' XP FROM ONLINE')}else if(d.bad)toast('Online coins could not be checked')}
+function openOnline(){var u=ONLINE_URL+'#lobby&p='+exportP();
  if(/^192\.168\.4\./.test(location.hostname)){$('modeOv').classList.remove('on');onU=u;$('onCnt').hidden=true;$('onGo').disabled=false;$('onGo').textContent='GO ONLINE';$('onOv').classList.add('on');buzz(15);return}
  $('modeOv').classList.remove('on');buzz(15);var w=null;try{w=window.open(u,'_blank')}catch(e){}if(!w)location.href=u}
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
@@ -1503,7 +1549,7 @@ var svg='<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">'+o+'<
 var d=document.createElement('div');d.className='scene2';d.setAttribute('aria-hidden','true');d.innerHTML=svg;document.body.insertBefore(d,document.body.firstChild);
 function $(i){return document.getElementById(i)}
 // top bar: + on gems, gear button
-['coinB','gemB'].forEach(function(id){var gb=$(id);if(gb){var p=document.createElement('i');p.className='plusB';p.textContent='+';gb.appendChild(p)}});$('coinB').onclick=function(){$('tWhl').click();setTimeout(function(){var b=document.querySelector('.stabs button[data-t="gems"]');b&&b.click()},60)};
+['coinB','gemB'].forEach(function(id){var gb=$(id);if(gb){var p=document.createElement('i');p.className='plusB';p.textContent='+';gb.appendChild(p)}});$('coinB').onclick=function(){window.BSShop&&window.BSShop('gems')};
 var top=document.querySelector('.top'),gear=document.createElement('button');gear.className='gearB';gear.setAttribute('aria-label','Settings');
 gear.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M3.8 7l2.6 1.5M17.6 15.5l2.6 1.5M3.8 17l2.6-1.5M17.6 8.5l2.6-1.5"/></svg>';
 gear.onclick=function(){$('tSet').click()};top.appendChild(gear);
@@ -1519,8 +1565,8 @@ var u=$('tUpd');u.querySelector('svg').outerHTML='<span class="env">'+ICO.env+'<
 var pt=document.createElement('button');pt.className='tile';pt.id='tPass';
 pt.innerHTML='<span class="crown2">'+ICO.crown+'</span><b>BRICKSPEED PASS</b><span id="lPassT">TIER 0</span><span class="pxb"><i id="lPassB"></i><em id="lPassX">0/100 XP</em></span><i class="chev">›</i>';
 document.querySelector('#lob .lcol').appendChild(pt);
-pt.onclick=function(){$('tWhl').click();setTimeout(function(){var b=document.querySelector('.stabs button[data-t="pass"]');b&&b.click()},60)};
-setInterval(function(){var P=window.__PS;if(!P)return;var t=Math.min(20,Math.floor(P.xp/100)),x=t>=20?100:P.xp%100;$('lPassT').textContent='TIER '+t+(P.pr?' · PASS ★':'');$('lPassB').style.setProperty('--px',x+'%');$('lPassX').textContent=t>=20?'MAX':x+'/100 XP'},500);
+pt.onclick=function(){window.BSShowPass&&window.BSShowPass()};
+setInterval(function(){var P=window.__PS;if(!P)return;var t=Math.min(20,Math.floor(P.xp/100)),x=t>=20?100:P.xp%100;var cc=0;for(var i=0;i<t;i++){if(!((P.cf>>>i)&1))cc++;if(P.pr&&!((P.cp>>>i)&1))cc++}$('lPassT').textContent=cc?'CLAIM '+cc+' REWARD'+(cc>1?'S':'')+'!':'TIER '+t+(P.pr?' · PASS ★':'');pt.classList.toggle('claim',!!cc);$('lPassB').style.setProperty('--px',x+'%');$('lPassX').textContent=t>=20?'MAX':x+'/100 XP'},500);
 })();
 </script>
 </body></html>
