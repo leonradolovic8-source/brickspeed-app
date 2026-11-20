@@ -1734,16 +1734,19 @@ var css=document.createElement('style');css.textContent=`
 .bnbuy{margin-top:8px;width:100%;height:50px;border-radius:14px;font:italic 900 18px system-ui;color:#fff;background:linear-gradient(180deg,#d07bff,#9b3dff);box-shadow:0 4px 0 #4a1a8c;display:flex;align-items:center;justify-content:center;gap:8px}.bnbuy .gem{width:18px;height:18px}.bnbuy[disabled]{filter:grayscale(.8);opacity:.7}
 .bnx{position:absolute;top:8px;right:8px}
 @media (max-height:340px){#bnOv canvas{height:56vh}#bnOv h2{font-size:18px}#bnOv p{display:none}.bnl button{padding:3px 6px}.bnbuy{height:40px}}
-/* skins department in each driver's page */
-.kTabs{grid-column:1/-1;display:flex;gap:6px;margin:-4px 0 2px}.kTabs button{flex:1;height:34px;border-radius:10px;background:#0a1430;border:2px solid var(--ln);font:italic 900 14px system-ui;color:#8ea5cc}
-.kTabs button.on{background:linear-gradient(180deg,#ffe066,#ffc400);color:#3a2600;border-color:transparent}
-.csheet.ksk>*:not(.kTabs):not(.kDep){display:none!important}
-.kDep{grid-column:1/-1;display:none;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:10px;min-height:0}.csheet.ksk .kDep{display:grid}
-.kDep canvas{width:100%;height:min(52vh,240px);border-radius:14px;background:radial-gradient(circle at 50% 40%,#1c2a55,#05060f);display:block;touch-action:none}
-.kDep .kl{display:grid;gap:6px;align-content:start}.kDep .kl button{display:flex;align-items:center;gap:8px;border-radius:12px;padding:6px 8px;background:#0e1730;border:3px solid var(--fr);text-align:left}
-.kDep .kl button.sel{box-shadow:0 0 0 2px #fff}.kDep .kl b{font:italic 900 14px system-ui;color:#fff;display:block}.kDep .kl small{font:800 9px ui-monospace,Menlo,monospace;letter-spacing:.05em;color:var(--fr)}
-.kDep .kl .sw{width:26px;height:26px;border-radius:8px;flex:none;border:2px solid #fff}
-.kDep .kact{height:44px;border-radius:12px;font:italic 900 16px system-ui;background:linear-gradient(180deg,#5dffb0,#1fd38a);color:#04140d;box-shadow:0 3px 0 #0d7a4d}.kDep .kact.buy{background:linear-gradient(180deg,#d07bff,#9b3dff);color:#fff;box-shadow:0 3px 0 #4a1a8c}.kDep .kact[disabled]{background:#14264f;color:#8ea5cc;box-shadow:none}
+/* driver page: character + 3D car with arrows */
+.csheet.kx{grid-template-columns:auto minmax(0,1.15fr) minmax(0,1fr);width:min(96vw,860px);gap:14px}
+.csheet.kx .art{width:min(22vw,150px)}
+.kCar{position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto auto auto;gap:4px;justify-items:center;align-self:stretch;min-height:0;border-radius:18px;padding:6px 6px 8px;background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--fr) 28%,#0e1838),#05060f 75%);border:3px solid var(--fr);box-shadow:0 0 18px color-mix(in srgb,var(--fr) 40%,transparent)}
+.kCar canvas{width:100%;height:100%;min-height:150px;max-height:230px;display:block;touch-action:pan-y}
+.kCar.lock canvas{filter:saturate(.6) brightness(.85)}
+.kArr{position:absolute;top:38%;width:38px;height:54px;border-radius:12px;background:rgba(10,20,48,.85);border:2px solid rgba(255,255,255,.25);font:900 30px/1 system-ui;color:#fff;z-index:2;box-shadow:0 3px 0 #000}
+.kArr.l{left:6px}.kArr.r{right:6px}.kArr:active{transform:translateY(2px)}
+.kNm{text-align:center;line-height:1.1}.kNm b{display:block;font:italic 900 18px system-ui;color:#fff}.kNm small{font:800 9px ui-monospace,Menlo,monospace;letter-spacing:.06em;color:var(--fr)}
+.kDots{display:flex;gap:6px}.kDots i{width:9px;height:9px;border-radius:50%;background:#2a3a66}.kDots i.on{background:var(--fr);box-shadow:0 0 8px var(--fr)}.kDots i.lk{outline:1px solid #8ea5cc}
+.kAct{width:100%;height:40px;border-radius:12px;font:italic 900 15px system-ui;background:linear-gradient(180deg,#5dffb0,#1fd38a);color:#04140d;box-shadow:0 3px 0 #0d7a4d}.kAct.buy{background:linear-gradient(180deg,#d07bff,#9b3dff);color:#fff;box-shadow:0 3px 0 #4a1a8c}.kAct[disabled]{background:#14264f;color:#8ea5cc;box-shadow:none}
+@media (max-height:340px){.kCar canvas{min-height:110px}.kNm b{font-size:14px}.kAct{height:32px;font-size:13px}.csheet.kx .art{width:min(18vw,100px)}.csheet.kx{gap:10px}}
+@media (max-width:640px){.csheet.kx{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.csheet.kx .art{display:none}}
 .k3fail{display:grid;place-items:center;color:#8ea5cc;font:700 12px system-ui}
 .card .kn{position:absolute;top:6px;right:6px;font:900 9px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.5);color:#fff;border-radius:7px;padding:2px 5px}`;
 document.head.appendChild(css);
@@ -1776,28 +1779,33 @@ function bnOpen(b){cur=b;var p=price(b),f=full(b);$('bnB').style.setProperty('--
   bb.disabled=true;send('b'+today()+','+todays().indexOf(b));buzz(15)};
  ov.classList.add('on');bnShow(b,b.sk[0])}
 
-// ---------- skins department in every driver's page ----------
-var sheet=$('csheet'),tab='info',busy=false;
+// ---------- every driver's page: the character + the car in 3D, arrows change the skin ----------
+var sheet=$('csheet'),busy=false,kSel={};
 function curDrv(){return curCh}
-function kDraw(sel){var c=curDrv();if(c<0)return;var dep=sheet.querySelector('.kDep');if(!dep)return;var u=useOf(c);if(sel==null)sel=u?c*2+u-1:-1;dep.dataset.sel=sel;
- var list=[-1,c*2,c*2+1],h='';list.forEach(function(s){var own=s<0||ownSkin(s),on=s<0?u===0:u===(s%2)+1;
-  h+='<button data-s="'+s+'" class="'+(s===sel?'sel':'')+'" style="--fr:'+(s<0?'#8ea5cc':FRC[SKN[s][1]])+'"><span class="sw" style="background:'+(s<0?'#8ea5cc':hx(SKN[s][2]))+'"></span><span><b>'+(s<0?'NORMAL':SKN[s][0])+(on?' · IN USE':'')+'</b><small>'+(s<0?'THE CLASSIC CAR':(own?RNM[SKN[s][1]]:'🔒 IN SHOP BUNDLES'))+'</small></span></button>'});
- var s2=sel,own2=s2<0||ownSkin(s2),on2=s2<0?u===0:u===(s2%2)+1;
- h+='<button class="kact'+(own2?'':' buy')+'" id="kAct"'+(on2?' disabled':'')+'>'+(on2?'IN USE ✓':own2?'USE THIS SKIN':'FIND IT IN THE SHOP')+'</button>';
- dep.querySelector('.kl').innerHTML=h;
- [].forEach.call(dep.querySelectorAll('.kl button[data-s]'),function(b){b.onclick=function(e){e.stopPropagation();var s=+b.dataset.s;kDraw(s);var old=dep.querySelector('canvas'),cv=document.createElement('canvas');old.replaceWith(cv);car3d(cv,s,s<0?parseInt(window.CH?0:0):0);if(s<0)cv.dataset.base=1}});
- $('kAct').onclick=function(e){e.stopPropagation();if(s2>=0&&!ownSkin(s2)){$('charOv').classList.remove('on');if(window.BSShop)window.BSShop('bundles');return}send('j'+c+','+(s2<0?0:(s2%2)+1));setTimeout(function(){kDraw()},350)}}
 var BASEC=[0xffb020,0xff6e14,0x3cc864,0x285aff,0x00dcc8,0xe11d2e,0x8cc8ff,0xbe78ff,0xb6f22e,0xff4fa3];
+function kList(c){return [-1,c*2,c*2+1]}
+function kDraw(redraw3d){var c=curDrv();if(c<0)return;var box=sheet.querySelector('.kCar');if(!box)return;var u=useOf(c),L=kList(c);
+ if(kSel[c]==null)kSel[c]=u?c*2+u-1:-1;var s=kSel[c],own=s<0||ownSkin(s),on=s<0?u===0:u===(s%2)+1,fr=s<0?'#8ea5cc':FRC[SKN[s][1]];
+ box.style.setProperty('--fr',fr);
+ if(redraw3d||!box.querySelector('canvas')){var old=box.querySelector('canvas'),cv=document.createElement('canvas');if(old)old.replaceWith(cv);else box.insertBefore(cv,box.firstChild);car3d(cv,s,BASEC[c])}
+ box.querySelector('.kNm').innerHTML='<b>'+(s<0?'NORMAL':SKN[s][0])+'</b><small>'+(s<0?'THE CLASSIC CAR':RNM[SKN[s][1]])+' · '+(L.indexOf(s)+1)+'/3</small>';
+ var dots='';L.forEach(function(x){dots+='<i class="'+(x===s?'on':'')+(x>=0&&!ownSkin(x)?' lk':'')+'"></i>'});box.querySelector('.kDots').innerHTML=dots;
+ var a=box.querySelector('.kAct');a.className='kAct'+(own?'':' buy');a.disabled=on;a.textContent=on?'IN USE ✓':own?'USE THIS SKIN':'🔒 IN SHOP BUNDLES';
+ a.onclick=function(e){e.stopPropagation();if(!own){$('charOv').classList.remove('on');if(window.BSShop)window.BSShop('bundles');return}send('j'+c+','+(s<0?0:(s%2)+1));buzz(10);setTimeout(function(){kDraw()},350)};
+ box.classList.toggle('lock',!own)}
+function kStep(d){var c=curDrv();if(c<0)return;var L=kList(c),i=L.indexOf(kSel[c]);kSel[c]=L[(i+d+L.length)%L.length];buzz(6);kDraw(true)}
 function inject(){if(busy)return;var c=curDrv();if(c<0)return;busy=true;
- if(!sheet.querySelector('.kTabs')){var t=document.createElement('div');t.className='kTabs';t.innerHTML='<button data-t="info">INFO</button><button data-t="skins">🎨 SKINS ('+(1+[c*2,c*2+1].filter(ownSkin).length)+'/3)</button>';sheet.insertBefore(t,sheet.firstChild);
-  [].forEach.call(t.children,function(b){b.onclick=function(e){e.stopPropagation();tab=b.dataset.t;apply()}})}
- if(!sheet.querySelector('.kDep')){var d=document.createElement('div');d.className='kDep';d.innerHTML='<canvas></canvas><div class="kl"></div>';sheet.appendChild(d);var u=useOf(c),s=u?c*2+u-1:-1;car3d(d.querySelector('canvas'),s,BASEC[c]);kDraw()}
- apply();busy=false}
-function apply(){sheet.classList.toggle('ksk',tab==='skins');[].forEach.call(sheet.querySelectorAll('.kTabs button'),function(b){b.classList.toggle('on',b.dataset.t===tab)})}
+ sheet.classList.add('kx');
+ if(!sheet.querySelector('.kCar')){var d=document.createElement('div');d.className='kCar';
+  d.innerHTML='<button class="kArr l" aria-label="Previous skin">‹</button><button class="kArr r" aria-label="Next skin">›</button><div class="kNm"></div><div class="kDots"></div><button class="kAct"></button>';
+  var art=sheet.querySelector('.art');if(art&&art.nextSibling)sheet.insertBefore(d,art.nextSibling);else sheet.appendChild(d);
+  d.querySelector('.kArr.l').onclick=function(e){e.stopPropagation();kStep(-1)};d.querySelector('.kArr.r').onclick=function(e){e.stopPropagation();kStep(1)};
+  var sx=null;d.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});d.addEventListener('touchend',function(e){if(sx==null)return;var dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>60&&e.target.tagName!=='CANVAS')kStep(dx<0?1:-1)},{passive:true});
+  kDraw(true)}
+ busy=false}
 new MutationObserver(function(){if(!busy)inject()}).observe(sheet,{childList:true});
-// fix: the NORMAL car shows the driver's own colour
 var _mv=makeView;makeView=function(cv,si,body){return _mv(cv,si,si<0?(body||BASEC[curDrv()]||0x8ea5cc):body)};
-$('charBack')&&$('charBack').addEventListener('click',function(){tab='info'});
+$('charBack')&&$('charBack').addEventListener('click',function(){sheet.classList.remove('kx')});
 // little "skins 1/3" badge on every collection card
 function colMark(){[].forEach.call(document.querySelectorAll('#cards .card'),function(b){var c=+b.dataset.i,n=1+[c*2,c*2+1].filter(ownSkin).length,k=b.querySelector('.kn');if(!k){k=document.createElement('span');k.className='kn';b.appendChild(k)}k.textContent='🎨 '+n+'/3'})}
 setInterval(colMark,1500);

@@ -4082,6 +4082,17 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 /* v2: coins, paints, drivers like the pad */
 .bsl-dc{border:3px solid var(--fr,#2a3c6e)!important}
 .bsl-info{border:3px solid var(--dc,#e8392f)}
+.bsl-info{grid-template-columns:auto minmax(0,1.15fr) minmax(0,1fr)!important;align-items:stretch!important}
+.bsl-info .bslart{width:clamp(60px,14vw,120px)!important;height:auto!important;align-self:center}
+.dvCar{position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:4px;justify-items:center;border-radius:14px;padding:4px 4px 6px;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--fr) 26%,#0e1838),#05060f 75%);border:3px solid var(--fr);min-height:0}
+.dvCv{width:100%;height:clamp(120px,36vh,210px);display:block}
+.dvCar.lock .dvCv{filter:saturate(.6) brightness(.85)}
+.dvCar .kArr{position:absolute;top:34%;width:34px;height:48px;border-radius:11px;background:rgba(10,20,48,.85)!important;border:2px solid rgba(255,255,255,.25)!important;font:900 26px/1 system-ui!important;color:#fff;z-index:2}
+.dvCar .kArr.l{left:4px}.dvCar .kArr.r{right:4px}
+.dvCar .kNm{text-align:center;line-height:1.1}.dvCar .kNm b{display:block;font:800 italic 17px var(--display)}.dvCar .kNm small{font:700 9px var(--hud);letter-spacing:.06em;color:var(--fr)}
+.dvAct{width:100%;height:36px;border-radius:10px;font:800 italic 15px var(--display)!important;background:linear-gradient(180deg,#5dffb0,#1fd38a)!important;color:#04140d!important}.dvAct.buy{background:linear-gradient(180deg,#d07bff,#9b3dff)!important;color:#fff!important}.dvAct[disabled]{background:#14264f!important;color:#8ea5cc!important}
+.dvTx{display:flex;flex-direction:column;gap:4px;min-width:0}.dvTx b{font:800 italic 22px/1 var(--display)}.dvTx p{margin:2px 0 6px;font:500 13px/1.35 var(--body);color:#c9d4f2}.dvTx .ab{font:700 10px var(--hud);letter-spacing:.1em;color:#ffcf3a}
+@media (max-height:340px){.dvTx p{font-size:11.5px}.dvTx b{font-size:18px}}
 .bsl-skr{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .bsl-sk{display:flex;flex-direction:column;align-items:flex-start;padding:5px 10px;border-radius:10px;border:2px solid var(--fr)!important;background:color-mix(in srgb,var(--c1,#1e2a4a) 35%,#0b1226)!important;min-width:0;text-align:left}
 .bsl-sk b{font:800 italic 14px/1 var(--display)!important;white-space:nowrap}.bsl-sk small{font:700 8.5px var(--hud);letter-spacing:.06em;color:var(--fr);white-space:nowrap}
@@ -4547,12 +4558,19 @@ function skinRow(c){var i=padIdx(c.id);if(i<0)return '';var h='<div class="bsl-s
  return h+'</div>'}
 function drvDraw(){var L=chars(),c=cur(),box=$('bslDrvList'),ban=$('bslDrvBan');
  ban.hidden=!!PROF;if(!PROF)ban.textContent='🎮 Press ONLINE on your BrickSpeed pad to bring your drivers, levels, coins and paints here. Without a pad you drive BLAZE.';
- var inf=$('bslDrvInfo'),pi=padIdx(c.id);inf.style.setProperty('--dc',c.col);
- inf.style.setProperty('--dc',FRC[rarOf(c.id)]);inf.innerHTML='<span class="bslart"></span><div><b></b><span class="ab"></span><p></p>'+skinRow(c)+'</div><button class="bsl-btn" data-back type="button">RACE WITH IT</button>';
- [].forEach.call(inf.querySelectorAll('.bsl-sk'),function(b){b.onclick=function(){var k=+b.dataset.k,i=padIdx(c.id);if(!PROF){toast('Skins come from your pad shop');return}if(k&&!skinOwned(i*2+k-1)){toast('Buy '+SKN[i*2+k-1][0]+' in the pad shop (SKINS)');return}
-  var ks=String(PROF.ks||'0000000000');while(ks.length<10)ks+='0';ks=ks.slice(0,i)+k+ks.slice(i+1);PROF.ks=ks;jset('bs-prof',PROF);vib(10);drvDraw();draw();carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()))}});
- inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):'';inf.querySelector('b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
- inf.querySelector('p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('[data-back]').onclick=function(){panel(null);draw()};
+ var inf=$('bslDrvInfo'),pi=padIdx(c.id),L3=pi>=0?[-1,pi*2,pi*2+1]:[-1];if(dvSel[c.id]==null)dvSel[c.id]=skinIdx(c.id);var sv=dvSel[c.id];
+ var ik=c.id+'|'+sv+'|'+skinIdx(c.id)+'|'+(PROF?PROF.kn:0)+'|'+level(c.id);
+ if(inf.__k!==ik){inf.__k=ik;
+  var own=sv<0||skinOwned(sv),on=sv===skinIdx(c.id),fr=sv<0?'#8ea5cc':FRC[SKN[sv][1]];
+  inf.style.setProperty('--dc',FRC[rarOf(c.id)]);
+  inf.innerHTML='<span class="bslart"></span><div class="dvCar'+(own?'':' lock')+'" style="--fr:'+fr+'"><button class="kArr l" type="button" aria-label="Previous skin">‹</button><button class="kArr r" type="button" aria-label="Next skin">›</button><div class="kNm"><b>'+(sv<0?'NORMAL':SKN[sv][0])+'</b><small>'+(sv<0?'THE CLASSIC CAR':RNAME[SKN[sv][1]])+' · '+(L3.indexOf(sv)+1)+'/'+L3.length+'</small></div><button class="dvAct'+(own?'':' buy')+'" type="button"'+(on?' disabled':'')+'>'+(on?'IN USE ✓':own?'USE THIS SKIN':'🔒 PAD SHOP BUNDLES')+'</button></div><div class="dvTx"><b></b><span class="ab"></span><p></p><button class="bsl-btn" data-back type="button">RACE WITH IT</button></div>';
+  var dc=inf.querySelector('.dvCar');dc.insertBefore(dvCanvas(),dc.firstChild);dvSet(c,sv);
+  inf.querySelector('.kArr.l').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i-1+L3.length)%L3.length];vib(6);drvDraw()};
+  inf.querySelector('.kArr.r').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i+1)%L3.length];vib(6);drvDraw()};
+  inf.querySelector('.dvAct').onclick=function(){if(sv>=0&&!own){toast('Get '+SKN[sv][0]+' in the pad shop (BUNDLES)');return}if(!PROF){toast('Skins come from your pad shop');return}
+   var k=sv<0?0:(sv%2)+1,ks=String(PROF.ks||'0000000000');while(ks.length<10)ks+='0';ks=ks.slice(0,pi)+k+ks.slice(pi+1);PROF.ks=ks;jset('bs-prof',PROF);vib(10);drvDraw();draw();carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()))};
+  inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):'';inf.querySelector('.dvTx b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
+  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('[data-back]').onclick=function(){panel(null);draw()}}
  var key=L.map(function(x){return x.id+owned(x.id)+level(x.id)}).join()+c.id;if(box.__k===key)return;box.__k=key;box.innerHTML='';
  L.map(function(ch,i){return i}).sort(function(a,b){return rarOf(L[a].id)-rarOf(L[b].id)||a-b}).forEach(function(i){var ch=L[i],pi2=padIdx(ch.id),b=document.createElement('button');b.type='button';b.className='bsl-dc'+(owned(ch.id)?'':' lock');b.style.setProperty('--dc',ch.col);b.style.setProperty('--fr',FRC[rarOf(ch.id)]);
   b.setAttribute('aria-pressed',ch===c?'true':'false');b.innerHTML='<span class="bslart"></span><b></b><small></small>'+(owned(ch.id)?'<span class="lv">LV '+level(ch.id)+'</span>':'');
@@ -4630,6 +4648,19 @@ $('bslPlay').onclick=function(){vib(20);
 var pcB=$('pickc');if(pcB)pcB.addEventListener('click',function(e){if(!B.classList.contains('bsl-on'))return;var n=NETo();if(n&&n.on)return;e.stopImmediatePropagation();e.preventDefault();if(window.BSRace)window.BSRace.end();setTimeout(function(){panel('bslPDrv')},50)},true);
 
 // ---------- the car on the podium (3D, the game's own car models, with your paint) ----------
+var dvSel={},DV=null,DVC=null;
+function dvCanvas(){if(!DVC){DVC=document.createElement('canvas');DVC.className='dvCv'}return DVC}
+function dvSet(c,sv){if(!window.THREE||!window.BSMakeCar)return;var T=window.THREE;
+ if(!DV){var R;try{R=new T.WebGLRenderer({canvas:dvCanvas(),antialias:true,alpha:true})}catch(e){return}R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));R.outputEncoding=T.sRGBEncoding;R.toneMapping=T.ACESFilmicToneMapping;R.toneMappingExposure=1.15;
+  var sc=new T.Scene();sc.add(new T.HemisphereLight(0xbfd4ff,0x1a1030,.9));var dl=new T.DirectionalLight(0xffffff,1.6);dl.position.set(4,8,6);sc.add(dl);var dl2=new T.DirectionalLight(0xffffff,.6);dl2.position.set(-5,3,-6);sc.add(dl2);
+  var hold=new T.Group();sc.add(hold);var disc=new T.Mesh(new T.CylinderGeometry(3.3,3.3,.1,48),new T.MeshStandardMaterial({color:0x141a33,roughness:.6}));disc.position.y=-.06;sc.add(disc);
+  var ring=new T.Mesh(new T.TorusGeometry(3.3,.05,8,80),new T.MeshStandardMaterial({color:0,emissive:new T.Color(0xffffff),emissiveIntensity:2}));ring.rotation.x=Math.PI/2;sc.add(ring);
+  DV={T:T,R:R,sc:sc,cam:new T.PerspectiveCamera(32,1.4,.1,100),hold:hold,ring:ring,car:null}}
+ if(DV.car)DV.hold.remove(DV.car);var ch=sv>=0?window.BSSkinOf(c,sv):c;var m;try{m=window.BSMakeCar(ch)}catch(e){return}DV.car=m;DV.hold.add(m);
+ DV.ring.material.emissive.set(sv>=0?FRC[SKN[sv][1]]:'#8ea5cc')}
+function dvFrame(dt){if(!DV||!$('bslPDrv').classList.contains('on'))return;var cv=dvCanvas(),w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+ if(cv.width!==Math.round(w*DV.R.getPixelRatio())||cv.height!==Math.round(h*DV.R.getPixelRatio())){DV.R.setSize(w,h,false);DV.cam.aspect=w/h;DV.cam.updateProjectionMatrix()}
+ DV.hold.rotation.y+=dt*.6;DV.cam.position.set(0,3.6,w/h<1.2?10.5:8.4);DV.cam.lookAt(0,.7,0);DV.R.render(DV.sc,DV.cam)}
 var R3=null;
 function car3d(){if(R3||!window.THREE||!window.BSMakeCar)return;var T=window.THREE,cv=$('bslCar'),R;
  try{R=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){return}
@@ -4654,7 +4685,7 @@ function carSet(){car3d();if(!R3)return;var c=cur();if(!c||R3.id===carKey())retu
 var lastT=0;
 function loop(t){requestAnimationFrame(loop);if(!B.classList.contains('bsl-on')||B.classList.contains('racing'))return;
  if(t-lastT<33)return;var dt=Math.min(.1,(t-lastT)/1000);lastT=t;
- if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();R3.holder.rotation.y+=dt*.5;if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam)}}
+ dvFrame(dt);if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();R3.holder.rotation.y+=dt*.5;if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam)}}
 requestAnimationFrame(loop);
 
 // ---------- keep everything fresh ----------
