@@ -4092,6 +4092,12 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 .dvCar .kNm{text-align:center;line-height:1.1}.dvCar .kNm b{display:block;font:800 italic 17px var(--display)}.dvCar .kNm small{font:700 9px var(--hud);letter-spacing:.06em;color:var(--fr)}
 .dvAct{width:100%;height:36px;border-radius:10px;font:800 italic 15px var(--display)!important;background:linear-gradient(180deg,#5dffb0,#1fd38a)!important;color:#04140d!important}.dvAct.buy{background:linear-gradient(180deg,#d07bff,#9b3dff)!important;color:#fff!important}.dvAct[disabled]{background:#14264f!important;color:#8ea5cc!important}
 .dvTx{display:flex;flex-direction:column;gap:4px;min-width:0}.dvTx b{font:800 italic 22px/1 var(--display)}.dvTx p{margin:2px 0 6px;font:500 13px/1.35 var(--body);color:#c9d4f2}.dvTx .ab{font:700 10px var(--hud);letter-spacing:.1em;color:#ffcf3a}
+.bsl-dpop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(3,6,16,.74);padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));animation:bslPopIn .18s ease-out}
+.bsl-dpop[hidden]{display:none}.bsl-dpop-in{position:relative;width:min(900px,100%);max-height:100%;display:flex}
+.bsl-dpop .bsl-info{margin:0;width:100%;max-height:calc(100dvh - 24px);min-height:min(300px,calc(100dvh - 24px));box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.bsl-dpx{position:absolute;top:-6px;right:-6px;z-index:3;width:38px;height:38px;border-radius:50%}
+@keyframes bslPopIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.dvTx .dvGo.lock{filter:grayscale(.8);opacity:.75}
 @media (max-height:340px){.dvTx p{font-size:11.5px}.dvTx b{font-size:18px}}
 .bsl-skr{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .bsl-sk{display:flex;flex-direction:column;align-items:flex-start;padding:5px 10px;border-radius:10px;border:2px solid var(--fr)!important;background:color-mix(in srgb,var(--c1,#1e2a4a) 35%,#0b1226)!important;min-width:0;text-align:left}
@@ -4185,7 +4191,8 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
   </div>
 
   <div class="bslp" id="bslPDrv"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>Pick your <i>driver</i></h2><span class="sub" id="bslDrvSub">YOUR PAD'S DRIVERS · LEVELS FROM YOUR PAD</span><span class="bsl-sp"></span><button class="bsl-btn" data-back type="button">DONE</button></div>
-   <div class="bslp-b"><div class="bsl-banner" id="bslDrvBan" hidden></div><div class="bsl-info" id="bslDrvInfo"></div><div class="bsl-dgrid" id="bslDrvList"></div></div></div>
+   <div class="bslp-b"><div class="bsl-banner" id="bslDrvBan" hidden></div><p class="bsl-note" style="margin:0 0 6px">Tap a driver to see them, their car and their skins.</p><div class="bsl-dgrid" id="bslDrvList"></div></div>
+   <div class="bsl-dpop" id="bslDrvPop" hidden><div class="bsl-dpop-in"><div class="bsl-info" id="bslDrvInfo"></div><button class="bsl-ib bsl-dpx" id="bslDrvX" type="button" aria-label="Close">✕</button></div></div></div>
   <div class="bslp" id="bslPMode"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>What do you <i>play?</i></h2><span class="sub" id="bslMapSub"></span><span class="bsl-sp"></span><button class="bsl-btn" data-back type="button">DONE</button></div>
    <div class="bslp-b"><div class="bsl-modes" id="bslModes"></div>
     <div class="bsl-grp" id="bslTrackH">TRACK</div><div class="bsl-maps" id="bslMaps"></div>
@@ -4483,14 +4490,29 @@ var TRAILTEX=null;function trailTex(T){if(TRAILTEX)return TRAILTEX;var c=documen
 window.BSGlow=function(g,col,T){try{
  var mat=function(tex){return new T.MeshBasicMaterial({color:col,map:tex,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide})};
  var ug=new T.Mesh(new T.PlaneGeometry(4.2,7),mat(glowTex(T)));ug.rotation.x=-Math.PI/2;ug.position.y=.06;ug.renderOrder=2;g.add(ug);
- // the trail: two ribbons from the back wheels, as long as the car is fast
- var tg=new T.PlaneGeometry(.38,1);tg.rotateX(-Math.PI/2);tg.translate(0,0,.5);var tm=mat(trailTex(T));tm.opacity=.85;
- var hold=new T.Group();hold.position.set(0,.3,2.35);g.add(hold);
- [-1,1].forEach(function(sd){var m=new T.Mesh(tg,tm);m.position.x=sd*1.05;hold.add(m)});
- var wp=new T.Vector3(),last=null,lt=0,len=0;hold.scale.z=.001;hold.visible=false;
- ug.onBeforeRender=function(){var now=performance.now();if(now-lt<12)return;g.getWorldPosition(wp);
-  if(last){var dt=Math.min(.1,(now-lt)/1000),v=wp.distanceTo(last)/Math.max(dt,.001);if(v>200)v=0;var want=Math.min(9,v*.32);len+=(want-len)*Math.min(1,dt*6)}
-  last=(last||new T.Vector3()).copy(wp);lt=now;hold.visible=len>.25;hold.scale.z=Math.max(.001,len)};
+ // the trail: a real light trail. Every few cm we drop a point behind each back wheel (in the world),
+ // so the ribbon follows the road the car really drove (curves, drifts) and fades out after ~0.6 s.
+ var N=48,LIFE=.6,HW=.24,pts=[],sc=null,tr=null,lastSeen=0,wp=new T.Vector3(),q=new T.Quaternion(),side=new T.Vector3(),tmp=new T.Vector3(),cc=new T.Color(col);
+ var geo=new T.BufferGeometry(),pos=new Float32Array(N*2*2*3),cl=new Float32Array(N*2*2*3),idx=[];
+ for(var w=0;w<2;w++)for(var k=0;k<N-1;k++){var a=(w*N+k)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}
+ geo.setIndex(idx);geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('color',new T.BufferAttribute(cl,3));geo.setDrawRange(0,0);
+ var tmat=new T.MeshBasicMaterial({vertexColors:true,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
+ function build(now){var n=pts.length,cnt=0;for(var w=0;w<2;w++){for(var k=0;k<N;k++){var p=pts[Math.min(k,n-1)],o=((w*N+k)*2)*3;
+   if(!p){pos.fill(0,o,o+6);continue}var age=(now-p.t)/1000,f=Math.max(0,1-age/LIFE)*(k<n?1:0);f=f*f;var hw=HW*(.35+.65*f);
+   var bx=p.w[w].x,by=p.w[w].y,bz=p.w[w].z;pos[o]=bx-p.s.x*hw;pos[o+1]=by;pos[o+2]=bz-p.s.z*hw;pos[o+3]=bx+p.s.x*hw;pos[o+4]=by;pos[o+5]=bz+p.s.z*hw;
+   for(var e=0;e<6;e+=3){cl[o+e]=cc.r*f;cl[o+e+1]=cc.g*f;cl[o+e+2]=cc.b*f}}}
+  cnt=n>1?(Math.min(n,N)-1)*6:0;geo.setDrawRange(0,cnt?((N-1)*6)*2:0);geo.attributes.position.needsUpdate=true;geo.attributes.color.needsUpdate=true;geo.computeBoundingSphere()}
+ ug.onBeforeRender=function(rd,scene){var now=performance.now();lastSeen=now;
+  if(!tr||sc!==scene){if(tr&&tr.parent)tr.parent.remove(tr);sc=scene;tr=new T.Mesh(geo,tmat);tr.frustumCulled=false;tr.renderOrder=3;
+   tr.onBeforeRender=function(){if(performance.now()-lastSeen>250){pts.length=0;geo.setDrawRange(0,0)}};scene.add(tr);pts.length=0}
+  g.updateMatrixWorld();g.getWorldPosition(wp);g.getWorldQuaternion(q);side.set(1,0,0).applyQuaternion(q);side.y=0;side.normalize();
+  var head=pts[0];
+  if(!head||wp.distanceTo(head.c)>.22){var wl=[];[-1.05,1.05].forEach(function(x){tmp.set(x,.12,2.2);g.localToWorld(tmp);wl.push(tmp.clone())});
+   if(head&&wp.distanceTo(head.c)>8)pts.length=0; /* respawn / teleport: start fresh */
+   pts.unshift({c:wp.clone(),w:wl,s:side.clone(),t:now});if(pts.length>N)pts.length=N}
+  else{/* keep the newest point glued to the wheels */[-1.05,1.05].forEach(function(x,w2){tmp.set(x,.12,2.2);g.localToWorld(tmp);head.w[w2].copy(tmp)});head.s.copy(side)}
+  while(pts.length&&(now-pts[pts.length-1].t)/1000>LIFE)pts.pop();
+  build(now)};
 }catch(e){}return g};
 
 // ================= coins + XP won online (go back to the pad) =================
@@ -4558,7 +4580,7 @@ function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return
  else{chip.classList.add('off');$('bslRoomT').textContent='OFFLINE';$('bslVFr').textContent='CREATE OR JOIN A ROOM';pb.className='bsl-play';$('bslPlayB').textContent='PLAY';$('bslPlayS').textContent=(md==='race'?'RACE NOW':modeOf(md).n.toUpperCase()+' NOW')}
  if($('bslPDrv').classList.contains('on'))drvDraw();if($('bslPMode').classList.contains('on'))modeDraw();if($('bslPFr').classList.contains('on'))frDraw();if($('bslPSync').classList.contains('on'))syncDraw();
 }
-function panel(id){[].forEach.call(document.querySelectorAll('.bslp'),function(p){p.classList.toggle('on',p.id===id)});vib(8);
+function panel(id){if($('bslDrvPop')){$('bslDrvPop').hidden=true;dvView=null}[].forEach.call(document.querySelectorAll('.bslp'),function(p){p.classList.toggle('on',p.id===id)});vib(8);
  if(id==='bslPDrv')drvDraw();if(id==='bslPMode')modeDraw();if(id==='bslPPaint')paintDraw();if(id==='bslPTop')topLoad();if(id==='bslPFr')frDraw();if(id==='bslPSync')syncDraw();
  if(id==='bslPSet'){$('bslNameIn').value=myName();$('bslFs').setAttribute('aria-pressed',document.fullscreenElement?'true':'false');$('bslAuto').setAttribute('aria-pressed',auto?'true':'false')}}
 [].forEach.call(document.querySelectorAll('#bsl [data-back]'),function(b){b.onclick=function(){panel(null);draw()}});
@@ -4573,26 +4595,29 @@ function rarOf(id){var i=padIdx(id);return i>=0?PADART.CH[i][2]:1}
 function skinRow(c){var i=padIdx(c.id);if(i<0)return '';var h='<div class="bsl-skr"><button type="button" data-k="0" class="bsl-sk'+(skinIdx(c.id)<0?' on':'')+'" style="--fr:#8ea5cc"><b>NORMAL</b><small>'+c.name+'</small></button>';
  for(var k=1;k<=2;k++){var s=i*2+k-1,S=SKN[s],ow=skinOwned(s);h+='<button type="button" data-k="'+k+'" class="bsl-sk'+(skinIdx(c.id)===s?' on':'')+(ow?'':' lock')+'" style="--fr:'+FRC[S[1]]+';--c1:#'+('00000'+S[2].toString(16)).slice(-6)+'"><b>'+(ow?'':'🔒 ')+S[0]+'</b><small>'+(ow?RNAME[S[1]]:'PAD SHOP · '+SKIN_GEMS[S[1]]+' GEMS')+'</small></button>'}
  return h+'</div>'}
-function drvDraw(){var L=chars(),c=cur(),box=$('bslDrvList'),ban=$('bslDrvBan');
+var dvView=null;function drvPop(on){var p=$('bslDrvPop');p.hidden=!on;if(!on)dvView=null}
+$('bslDrvX').onclick=function(){drvPop(false)};$('bslDrvPop').addEventListener('pointerdown',function(e){if(e.target===this)drvPop(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('bslDrvPop').hidden)drvPop(false)});
+function drvDraw(){var L=chars(),c0=cur(),c=(dvView&&L.filter(function(x){return x.id===dvView})[0])||c0,box=$('bslDrvList'),ban=$('bslDrvBan');
  ban.hidden=!!PROF;if(!PROF)ban.textContent='🎮 Press ONLINE on your BrickSpeed pad to bring your drivers, levels, coins and paints here. Without a pad you drive BLAZE.';
  var inf=$('bslDrvInfo'),pi=padIdx(c.id),L3=pi>=0?[-1,pi*2,pi*2+1]:[-1];if(dvSel[c.id]==null)dvSel[c.id]=skinIdx(c.id);var sv=dvSel[c.id];
  var ik=c.id+'|'+sv+'|'+skinIdx(c.id)+'|'+(PROF?PROF.kn:0)+'|'+level(c.id);
  if(inf.__k!==ik){inf.__k=ik;
   var own=sv<0||skinOwned(sv),on=sv===skinIdx(c.id),fr=sv<0?'#8ea5cc':FRC[SKN[sv][1]];
   inf.style.setProperty('--dc',FRC[rarOf(c.id)]);
-  inf.innerHTML='<span class="bslart"></span><div class="dvCar'+(own?'':' lock')+'" style="--fr:'+fr+'"><button class="kArr l" type="button" aria-label="Previous skin">‹</button><button class="kArr r" type="button" aria-label="Next skin">›</button><div class="kNm"><b>'+(sv<0?'NORMAL':SKN[sv][0])+'</b><small>'+(sv<0?'THE CLASSIC CAR':RNAME[SKN[sv][1]])+' · '+(L3.indexOf(sv)+1)+'/'+L3.length+'</small></div><button class="dvAct'+(own?'':' buy')+'" type="button"'+(on?' disabled':'')+'>'+(on?'IN USE ✓':own?'USE THIS SKIN':'🔒 PAD SHOP BUNDLES')+'</button></div><div class="dvTx"><b></b><span class="ab"></span><p></p><button class="bsl-btn" data-back type="button">RACE WITH IT</button></div>';
+  inf.innerHTML='<span class="bslart"></span><div class="dvCar'+(own?'':' lock')+'" style="--fr:'+fr+'"><button class="kArr l" type="button" aria-label="Previous skin">‹</button><button class="kArr r" type="button" aria-label="Next skin">›</button><div class="kNm"><b>'+(sv<0?'NORMAL':SKN[sv][0])+'</b><small>'+(sv<0?'THE CLASSIC CAR':RNAME[SKN[sv][1]])+' · '+(L3.indexOf(sv)+1)+'/'+L3.length+'</small></div><button class="dvAct'+(own?'':' buy')+'" type="button"'+(on?' disabled':'')+'>'+(on?'IN USE ✓':own?'USE THIS SKIN':'🔒 PAD SHOP BUNDLES')+'</button></div><div class="dvTx"><b></b><span class="ab"></span><p></p><button class="bsl-btn dvGo'+(owned(c.id)?'':' lock')+'" type="button">'+(owned(c.id)?(c===c0?'RACE WITH IT':'PICK &amp; RACE'):'🔒 GET IT ON YOUR PAD')+'</button></div>';
   var dc=inf.querySelector('.dvCar');dc.insertBefore(dvCanvas(),dc.firstChild);dvSet(c,sv);
   inf.querySelector('.kArr.l').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i-1+L3.length)%L3.length];vib(6);drvDraw()};
   inf.querySelector('.kArr.r').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i+1)%L3.length];vib(6);drvDraw()};
   inf.querySelector('.dvAct').onclick=function(){if(sv>=0&&!own){toast('Get '+SKN[sv][0]+' in the pad shop (BUNDLES)');return}if(!PROF){toast('Skins come from your pad shop');return}
    var k=sv<0?0:(sv%2)+1,ks=String(PROF.ks||'0000000000');while(ks.length<10)ks+='0';ks=ks.slice(0,pi)+k+ks.slice(pi+1);PROF.ks=ks;jset('bs-prof',PROF);vib(10);drvDraw();draw();carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()))};
   inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):'';inf.querySelector('.dvTx b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
-  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('[data-back]').onclick=function(){panel(null);draw()}}
- var key=L.map(function(x){return x.id+owned(x.id)+level(x.id)}).join()+c.id;if(box.__k===key)return;box.__k=key;box.innerHTML='';
+  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('.dvGo').onclick=function(){if(!owned(c.id)){toast(c.name+' is locked: get it on your pad');vib(30);return}if(c!==c0&&!pickChar(L.indexOf(c)))return;drvPop(false);panel(null);draw()}}
+ var key=L.map(function(x){return x.id+owned(x.id)+level(x.id)}).join()+c0.id;if(box.__k===key)return;box.__k=key;box.innerHTML='';
  L.map(function(ch,i){return i}).sort(function(a,b){return rarOf(L[a].id)-rarOf(L[b].id)||a-b}).forEach(function(i){var ch=L[i],pi2=padIdx(ch.id),b=document.createElement('button');b.type='button';b.className='bsl-dc'+(owned(ch.id)?'':' lock');b.style.setProperty('--dc',ch.col);b.style.setProperty('--fr',FRC[rarOf(ch.id)]);
-  b.setAttribute('aria-pressed',ch===c?'true':'false');b.innerHTML='<span class="bslart"></span><b></b><small></small>'+(owned(ch.id)?'<span class="lv">LV '+level(ch.id)+'</span>':'');
+  b.setAttribute('aria-pressed',ch===c0?'true':'false');b.innerHTML='<span class="bslart"></span><b></b><small></small>'+(owned(ch.id)?'<span class="lv">LV '+level(ch.id)+'</span>':'');
   b.querySelector('.bslart').innerHTML=pi2>=0?PADART.art(pi2):'';b.querySelector('b').textContent=ch.name;b.querySelector('small').textContent=owned(ch.id)?RNAME[rarOf(ch.id)]:'LOCKED';
-  b.onclick=function(){pickChar(i)};box.appendChild(b)})}
+  b.onclick=function(){dvView=ch.id;drvPop(true);vib(6);drvDraw()};box.appendChild(b)})}
 // mode + track in one place
 function modeDraw(){var o=gameOpts(),md=o.mode||'race',lock=inRoom()&&!isHost(),tag=md==='tag',h='';
  MODES.forEach(function(m){var ok=inRoom()?m.mp:m.solo,g=MC[m.id];h+='<button class="bsl-mo" type="button" data-m="'+m.id+'" style="--m1:'+g[0]+';--m2:'+g[1]+'" aria-pressed="'+(md===m.id)+'"'+(!ok||lock?' disabled':'')+'><i>'+m.i+'</i><b>'+m.n+'</b><small>'+m.d+(ok?'':' · solo only')+'</small></button>'});
