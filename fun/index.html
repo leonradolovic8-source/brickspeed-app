@@ -4092,6 +4092,7 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 .dvCar .kNm{text-align:center;line-height:1.1}.dvCar .kNm b{display:block;font:800 italic 17px var(--display)}.dvCar .kNm small{font:700 9px var(--hud);letter-spacing:.06em;color:var(--fr)}
 .dvAct{width:100%;height:36px;border-radius:10px;font:800 italic 15px var(--display)!important;background:linear-gradient(180deg,#5dffb0,#1fd38a)!important;color:#04140d!important}.dvAct.buy{background:linear-gradient(180deg,#d07bff,#9b3dff)!important;color:#fff!important}.dvAct[disabled]{background:#14264f!important;color:#8ea5cc!important}
 .dvTx{display:flex;flex-direction:column;gap:4px;min-width:0}.dvTx b{font:800 italic 22px/1 var(--display)}.dvTx p{margin:2px 0 6px;font:500 13px/1.35 var(--body);color:#c9d4f2}.dvTx .ab{font:700 10px var(--hud);letter-spacing:.1em;color:#ffcf3a}
+.bsl-back{color:#ffd23a;border-color:#ffd23a}
 .bsl-dpop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(3,6,16,.74);padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));animation:bslPopIn .18s ease-out}
 .bsl-dpop[hidden]{display:none}.bsl-dpop-in{position:relative;width:min(900px,100%);max-height:100%;display:flex}
 .bsl-dpop .bsl-info{margin:0;width:100%;max-height:calc(100dvh - 24px);min-height:min(300px,calc(100dvh - 24px));box-shadow:0 18px 50px rgba(0,0,0,.6)}
@@ -4160,6 +4161,7 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
  <div class="bsl-city" id="bslCity" aria-hidden="true"></div>
  <div class="bsl-app">
   <div class="bsl-top">
+   <button class="bsl-chip bsl-back" id="bslBackPad" type="button" hidden aria-label="Back to my pad">‹ PAD</button>
    <span class="bsl-logo" id="bslLogo"></span>
    <span class="bsl-chip off" id="bslRoomChip"><span class="dot"></span><span id="bslRoomT">OFFLINE</span></span>
    <span class="bsl-sp"></span>
@@ -4463,7 +4465,7 @@ var PROF=jget('bs-prof');
 (function(){var m=/[#&]p=([A-Za-z0-9_-]+)/.exec(location.hash);if(!m)return;
  try{var j=JSON.parse(unb64u(m[1]));if(!j||!j.id)throw 0;
   PROF={id:String(j.id).slice(0,12),nm:cleanName(j.nm)||'PLAYER',ti:num(j.ti,7),tm:num(j.tm,255)|1,t:num(j.t,1e7),g:num(j.g,1e7),p:num(j.p,1e7),lt:num(j.lt,255),m:num(j.m,4294967295),
-   lv:(j.lv||[]).slice(0,10).map(function(v){return Math.max(1,num(v,10))}),sk:num(j.sk,255)|1,sp:num(j.sp,7),kn:num(j.kn,4294967295),ks:String(j.ks||'').replace(/[^0-2]/g,'').slice(0,10),xp:num(j.xp,1e7),pr:j.pr?1:0,on:(j.on||[]).map(function(v){return +v||0}),at:Date.now()};
+   lv:(j.lv||[]).slice(0,10).map(function(v){return Math.max(1,num(v,10))}),sk:num(j.sk,255)|1,sp:num(j.sp,7),kn:num(j.kn,4294967295),ks:String(j.ks||'').replace(/[^0-2]/g,'').slice(0,10),xp:num(j.xp,1e7),pr:j.pr?1:0,on:(j.on||[]).map(function(v){return +v||0}),at:Date.now(),src:(/[#&]src=b/.test(location.hash)?'b':'w')};
   jset('bs-prof',PROF);store('bs-mp-name',PROF.nm);
   var E=earn();if(E.pad&&E.pad!==PROF.id&&E.sent)E.sent.forEach(function(x){x.k=onlSum(PROF.id,x.b,x.t,x.x)});E.pad=PROF.id;
   E.sent=(E.sent||[]).filter(function(x){return PROF.on.indexOf(x.b)<0});saveEarn(E);
@@ -4654,11 +4656,14 @@ function topLoad(){var o=gameOpts();if(!topMap)topMap=MAPS.some(function(m){retu
  .catch(function(){ol.innerHTML='<li class="empty">Could not load the ranking. Try again in a moment.</li>'})}
 // my pad: send online coins back
 function syncDraw(){var P=pending();$('bslPend').textContent=P.t+' coin'+(P.t===1?'':'s');$('bslPendX').textContent='+'+P.x+' XP for the BrickSpeed Pass';
- $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET';$('bslOpenPad').disabled=!PROF||!(P.t||P.x)}
-$('bslOpenPad').onclick=function(){var E=earn();if(!PROF){toast('Press ONLINE on your pad first');return}freeze(E);saveEarn(E);
- if(!E.sent.length){toast('Nothing to send');return}
- $('bslSyncMsg').textContent='Opening your pad… if nothing loads, join the pad Wi-Fi first and tap OPEN PAD again.';
- location.href='http://192.168.4.1/#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent}))};
+ $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET';$('bslOpenPad').disabled=!PROF;$('bslOpenPad').textContent=(P.t||P.x)?'OPEN PAD':'BACK TO PAD'}
+// go back the same way you came: pad Wi-Fi -> the pad's own page (192.168.4.1), Bluetooth app -> the app (same tab, same app)
+window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your pad first');return}freeze(E);saveEarn(E);var ble=PROF.src==='b';
+ $('bslSyncMsg').textContent=ble?'Opening the BrickSpeed app… your coins go to the pad over Bluetooth.':'Opening your pad… if nothing loads, join the pad Wi-Fi (Settings > Wi-Fi) and tap again.';
+ if(ble){location.href=new URL('../',location.href).href;return}
+ location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};
+$('bslOpenPad').onclick=window.BSBackToPad;
+$('bslBackPad').onclick=window.BSBackToPad;$('bslBackPad').hidden=!PROF;
 // friends / online room
 function frMsg(t){$('bslFrMsg').textContent=t||''}
 var TC=['ROOKIE','SPEEDY','TURBO','BRICK BOSS','DRIFT KING','NO BRAKES','BRICK LEGEND','CHAMPION'];

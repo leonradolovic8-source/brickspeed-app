@@ -1490,9 +1490,9 @@ function syncOut(){if(!PS.id)return;var on=PS.on||[],L=SYNC.slice(),E=earnLS();
  L.forEach(function(x){if(!x||!x.b||on.indexOf(x.b)>=0||syncSent[x.b])return;syncSent[x.b]=1;send('V'+x.b+','+(x.t|0)+','+(x.x|0)+','+x.k)})}
 function onlAck(d){var E=earnLS();if(E&&E.sent){E.sent=E.sent.filter(function(x){return x.b!=d.onl});try{localStorage.setItem('bs-earn',JSON.stringify(E))}catch(e){}}
  if(d.t!=null){confetti(['#ffd23a','#38e1ff','#ffffff'],80);bigToast('+'+d.t+' COINS · +'+d.xp+' XP FROM ONLINE')}else if(d.bad)toast('Online coins could not be checked')}
-function openOnline(){var u=ONLINE_URL+'#lobby&p='+exportP();
+function openOnline(){var wifi=/^192\.168\.4\./.test(location.hostname),u=ONLINE_URL+'#lobby&src='+(wifi?'w':'b')+'&p='+exportP();
  if(/^192\.168\.4\./.test(location.hostname)){$('modeOv').classList.remove('on');onU=u;$('onCnt').hidden=true;$('onGo').disabled=false;$('onGo').textContent='GO ONLINE';$('onOv').classList.add('on');buzz(15);return}
- $('modeOv').classList.remove('on');buzz(15);var w=null;try{w=window.open(u,'_blank')}catch(e){}if(!w)location.href=u}
+ $('modeOv').classList.remove('on');buzz(15);location.href=u}   // same tab, so BACK TO PAD in the game brings you straight back
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
 // ONLINE from the pad's own Wi-Fi: the pad switches its Wi-Fi off, the phone falls back to home Wi-Fi / mobile data, then the game opens
 var onU='',onT=0;
