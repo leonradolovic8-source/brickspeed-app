@@ -961,7 +961,7 @@ function send(t){if(!ok)return;if(T){T.send(t);return}if(ws&&ws.readyState==1){t
 function lostOv(on){$('lost').classList.toggle('on',on)}
 var lostHide=0,carHide=false;
 setInterval(function(){var bad=!ok||(lastMsg&&Date.now()-lastMsg>2000);if(bad){if(!lostT)lostT=Date.now();lostOv(Date.now()-lostT>1200&&Date.now()>lostHide);$('lostHelp').hidden=Date.now()-lostT<8000}else{lostT=0;lostHide=0;lostOv(false)}
- var cl=!bad&&st.cl==1&&st.s>=0;if(!cl)carHide=false;$('carH').textContent='CAR '+(st.s+1)+' isn\'t answering';$('carOv').classList.toggle('on',cl&&!carHide)},300);
+ var cl=!bad&&st.nc==1&&st.s>=0;if(!cl)carHide=false;$('carH').textContent='CAR '+(st.s+1)+' isn\'t answering';$('carOv').classList.toggle('on',cl&&!carHide)},300);
 $('lostX').onclick=function(){lostHide=Date.now()+20000;lostOv(false)};   /* hide for 20 s, then show again if still lost */
 $('carWait').onclick=function(){carHide=true;$('carOv').classList.remove('on')};
 $('carStop').onclick=$('carX').onclick=function(){carHide=true;$('carOv').classList.remove('on');send('X');buzz(15);toast('Stopped looking for your car');if(curScr=='drive')show('lobby')};
