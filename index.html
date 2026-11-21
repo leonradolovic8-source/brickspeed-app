@@ -1518,7 +1518,15 @@ function onlAck(d){var E=earnLS();if(E&&E.sent){E.sent=E.sent.filter(function(x)
  if(d.t!=null){confetti(['#ffd23a','#38e1ff','#ffffff'],80);bigToast('+'+d.t+' COINS · +'+d.xp+' XP FROM ONLINE')}else if(d.bad)toast('Online coins could not be checked')}
 function openOnline(){var wifi=/^192\.168\.4\./.test(location.hostname),u=ONLINE_URL+'#lobby&src='+(wifi?'w':'b')+'&p='+exportP();
  if(/^192\.168\.4\./.test(location.hostname)){$('modeOv').classList.remove('on');onU=u;$('onCnt').hidden=true;$('onGo').disabled=false;$('onGo').textContent='GO ONLINE';$('onOv').classList.add('on');buzz(15);return}
- $('modeOv').classList.remove('on');buzz(15);location.href=u}   // same tab, so BACK TO PAD in the game brings you straight back
+ $('modeOv').classList.remove('on');buzz(15);onlOpen(u)}
+// Bluetooth app: the online game opens INSIDE the app (full-screen frame), so Bluetooth stays connected and
+// BACK TO PAD just closes it again: no reload, no flash of the web address. Its coins come back in the message.
+function onlOpen(u){var f=$('onlFr');if(!f){f=document.createElement('iframe');f.id='onlFr';f.setAttribute('allow','fullscreen; autoplay');f.setAttribute('title','BrickSpeed Online');
+  f.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;border:0;z-index:99999;background:#0b0b3a';document.body.appendChild(f)}f.src=u}
+window.addEventListener('message',function(e){var d=e.data;if(!d||d.bs!=='back')return;if(!/github\.io$|^null$/.test(String(e.origin).replace(/^https?:\/\//,''))&&e.origin!==location.origin)return;
+ var f=$('onlFr');if(f)f.remove();
+ if(d.sync&&d.sync.b&&d.sync.b.length){d.sync.b.forEach(function(x){SYNC.push(x)});SYNC.pid=d.sync.id||'';try{syncOut()}catch(er){}toast('Sending your online coins to the pad…')}
+ buzz(10)});
 $('modeNo').onclick=function(){$('modeOv').classList.remove('on')};
 // ONLINE from the pad's own Wi-Fi: the pad switches its Wi-Fi off, the phone falls back to home Wi-Fi / mobile data, then the game opens
 var onU='',onT=0;

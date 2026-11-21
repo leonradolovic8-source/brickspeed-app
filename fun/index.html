@@ -3956,7 +3956,7 @@ document.addEventListener('visibilitychange',function(){setRun(vis&&!document.hi
 <style>
 #bsl{position:fixed;inset:0;z-index:70;display:none;color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none;touch-action:manipulation;background:#0b0b3a}
 /* neon city behind the lobby (same as the pad lobby) */
-.bsl-city .snow{position:absolute;inset:0;z-index:3;background-image:radial-gradient(3px 3px at 20px 30px,#fff 50%,transparent 52%),radial-gradient(2px 2px at 90px 120px,#fff 50%,transparent 52%),radial-gradient(4px 4px at 160px 60px,rgba(255,255,255,.9) 50%,transparent 52%),radial-gradient(2px 2px at 210px 180px,#fff 50%,transparent 52%),radial-gradient(3px 3px at 270px 100px,#fff 50%,transparent 52%);background-size:300px 220px;animation:bslSnowA 9s linear infinite;opacity:.85}
+.bsl-city .snow{position:absolute;inset:0;z-index:3;background-image:radial-gradient(circle at 20px 30px,#fff 3px,transparent 4px),radial-gradient(circle at 90px 120px,#fff 2px,transparent 3px),radial-gradient(circle at 160px 60px,rgba(255,255,255,.95) 4px,transparent 5px),radial-gradient(circle at 210px 180px,#fff 2.5px,transparent 3.5px),radial-gradient(circle at 270px 100px,#fff 3px,transparent 4px);background-size:300px 220px;filter:drop-shadow(0 0 3px rgba(255,255,255,.8));animation:bslSnowA 9s linear infinite;opacity:.85}
 .bsl-city .snow.s2{background-size:200px 160px;animation-name:bslSnowB;animation-duration:6s;opacity:.55}
 @keyframes bslSnowA{to{background-position:40px 220px,-30px 220px,20px 220px,-40px 220px,30px 220px}}@keyframes bslSnowB{to{background-position:-20px 160px,30px 160px,-10px 160px,20px 160px,-30px 160px}}
 @media (prefers-reduced-motion:reduce){.bsl-city .snow{animation:none}}
@@ -4512,7 +4512,7 @@ function skinDeco(g,si,T){
   var po=new T.Mesh(new T.TorusGeometry(.62,.07,10,40),M(acc,{glow:3.2}));po.userData.deco=1;pg.add(po);var pi=new T.Mesh(new T.CircleGeometry(.56,32),M(0x6a2cff,{glow:1.4,op:.55}));pi.userData.deco=1;pg.add(pi);spin(pg,'z',2.2);
   underglow(acc);break;
  case 21: // MIRROR WORLD
-  bodyLook({metalness:1,roughness:.06});lines(acc,22,true,3);sideText('MIRROR','#ff3df2');
+  bodyLook({metalness:.5,roughness:.12,emissive:new T.Color(0x2a3040),emissiveIntensity:.8});lines(acc,22,true,3);sideText('MIRROR','#ff3df2');
   [-.55,.55].forEach(function(x,k){var p=add(new T.OctahedronGeometry(.22),M(k?acc:0x9ff6ff,{glow:2.6}),x,(surf(x,.4)||1.5)+.55,.4);spin(p,'y',k?2:-2);bob(p,.12,k*2)});
   underglow(acc);light(acc,.9,1.6);break;
  case 22: // SHARK
@@ -4530,7 +4530,7 @@ function skinDeco(g,si,T){
   var cy0=(surf(.5,1.4)||1.3);var cs=cyl(.06,.06,.7,M(0xffffff),.5,cy0+.35,1.4);var ch=add(new T.TorusGeometry(.18,.06,8,16,Math.PI),M(acc),.32,cy0+.7,1.4);
   for(var ci=0;ci<4;ci++)box(.13,.04,.13,M(acc),.5,cy0+.1+ci*.17,1.4,0,.6,0);break;
  case 25: // GOLDEN SLEIGH
-  bodyLook({metalness:.85,roughness:.22});stripe(0,.5,M(acc,{r:.9}),-.6,1.4);
+  bodyLook({metalness:.45,roughness:.28,emissive:new T.Color(0x6a4a00),emissiveIntensity:.7});stripe(0,.5,M(acc,{r:.9}),-.6,1.4);
   [-1,1].forEach(function(s){box(.07,.07,4.4,M(0xffe08a,{m:.9,r:.15}),s*1.25,.14,0);var cu=add(new T.TorusGeometry(.28,.05,8,16,Math.PI),M(0xffe08a,{m:.9,r:.15}),s*1.25,.42,-2.2,0,Math.PI/2,0);cu.rotation.z=Math.PI/2;[-1.2,0,1.2].forEach(function(z){box(.05,.3,.05,M(0xffe08a,{m:.9}),s*1.2,.3,z)});ball(.09,M(0xffd23c,{m:.9,r:.2}),s*1.25,.85,-1.4)});
   var gy=(surf(0,1.3)||1.3);[[-.35,.25,0xe5243b],[.3,.2,0x1f8a3a],[0,.32,0x3b8cff]].forEach(function(g2,k){var b=box(g2[1]*2,g2[1]*2,g2[1]*2,M(g2[2]),g2[0],gy+g2[1],1.5+k*.25-.2,0,k*.4,0);box(g2[1]*2+.02,.05,.08,M(0xffd23c,{m:.8}),g2[0],gy+g2[1]*2,1.5+k*.25-.2,0,k*.4,0)});light(0xffd070,.4,1.6);break;
  case 26: // GINGERBREAD
@@ -4779,6 +4779,7 @@ function syncDraw(){var P=pending();$('bslPend').textContent=P.t+' coin'+(P.t===
  $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET';$('bslOpenPad').disabled=!PROF;$('bslOpenPad').textContent=(P.t||P.x)?'OPEN PAD':'BACK TO PAD'}
 // go back the same way you came: pad Wi-Fi -> the pad's own page (192.168.4.1), Bluetooth app -> the app (same tab, same app)
 window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your pad first');return}freeze(E);saveEarn(E);var ble=PROF.src==='b';
+ if(window.parent!==window){try{window.parent.postMessage({bs:'back',sync:{id:E.pad,b:E.sent}},'*');return}catch(e){}}   // opened inside the Bluetooth app: just close
  $('bslSyncMsg').textContent=ble?'Opening the BrickSpeed app… your coins go to the pad over Bluetooth.':'Opening your pad… if nothing loads, join the pad Wi-Fi (Settings > Wi-Fi) and tap again.';
  if(ble){location.href=new URL('../',location.href).href;return}
  location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};

@@ -1,5 +1,5 @@
 // Offline cache for the BrickSpeed app. Bump VERSION when you upload new files.
-const VERSION = 'bs-1.17.1';
+const VERSION = 'bs-1.17.2';
 const FILES = ['./', 'index.html', 'ble-web.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
