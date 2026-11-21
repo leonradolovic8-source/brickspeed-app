@@ -667,6 +667,7 @@ body.s-lobby{background:#0b0b3a}
 .scene2 .neon{animation:neon 3s ease-in-out infinite}
 @keyframes neon{0%,46%,54%,100%{opacity:1}50%{opacity:.55}}
 .scene2 .dash{animation:dash 1s linear infinite}
+.scene2 .wxau{animation:wxau 9s ease-in-out infinite alternate}.scene2 .wxau2{animation:wxau 6s ease-in-out infinite alternate-reverse}.scene2 .wxt{animation:wxtw 2.4s ease-in-out infinite}@keyframes wxau{0%{transform:translateX(-30px);opacity:.75}100%{transform:translateX(30px);opacity:1}}@keyframes wxtw{0%,100%{opacity:1}50%{opacity:.25}}
 .scene2 .snow{position:absolute;inset:0;background-image:radial-gradient(circle at 20px 30px,#fff 3px,transparent 4px),radial-gradient(circle at 90px 120px,#fff 2px,transparent 3px),radial-gradient(circle at 160px 60px,rgba(255,255,255,.95) 4px,transparent 5px),radial-gradient(circle at 210px 180px,#fff 2.5px,transparent 3.5px),radial-gradient(circle at 270px 100px,#fff 3px,transparent 4px);background-size:300px 220px;filter:drop-shadow(0 0 3px rgba(255,255,255,.8));animation:snowA 9s linear infinite;opacity:.85}
 .scene2 .snow.s2{background-size:200px 160px;animation-name:snowB;animation-duration:6s;opacity:.55}
 @keyframes snowA{to{background-position:40px 220px,-30px 220px,20px 220px,-40px 220px,30px 220px}}@keyframes snowB{to{background-position:-20px 160px,30px 160px,-10px 160px,20px 160px,-30px 160px}}
@@ -731,6 +732,7 @@ body.s-lobby #lob{grid-template-columns:minmax(150px,30%) minmax(0,1fr) minmax(1
 #lob .plate{background:rgba(8,6,20,.85);border:2px solid rgba(255,255,255,.3);border-radius:14px;padding:6px 18px;bottom:1%}
 #lob .plate b{font:italic 900 clamp(13px,3vh,20px) system-ui}
 .ptag{background:rgba(8,6,20,.8)!important;border:2px solid #b25cff!important;box-shadow:0 0 14px rgba(178,92,255,.6)}
+body.xmas #lob .podium{box-shadow:0 0 0 4px #000,0 0 0 10px transparent,0 0 30px 8px rgba(255,80,90,.55);background:radial-gradient(closest-side,#2a2440 0 58%,#14111f 59% 74%,transparent 75%),repeating-conic-gradient(#e5243b 0 15deg,#f6f8ff 15deg 30deg)}   /* candy-cane ring in the Christmas season */
 @media (max-height:300px){#lob .tile{border-width:2px;border-radius:12px;padding:2px 8px}#tPass b{font-size:12px;line-height:1}#tPass span{font-size:10px}#tPass .pxb{display:none}#tPass{flex:1!important}#lob .plate{padding:2px 12px;bottom:0}#lob .podium{bottom:16%}#tPass .pxb em{display:none}#tUpd .badge{min-width:16px;height:16px;font-size:10px;top:-4px;right:-6px}.ptag{display:none}}
 </style></head><body class="m-sticks s-lobby">
 <div id="app">
@@ -2005,6 +2007,76 @@ o+='<text x="800" y="395" text-anchor="middle" font-family="system-ui" font-weig
 if(XM){o+='<path d="M565 318 h470" stroke="#f2f8ff" stroke-width="12" stroke-linecap="round"/><path d="M600 343 h400" stroke="#f2f8ff" stroke-width="7" stroke-linecap="round"/>';
  var gl='',GC=['#ff3b3b','#ffd23c','#3dff8a','#3b8cff','#ff8be0'];for(var q=0;q<=20;q++){var gx=570+q*23,gy=322+Math.sin(q/20*Math.PI*4)*-0+Math.abs(Math.sin(q/20*Math.PI*2))*26;gl+=(q?' L':'M')+gx+' '+gy.toFixed(0);o+='<circle class="win '+'abc'[q%3]+'" cx="'+gx+'" cy="'+(gy+5).toFixed(0)+'" r="5" fill="'+GC[q%5]+'"/>'}o='<!--x-->'+o+'<path d="'+gl+'" stroke="#1b2a1b" stroke-width="2" fill="none"/>';
  o+='<g transform="translate(600 326)"><path d="M-18 0 q12 -40 40 -36 q-6 10 -4 20z" fill="#e5243b"/><rect x="-22" y="-4" width="48" height="9" rx="4" fill="#fff"/><circle cx="38" cy="-38" r="6" fill="#fff"/></g>'}
+// ---------- Christmas: the whole lobby turns into a snowy winter park (aurora, pine forest, tree, snowman…) ----------
+function winterSVG(){var q=R(7),o='',HZ=520,VP=800,i,k;
+ function f(n){return n.toFixed(0)}
+ o+='<defs><linearGradient id="wxs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070d3a"/><stop offset=".35" stop-color="#1b2a7a"/><stop offset=".52" stop-color="#4b4aa8"/><stop offset=".6" stop-color="#a98ad8"/></linearGradient>'+
+  '<linearGradient id="wxa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3dffb0" stop-opacity="0"/><stop offset=".5" stop-color="#3dffb0" stop-opacity=".85"/><stop offset="1" stop-color="#2dd4ff" stop-opacity="0"/></linearGradient>'+
+  '<linearGradient id="wxa2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5cff" stop-opacity="0"/><stop offset=".5" stop-color="#2dffc8" stop-opacity=".7"/><stop offset="1" stop-color="#2dffc8" stop-opacity="0"/></linearGradient>'+
+  '<filter id="wxb" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="14"/></filter><filter id="wxg"><feGaussianBlur stdDeviation="4"/></filter>'+
+  '<linearGradient id="wxr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dcff"/><stop offset=".35" stop-color="#9aa0e6"/><stop offset="1" stop-color="#4a4fa8"/></linearGradient>'+
+  '<linearGradient id="wxn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c3cdf2"/></linearGradient>'+
+  '<radialGradient id="wxl"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs>';
+ o+='<rect width="1600" height="900" fill="url(#wxs)"/>';
+ for(i=0;i<170;i++){var sy=q()*480;o+='<circle '+(i%9==0?'class="wxt" ':'')+'cx="'+f(q()*1600)+'" cy="'+f(sy)+'" r="'+(q()*1.8+.4).toFixed(1)+'" fill="#fff" opacity="'+(q()*.6+.4).toFixed(2)+'"/>'}
+ // aurora
+ o+='<g class="wxau" filter="url(#wxb)"><path d="M120 300 C 360 160 560 330 800 230 S 1220 150 1500 270" stroke="url(#wxa)" stroke-width="110" fill="none" opacity=".75"/><path d="M300 250 C 500 330 700 170 900 260 S 1300 300 1560 180" stroke="url(#wxa2)" stroke-width="70" fill="none" opacity=".6"/></g>';
+ o+='<g class="wxau2" filter="url(#wxg)">';for(i=0;i<26;i++){var ax=200+i*48,ay=240+Math.sin(i*.55)*60;o+='<rect x="'+f(ax)+'" y="'+f(ay-70)+'" width="9" height="'+f(90+q()*60)+'" fill="#7dffd0" opacity="'+(.15+q()*.25).toFixed(2)+'"/>'}o+='</g>';
+ // far hills + tiny city in the distance
+ o+='<path d="M-20 '+(HZ-20)+' Q 200 '+(HZ-70)+' 420 '+(HZ-25)+' T 820 '+(HZ-40)+' T 1220 '+(HZ-30)+' T 1640 '+(HZ-55)+' V 560 H -20 Z" fill="#8d97d8"/>';
+ var x=650;while(x<950){var w=14+q()*20,h=24+q()*70;o+='<rect x="'+f(x)+'" y="'+f(HZ-h)+'" width="'+f(w)+'" height="'+f(h)+'" fill="#5a5fb0"/>';for(k=0;k<3;k++)if(q()<.6)o+='<rect x="'+f(x+3+q()*(w-6))+'" y="'+f(HZ-h+6+q()*(h-10))+'" width="3" height="4" fill="#ffd27a"/>';x+=w+2}
+ // pine
+ function pine(x,y,s,lit){var t='<g transform="translate('+f(x)+' '+f(y)+') scale('+s.toFixed(2)+')"><rect x="-5" y="-14" width="10" height="16" fill="#4a2f1a"/>';
+  [[0,-14,60,46],[0,-48,48,42],[0,-80,36,38],[0,-108,24,32]].forEach(function(L){t+='<path d="M'+(L[0]-L[2])+' '+L[1]+' L'+L[0]+' '+(L[1]-L[3])+' L'+(L[0]+L[2])+' '+L[1]+' Z" fill="#17553a"/><path d="M'+(L[0]-L[2])+' '+L[1]+' q'+L[2]*.5+' -10 '+L[2]+' -4 q'+L[2]*.5+' -8 '+L[2]+' 4 l-8 -10 q-'+(L[2]*.9)+' -6 -'+(L[2]*1.8-16)+' 0 Z" fill="#f3f7ff"/><path d="M'+L[0]+' '+(L[1]-L[3])+' l-'+(L[2]*.35)+' '+(L[3]*.45)+' q'+(L[2]*.35)+' -6 '+(L[2]*.7)+' 0 Z" fill="#f3f7ff"/>'});
+  if(lit){var C=['#ff3b3b','#ffd23c','#3dff8a','#3bb8ff','#ff8be0'];for(var b=0;b<14;b++){var by=-20-q()*100,bw=(by+140)/140*55;t+='<circle class="win '+'abc'[b%3]+'" cx="'+f((q()*2-1)*bw*.8)+'" cy="'+f(by)+'" r="4" fill="'+C[b%5]+'"/>'}}
+  return t+'</g>'}
+ // forest behind, near the horizon
+ for(i=0;i<36;i++){var px=q()*1600;if(Math.abs(px-800)<70)continue;o+=pine(px,HZ+8+q()*10,.28+q()*.22,false)}
+ // snowy ground on both sides
+ o+='<path d="M-20 '+(HZ+10)+' L770 '+HZ+' L-300 900 Z" fill="url(#wxn)"/><path d="M1620 '+(HZ+10)+' L830 '+HZ+' L1900 900 Z" fill="url(#wxn)"/>';
+ // icy road with reflections
+ o+='<path d="M770 '+HZ+' L830 '+HZ+' L1900 900 L-300 900 Z" fill="url(#wxr)"/>';
+ [[600,'#ff3b6b'],[1000,'#ff3b6b'],[700,'#ffd27a'],[900,'#ffd27a'],[800,'#7dffd0']].forEach(function(L){o+='<path d="M'+L[0]+' 560 L'+(L[0]+(L[0]-800)*.9-26)+' 900 L'+(L[0]+(L[0]-800)*.9+26)+' 900 Z" fill="'+L[1]+'" opacity=".16"/>'});
+ for(k=0;k<10;k++){var y1=HZ+Math.pow(k/10,2)*380,y2=HZ+Math.pow((k+.45)/10,2)*380;o+='<path d="M800 '+f(y1)+' L800 '+f(y2)+'" stroke="#ffffff" stroke-width="'+(2+k*1.4).toFixed(1)+'" opacity=".55"/>'}
+ // candy-cane fences with lights along the road
+ [-1,1].forEach(function(s){var pts='';for(k=1;k<11;k++){var ff=k/11,y=HZ+ff*ff*360,xx=VP+s*(40+ff*ff*1060),h=8+ff*60;
+   o+='<rect x="'+f(xx-2-ff*4)+'" y="'+f(y-h)+'" width="'+f(4+ff*8)+'" height="'+f(h)+'" fill="#fff"/><rect x="'+f(xx-2-ff*4)+'" y="'+f(y-h*.7)+'" width="'+f(4+ff*8)+'" height="'+f(h*.18)+'" fill="#e5243b"/><rect x="'+f(xx-2-ff*4)+'" y="'+f(y-h*.3)+'" width="'+f(4+ff*8)+'" height="'+f(h*.18)+'" fill="#e5243b"/>';
+   pts+=(k>1?' L':'M')+f(xx)+' '+f(y-h*.85);if(k>1)o+='<circle class="win '+'abc'[k%3]+'" cx="'+f(xx-s*ff*30)+'" cy="'+f(y-h*.72)+'" r="'+(2+ff*5).toFixed(1)+'" fill="'+['#ff3b3b','#ffd23c','#3dff8a','#3bb8ff'][k%4]+'"/>'}
+  o+='<path d="'+pts+'" stroke="#2a3a2a" stroke-width="2" fill="none"/>'});
+ // trees along the road (bigger to the front)
+ for(k=1;k<8;k++){var ff=k/8,yy=HZ+ff*ff*300+20,dx=150+ff*ff*900;o+=pine(VP-dx-60,yy,.45+ff*1.5,k%2==0);o+=pine(VP+dx+60,yy,.45+ff*1.5,k%2==1)}
+ // brick house on the right with warm windows
+ o+='<g><rect x="1400" y="330" width="260" height="330" fill="#7a2f24"/>';for(var by2=340;by2<660;by2+=16)o+='<path d="M1400 '+by2+' H1660" stroke="#5e2219" stroke-width="2"/>';
+ o+='<path d="M1380 340 L1530 250 L1680 340 Z" fill="#3a1d18"/><path d="M1380 340 L1530 250 L1680 340 L1680 352 Q1530 262 1380 352 Z" fill="#f3f7ff"/><path d="M1390 336 Q1450 300 1530 256 Q1610 300 1672 336" stroke="#fff" stroke-width="14" fill="none"/>';
+ [[1430,380],[1530,380],[1430,500],[1530,500]].forEach(function(w){o+='<circle cx="'+(w[0]+35)+'" cy="'+(w[1]+40)+'" r="70" fill="url(#wxl)" opacity=".7"/><rect x="'+w[0]+'" y="'+w[1]+'" width="70" height="80" fill="#ffd27a" stroke="#3a1d18" stroke-width="6"/><path d="M'+(w[0]+35)+' '+w[1]+' v80 M'+w[0]+' '+(w[1]+40)+' h70" stroke="#3a1d18" stroke-width="4"/><rect x="'+(w[0]-6)+'" y="'+(w[1]-8)+'" width="82" height="9" rx="4" fill="#f3f7ff"/>'});
+ o+='</g>';
+ // big Christmas tree, right side
+ o+=pine(1310,690,3.1,true)+'<path class="wxt" d="M1310 335 l9 20 22 2 -17 14 5 22 -19 -12 -19 12 5 -22 -17 -14 22 -2z" fill="#ffd23c" transform="translate(0 -12)"/><circle cx="1310" cy="345" r="46" fill="url(#wxl)" opacity=".8"/>';
+ // the gate (snowy, lights)
+ o+='<g><rect x="560" y="330" width="80" height="310" fill="#2a1d2a" stroke="#120a14" stroke-width="3"/><rect x="960" y="330" width="80" height="310" fill="#2a1d2a" stroke="#120a14" stroke-width="3"/>'+
+  '<g class="neon"><rect x="590" y="400" width="18" height="170" rx="4" fill="#ff3b5c"/><rect x="990" y="400" width="18" height="170" rx="4" fill="#ff3b5c"/></g>'+
+  '<rect x="600" y="345" width="400" height="74" fill="#14101f" stroke="#ff2d3d" stroke-width="4"/>';
+ for(var cx=0;cx<4;cx++)for(var cy=0;cy<3;cy++)if((cx+cy)%2==0)o+='<rect x="'+(610+cx*15)+'" y="'+(352+cy*19)+'" width="15" height="19" fill="#fff"/><rect x="'+(930+cx*15)+'" y="'+(352+cy*19)+'" width="15" height="19" fill="#fff"/>';
+ o+='<text x="800" y="397" text-anchor="middle" font-family="system-ui" font-weight="900" font-style="italic" font-size="40"><tspan fill="#fff">BRICK</tspan><tspan fill="#ff2d3d">SPEED</tspan></text>'+
+  '<path d="M552 330 q44 -26 96 0 z M952 330 q44 -26 96 0 z" fill="#f3f7ff"/><rect x="552" y="322" width="96" height="14" rx="7" fill="#f3f7ff"/><rect x="952" y="322" width="96" height="14" rx="7" fill="#f3f7ff"/><rect x="594" y="337" width="412" height="10" rx="5" fill="#f3f7ff"/></g>';
+ var gl='';for(i=0;i<=24;i++){var gx=600+i*16.7,gy=420+Math.abs(Math.sin(i/24*Math.PI*3))*22;gl+=(i?' L':'M')+f(gx)+' '+f(gy);o+='<circle class="win '+'abc'[i%3]+'" cx="'+f(gx)+'" cy="'+f(gy+6)+'" r="5" fill="'+['#ff3b3b','#ffd23c','#3dff8a','#3bb8ff','#ff8be0'][i%5]+'"/>'}
+ o+='<path d="'+gl+'" stroke="#1f5a2e" stroke-width="5" fill="none"/>';
+ // candy canes
+ function cane(x,y,s,flip){var t='<g transform="translate('+x+' '+y+') scale('+(flip?-s:s)+' '+s+')"><path d="M0 0 V-110 a26 26 0 0 1 52 0 v10" stroke="#fff" stroke-width="16" fill="none" stroke-linecap="round"/>';
+  t+='<path d="M0 0 V-110 a26 26 0 0 1 52 0 v10" stroke="#e5243b" stroke-width="16" fill="none" stroke-dasharray="12 12" stroke-linecap="butt"/></g>';return t}
+ o+=cane(520,650,1,false)+cane(1085,650,1,true)+cane(470,700,.7,true);
+ // presents
+ function gift(x,y,w,h,c,rb){return '<g><rect x="'+x+'" y="'+(y-h)+'" width="'+w+'" height="'+h+'" fill="'+c+'"/><rect x="'+(x+w/2-5)+'" y="'+(y-h)+'" width="10" height="'+h+'" fill="'+rb+'"/><rect x="'+x+'" y="'+(y-h/2-5)+'" width="'+w+'" height="10" fill="'+rb+'"/><path d="M'+(x+w/2)+' '+(y-h)+' q-22 -22 -26 -4 z M'+(x+w/2)+' '+(y-h)+' q22 -22 26 -4 z" fill="'+rb+'"/><rect x="'+(x-3)+'" y="'+(y-h-4)+'" width="'+(w+6)+'" height="8" rx="4" fill="#f3f7ff"/></g>'}
+ o+=gift(440,690,80,60,'#e5243b','#ffd23c')+gift(500,700,56,42,'#1f9d55','#e5243b')+gift(1100,690,70,54,'#3b6cff','#ffd23c')+gift(1160,705,90,62,'#e5243b','#f3f7ff')+gift(1250,700,50,40,'#ffd23c','#e5243b');
+ // snowman next to the gate
+ o+='<g transform="translate(1135 640)"><ellipse cx="0" cy="0" rx="58" ry="52" fill="#f7faff" stroke="#c9d3f0" stroke-width="3"/><ellipse cx="0" cy="-78" rx="42" ry="38" fill="#f7faff" stroke="#c9d3f0" stroke-width="3"/><circle cx="0" cy="-140" r="30" fill="#f7faff" stroke="#c9d3f0" stroke-width="3"/>'+
+  '<rect x="-34" y="-170" width="68" height="9" fill="#14141c"/><rect x="-24" y="-214" width="48" height="46" rx="3" fill="#14141c"/><rect x="-24" y="-180" width="48" height="8" fill="#e5243b"/>'+
+  '<circle cx="-10" cy="-146" r="4" fill="#14141c"/><circle cx="10" cy="-146" r="4" fill="#14141c"/><path d="M0 -138 l30 6 -30 6z" fill="#ff8a1a"/><path d="M-30 -110 q30 14 60 0 l2 12 q-32 16 -64 0z" fill="#e5243b"/><rect x="16" y="-104" width="14" height="40" rx="5" fill="#e5243b"/>'+
+  '<circle cx="0" cy="-90" r="4" fill="#14141c"/><circle cx="0" cy="-72" r="4" fill="#14141c"/><path d="M-40 -84 l-46 -30 M-40 -84 l-30 -2 M40 -84 l46 -30 M40 -84 l30 -6" stroke="#5a3a20" stroke-width="5" stroke-linecap="round"/></g>';
+ // snow banks in the front corners
+ o+='<path d="M-20 900 Q 160 760 420 820 T 640 900 Z" fill="#f3f7ff"/><path d="M1620 900 Q 1440 750 1200 820 T 960 900 Z" fill="#f3f7ff"/>';
+ return o}
+if(XM)o=winterSVG();
 var svg='<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">'+o+'</svg>';
 var d=document.createElement('div');d.className='scene2';d.setAttribute('aria-hidden','true');d.innerHTML=svg;document.body.insertBefore(d,document.body.firstChild);
 if(window.BSXmas&&window.BSXmas()){d.insertAdjacentHTML('beforeend','<div class="snow"></div><div class="snow s2"></div>');document.body.classList.add('xmas')}
