@@ -1116,7 +1116,7 @@ var RN=['Common','Rare','Super rare','Epic','Legendary'],RC=['#9aa7b8','#3cc864'
 function own(i){return CH[i][2]==0||((st.m||0)>>i)&1}
 function colDraw(){var h='',n=0;CH.map(function(c,i){return i}).sort(function(a,b){return CH[a][2]-CH[b][2]||a-b}).forEach(function(i){var c=CH[i],o=own(i);if(o)n++;
  h+=o?'<button class="card own" data-i="'+i+'" style="border-color:'+FRC[c[2]]+';background:radial-gradient(circle at 50% 30%,'+shade(c[3],1.25)+','+c[3]+' 60%,'+shade(c[3],.7)+')"><span class="lv'+(canUp(i)?' up':'')+'">'+(canUp(i)?'▲ ':'')+'LV '+lvl(i)+'</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="ca">'+c[1]+'</span><span class="cr">'+RN[c[2]]+'</span></button>'
-  :'<button class="card lock" data-i="'+i+'" style="border-color:'+FRC[c[2]]+'99"><span class="q">?</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="cr" style="color:'+RC[c[2]]+'">'+RN[c[2]]+' box</span></button>'});
+  :'<button class="card lock" data-i="'+i+'" style="border-color:'+FRC[c[2]]+'99"><span class="q">?</span><span class="av">'+charArt(i)+'</span><span class="cn">'+c[0]+'</span><span class="cr" style="color:'+RC[c[2]]+'">'+(i>=12?'🎄 CHRISTMAS BOX':RN[c[2]]+' box')+'</span></button>'});
  if($('cards').__h!==h){$('cards').__h=h;$('cards').innerHTML=h;[].forEach.call($('cards').children,function(b){b.onclick=function(){charInfo(+b.dataset.i)}})}$('ownN').textContent=n+'/'+CH.length;
  var lb=$('ltBig');lb.hidden=!st.lt;lb.textContent='LEVEL UP TICKET'+(st.lt>1?'S × '+st.lt:'')}
 var FILL=[203,201,203,202,203,200],FILL4=[203,204,201,203,202,200],BPP=[[0,0],[10,20],[25,45],[60,100],[150,250]];
