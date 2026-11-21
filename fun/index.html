@@ -4548,7 +4548,10 @@ function skinDeco(g,si,T){
   var nose=ball(.2,M(0xff2020,{glow:3.6}),0,.75,-2.55);pulse(nose,.15,6);light(0xff2020,.75,2.4);break;
  case 29: // NORTHERN LIGHTS
   patches([0xffffff],22,.03,.05,3);
-  [[0x3dffb0,.0],[0xa04dff,1.6],[0x2dd4ff,3.1]].forEach(function(a){var rb=add(new T.PlaneGeometry(3.2,.5,1,1),M(a[0],{glow:2.4,op:.45}),0,1.95+a[1]*.08,-1.2+a[1]*.6,0,0,0);rb.material.side=T.DoubleSide;rb.onBeforeRender=function(){var tt=Date.now()/900+a[1];rb.position.y=2+Math.sin(tt)*.15;rb.rotation.x=Math.sin(tt*.7)*.5;rb.scale.y=1+Math.sin(tt*1.3)*.3}});
+  var acv=document.createElement('canvas');acv.width=8;acv.height=64;var ax=acv.getContext('2d'),agr=ax.createLinearGradient(0,0,0,64);agr.addColorStop(0,'rgba(255,255,255,0)');agr.addColorStop(.55,'rgba(255,255,255,.9)');agr.addColorStop(1,'rgba(255,255,255,0)');ax.fillStyle=agr;ax.fillRect(0,0,8,64);var atx=new T.CanvasTexture(acv);
+  [[0x3dffb0,0],[0xa04dff,1.6],[0x2dd4ff,3.1]].forEach(function(a){var geo=new T.PlaneGeometry(3.6,1.1,24,1),pos=geo.attributes.position,bx=[];for(var q=0;q<pos.count;q++)bx.push(pos.getX(q));
+   var rb=add(geo,new T.MeshBasicMaterial({color:a[0],map:atx,transparent:true,opacity:.75,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide}),0,2.25,-.6+a[1]*.35,0,0,0);
+   rb.onBeforeRender=function(){var tt=Date.now()/700+a[1];for(var q=0;q<pos.count;q++)pos.setZ(q,Math.sin(bx[q]*1.6+tt)*.35);pos.needsUpdate=true;rb.position.y=2.25+Math.sin(tt*.5)*.08}});
   underglow(acc);break;
  case 30: // ICICLE
   bodyLook({roughness:.06,metalness:.25});patches([0xffffff,0xc8ecff],22,.15,.35);
