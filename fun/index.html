@@ -3036,10 +3036,11 @@ window.addEventListener('keydown',function(e){
   var tipOff=false;
   function landS(){return window.innerWidth>window.innerHeight}
   function isFs(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
-  function go(){if(app||!req||!landS()||isFs())return;try{var p=req.call(de,{navigationUI:'hide'});if(p&&p.then)p.then(function(){try{screen.orientation.lock('landscape').catch(function(){})}catch(_){}}).catch(function(){tipOff=true;upd()})}catch(_){tipOff=true;upd()}}
+  function typing(){var a=document.activeElement;return !!(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable))}
+  function go(e){if(app||!req||!landS()||isFs()||!race.on||typing())return;if(e&&e.target&&e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))return;try{var p=req.call(de,{navigationUI:'hide'});if(p&&p.then)p.then(function(){try{screen.orientation.lock('landscape').catch(function(){})}catch(_){}}).catch(function(){tipOff=true;upd()})}catch(_){tipOff=true;upd()}}
   function back(){if(isFs()&&!landS()&&ex){try{var p=ex.call(document);if(p&&p.catch)p.catch(function(){})}catch(_){}}}
   function upd(){
-    var need=!app&&landS()&&!isFs()&&!tipOff;
+    var need=!app&&landS()&&!isFs()&&!tipOff&&race.on;
     if(need&&req){tip.innerHTML='<span>Tap anywhere for <b>full screen</b></span>';tip.classList.add('on')}
     else if(need&&iOS&&!req){var seen=false;try{seen=localStorage.getItem('bsFsTip')==='1'}catch(_){}
       if(!seen){tip.innerHTML='<span>Full screen on iPhone: tap <b>Share</b> &#8594; <b>Add to Home Screen</b>, then play from the icon</span><button type="button">OK</button>';tip.classList.add('on');
@@ -3048,7 +3049,9 @@ window.addEventListener('keydown',function(e){
     else tip.classList.remove('on')}
   function changed(){go();back();setTimeout(upd,350)}
   window.addEventListener('orientationchange',changed);window.addEventListener('resize',function(){clearTimeout(changed.t);changed.t=setTimeout(function(){back();upd()},250)});
-  ['touchend','click'].forEach(function(ev){document.addEventListener(ev,function(){go()},{capture:true,passive:true})});
+  ['touchend','click'].forEach(function(ev){document.addEventListener(ev,function(e){go(e)},{capture:true,passive:true})});
+  document.addEventListener('focusin',function(e){var x=e.target;if(x&&(x.tagName==='INPUT'||x.tagName==='TEXTAREA')&&isFs()&&ex){try{var p=ex.call(document);if(p&&p.catch)p.catch(function(){})}catch(_){}}});   /* typing: leave full screen so the keyboard works */
+  setInterval(function(){if(!race.on&&isFs()&&ex&&document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)){try{ex.call(document)}catch(_){}}upd()},1500);
   ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){document.addEventListener(ev,upd)});
   upd();
 })();
@@ -6155,6 +6158,14 @@ window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your
  location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};
 $('bslOpenPad').onclick=window.BSBackToPad;
 $('bslBackPad').onclick=function(){padAsk()};
+// iPad/iPhone: swiping from the screen edge (or Safari's back arrow) went "back" to the pad page in the middle of a game.
+// Keep one extra history step: a back swipe now lands here, and outside a race it asks first.
+(function(){if(!forced)return;try{   /* only on the game page, never on the shop page */
+ function guard(){history.pushState({bsGuard:1},'',location.href)}
+ if(!(history.state&&history.state.bsGuard))guard();
+ window.addEventListener('popstate',function(){guard();var L=$('bsl'),open=false;try{var r=L.getBoundingClientRect();open=getComputedStyle(L).display!=='none'&&!L.hidden&&r.width>0}catch(e){}
+  if(open&&PROF)padAsk()});
+}catch(e){}})();
 // Christmas season (Dec 1 - Jan 6): snow over the neon city
 (function(){var d=new Date(),m=d.getUTCMonth(),dd=d.getUTCDate();if(m==11||(m==0&&dd<=6)){var c=$('bslCity');if(c)c.insertAdjacentHTML('beforeend','<div class="snow"></div><div class="snow s2"></div>')}})();$('bslBackPad').hidden=!PROF;
 // friends / online room
