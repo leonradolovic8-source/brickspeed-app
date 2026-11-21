@@ -2893,7 +2893,8 @@ function peerCtor(){return window.Peer||(window.peerjs&&(window.peerjs.Peer||win
 function errText(e){var ty=e&&e.type;
   if(ty==='peer-unavailable')return 'Room not found. Check the code and try again.';
   if(ty==='browser-incompatible')return 'This browser cannot do online rooms. Try Chrome or Safari.';
-  return 'Could not reach the online room service. Check your internet. Online rooms work on brickspeed.fun.'}
+  if(ty==='network'||ty==='server-error'||ty==='socket-error'||ty==='socket-closed')return 'The online room server is not answering right now. Your internet is fine. Try again in a few minutes.';
+  return 'Could not reach the online room server. Try again in a few minutes.'}
 function genCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function roomId(code){return 'brickspeed-fun-'+code.toLowerCase()}
 function send(conn,m){try{if(conn&&conn.open)conn.send(m)}catch(e){}}
@@ -2932,11 +2933,11 @@ function mpLeave(silent){
   NET.on=false;NET.host=false;NET.peer=null;NET.conns={};NET.players=[];NET.hostConn=null;NET.racing=false;NET.qm=false;clearInterval(qmT);
   MPUI.start.hidden=false;MPUI.lobby.hidden=true;if(!silent)mpMsg('');
 }
-function createRoom(retry,fixed,onTaken){
+function createRoom(retry,fixed,onTaken,mine){
   var PC=peerCtor();if(!PC){mpMsg('The online room service did not load. Check your internet.');return}
-  saveName();mpLeave(true);mpMsg(fixed?'Waiting for players…':'Creating a room…');
+  saveName();mpLeave(true);mpMsg(fixed&&!mine?'Waiting for players…':'Creating a room…');
   var code=fixed||genCode(),peer=new PC(roomId(code));NET.peer=peer;
-  peer.on('open',function(){NET.on=true;NET.host=true;NET.code=code;NET.qm=!!fixed;NET.myPid='H';NET.players=[Object.assign({pid:'H',name:NET.name,char:myChar().id},meCos())];if(fixed)qmHostTimer();renderLobby();mpMsg(fixed?'Waiting for players…':'')});
+  peer.on('open',function(){NET.on=true;NET.host=true;NET.code=code;NET.qm=!!fixed&&!mine;NET.myPid='H';NET.players=[Object.assign({pid:'H',name:NET.name,char:myChar().id},meCos(),{fc:window.BSMyCode?window.BSMyCode():''})];if(fixed&&!mine)qmHostTimer();renderLobby();mpMsg(fixed&&!mine?'Waiting for players…':'')});
   peer.on('error',function(e){if(e&&e.type==='unavailable-id'){if(onTaken){mpLeave(true);onTaken();return}if((retry||0)<3){createRoom((retry||0)+1);return}}mpMsg(errText(e));if(!NET.on)mpLeave(true)});
   peer.on('connection',function(conn){
     conn.on('data',function(m){hostData(conn,m)});
@@ -2951,7 +2952,7 @@ function hostData(conn,m){
   if(m.t==='hello'){
     if(NET.players.length>=6){send(conn,{t:'full'});setTimeout(function(){conn.close()},300);return}
     if(NET.racing){send(conn,{t:'busy'});setTimeout(function(){conn.close()},300);return}
-    var c=charById(m.char);NET.conns[conn.peer]=conn;NET.players.push({pid:conn.peer,name:cleanName(m.name),char:c?c.id:'blaze',ti:cosm(m.ti,7),lv:Math.max(1,cosm(m.lv,10)),sk:cosm(m.sk,7),kk:cosm(m.kk,20)});
+    var c=charById(m.char);NET.conns[conn.peer]=conn;NET.players.push({pid:conn.peer,name:cleanName(m.name),char:c?c.id:'blaze',ti:cosm(m.ti,7),lv:Math.max(1,cosm(m.lv,10)),sk:cosm(m.sk,7),kk:cosm(m.kk,20),fc:String(m.fc||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
     broadcast({t:'lobby',code:NET.code,players:NET.players,opts:NET.opts});renderLobby();return;
   }
   if(m.t==='st'){var c2=carByPid(conn.peer);if(c2)applyState(c2,m.s);return}
@@ -2981,7 +2982,7 @@ function joinRoom(qcode,onFail){
   var peer=new PC();NET.peer=peer;
   peer.on('open',function(id){
     NET.myPid=id;var conn=peer.connect(roomId(code),{reliable:true});NET.hostConn=conn;NET.conns.H=conn;
-    conn.on('open',function(){send(conn,Object.assign({t:'hello',name:NET.name,char:myChar().id},meCos()))});
+    conn.on('open',function(){send(conn,Object.assign({t:'hello',name:NET.name,char:myChar().id},meCos(),{fc:window.BSMyCode?window.BSMyCode():''}))});
     conn.on('data',function(m){clientData(m,code)});
     conn.on('close',function(){if(NET.on){mpMsg('The host left the room.');if(race.on&&race.mp){toast3('HOST LEFT','The room is closed')}}mpLeave(true);MPUI.box.hidden=race.on;});
   });
@@ -3013,7 +3014,7 @@ function clientData(m,code){
   if(!m||typeof m!=='object')return;
   if(m.t==='pong'){var now=Date.now(),rtt=now-(+m.c);if(rtt>=0&&rtt<5000){NET.syncs=(NET.syncs||[]).concat([{rtt:rtt,off:(+m.h)+rtt/2-now}]).slice(-10)}return}
   if(m.t==='lobby')clockPing(code);
-  if(m.t==='lobby'){NET.on=true;NET.host=false;NET.code=code;if(m.opts&&MAPS[m.opts.map])NET.opts={map:m.opts.map,laps:[1,2,3,5].indexOf(+m.opts.laps)>=0?+m.opts.laps:1,mode:['race','tag','dozer'].indexOf(m.opts.mode)>=0?m.opts.mode:'race',teams:+m.opts.teams?1:0,arena:m.opts.arena==='city'?'city':'fun'};NET.players=(m.players||[]).map(function(p){return{pid:String(p.pid),name:cleanName(p.name),char:(charById(p.char)||{id:'blaze'}).id,ti:cosm(p.ti,7),lv:Math.max(1,cosm(p.lv,10)),sk:cosm(p.sk,7),kk:cosm(p.kk,20),rd:!!p.rd}});
+  if(m.t==='lobby'){NET.on=true;NET.host=false;NET.code=code;if(m.opts&&MAPS[m.opts.map])NET.opts={map:m.opts.map,laps:[1,2,3,5].indexOf(+m.opts.laps)>=0?+m.opts.laps:1,mode:['race','tag','dozer'].indexOf(m.opts.mode)>=0?m.opts.mode:'race',teams:+m.opts.teams?1:0,arena:m.opts.arena==='city'?'city':'fun'};NET.players=(m.players||[]).map(function(p){return{pid:String(p.pid),name:cleanName(p.name),char:(charById(p.char)||{id:'blaze'}).id,ti:cosm(p.ti,7),lv:Math.max(1,cosm(p.lv,10)),sk:cosm(p.sk,7),kk:cosm(p.kk,20),rd:!!p.rd,fc:String(p.fc||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)}});
     if(!race.on)renderLobby();mpMsg('');return}
   if((m.t==='full'||m.t==='busy')&&NET.qmFail){var f=NET.qmFail;NET.qmFail=null;mpLeave(true);f(m.t);return}
   if(m.t==='lobby')NET.qmFail=null;
@@ -3052,7 +3053,7 @@ MPUI.box.addEventListener('click',function(e){if(e.target===MPUI.box)mpClose()})
 window.addEventListener('keydown',function(e){if(e.key==='Escape'&&!MPUI.box.hidden)mpClose()});
 ['mpOpen1','mpOpen2','mpOpen3'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',mpOpen)});
 /* player lobby hooks (bsl) */
-window.BSMP={net:NET,create:function(n){MPUI.name.value=n;createRoom(0)},join:function(n,code){MPUI.name.value=n;MPUI.code.value=code;joinRoom()},start:hostStart,leave:function(){mpLeave()},setOpt:function(k,v){setOpt(k,v);renderOpts()},pickChar:function(i){var L=window.BSChars||[],c=myChar();changeChar(i-L.indexOf(c))},msg:function(){return MPUI.msg.textContent},find:function(n){MPUI.name.value=n;quickMatch(0,0)},ready:function(v){if(NET.on&&!NET.host&&NET.hostConn)send(NET.hostConn,{t:'ready',r:!!v})}};
+window.BSMP={net:NET,create:function(n){MPUI.name.value=n;createRoom(0)},join:function(n,code){MPUI.name.value=n;MPUI.code.value=code;joinRoom()},start:hostStart,leave:function(){mpLeave()},setOpt:function(k,v){setOpt(k,v);renderOpts()},pickChar:function(i){var L=window.BSChars||[],c=myChar();changeChar(i-L.indexOf(c))},msg:function(){return MPUI.msg.textContent},find:function(n){MPUI.name.value=n;quickMatch(0,0)},createMine:function(n,code){MPUI.name.value=n;createRoom(0,code,function(){createRoom(0)},true)},ready:function(v){if(NET.on&&!NET.host&&NET.hostConn)send(NET.hostConn,{t:'ready',r:!!v})}};
 
 /* ---------- cars from other players ---------- */
 function carByPid(pid){for(var i=0;i<cars.length;i++)if(cars[i].pid===pid)return cars[i];return null}
@@ -4032,6 +4033,21 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 .bsl-find{display:flex;align-items:center;gap:14px;margin-bottom:10px;border:2px solid #3dff8a;background:linear-gradient(90deg,rgba(61,255,138,.16),rgba(10,22,48,.85))}.bsl-find>div{flex:1;min-width:0}
 .bsl-findb{min-width:170px;font-size:20px!important;background:linear-gradient(180deg,#5dff9c,#1fc463)!important;color:#03250f!important;box-shadow:0 4px 0 #0a6b31!important}
 @media (max-width:560px){.bsl-find{flex-direction:column;align-items:stretch}}
+.bsl-friends{margin-top:12px}
+.bsl-fh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bsl-fh h3{flex:1}
+.bsl-mycode{font:700 11px var(--hud);letter-spacing:.08em;color:var(--mute)}.bsl-mycode b{font:900 italic 24px/1 var(--display);letter-spacing:.12em;color:#ffcf00;margin-left:6px;vertical-align:-3px}
+.bsl-fl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.bsl-fl li{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border-radius:11px;background:#0e1730;border:2px solid rgba(255,255,255,.08);min-width:0;min-height:48px}
+.bsl-fl li span{flex:1;min-width:0}.bsl-fl li b{display:block;font:800 italic 17px/1.05 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bsl-fl li small{font:700 10px var(--hud);letter-spacing:.08em;color:var(--mute)}
+.bsl-fl li .bsl-btn{height:36px;padding:0 12px;font-size:15px!important}
+.bsl-fl .x{flex:none;width:30px;height:30px;border-radius:9px;border:2px solid #2a3c6e;background:#050a18;color:#9aa6c8;font:800 15px system-ui;cursor:pointer}
+.bsl-fl .none{opacity:.6;font:600 12px var(--body);border-style:dashed}
+.bsl-fadd{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:8px}
+.bsl-pl li .af{flex:none;height:28px;padding:0 8px;border-radius:8px;border:2px solid #ffcf00;background:transparent;color:#ffcf00;font:900 10px system-ui;letter-spacing:.06em;cursor:pointer;white-space:nowrap}
+.bsl-pl li .af.on{border-color:#3dff8a;color:#3dff8a;cursor:default}
+.bsl-rdyb{height:auto!important;min-height:58px;padding:6px 12px!important;font-size:clamp(18px,4.4vh,26px)!important;width:100%;white-space:normal;line-height:1.05;text-align:center}
+.bsl-rdyb.y{background:linear-gradient(180deg,#5dff9c,#1fc463)!important;color:#03250f!important;box-shadow:0 4px 0 #0a6b31!important}
+.bsl-rdyb.n{background:linear-gradient(180deg,#5d9bff,#2a7bff 55%,#1d5fe0)!important;color:#fff!important;box-shadow:0 4px 0 #123c94!important}
 .bsl-rd{margin-left:auto;flex:none;font:900 10px/1 system-ui;letter-spacing:.08em;padding:5px 8px;border-radius:999px;border:2px solid currentColor;white-space:nowrap}.bsl-rd.y{color:#3dff8a;background:rgba(61,255,138,.12)}.bsl-rd.n{color:#9aa6c8;opacity:.8}.bsl-rd.h{color:#ffd23a}
 .bsl-play.rdy{filter:saturate(.6) hue-rotate(60deg)}
 /* laptops and PCs: same lobby, buttons keep a sensible size instead of stretching */
@@ -4163,11 +4179,16 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
    <div class="bslp-b">
     <div class="bsl-box bsl-find" id="bslFindBox"><div><h3>🔍 Find a race</h3><p class="bsl-note" style="margin:0">Race real players from anywhere in the world. If nobody is around, bots fill the free spots after 30 s.</p></div><button class="bsl-btn bsl-findb" id="bslFind" type="button">FIND RACE</button></div>
     <div class="bsl-two" id="bslFrOut">
-     <div class="bsl-box"><h3>Create a room</h3><p class="bsl-note" style="margin:0">You are the host. You pick the mode and track, then invite your friends.</p><button class="bsl-btn" id="bslCreate" type="button">CREATE ROOM</button></div>
+     <div class="bsl-box"><h3>Create a room</h3><p class="bsl-note" style="margin:0">You are the host. Your room uses your own code, so your friends can join with one tap.</p><button class="bsl-btn" id="bslCreate" type="button">CREATE ROOM</button></div>
      <div class="bsl-box"><h3>Join a friend</h3><p class="bsl-note" style="margin:0">Type the 4-letter room code your friend sent you.</p><div class="bsl-join"><input class="bsl-in" id="bslCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" aria-label="Room code"><button class="bsl-btn blue" id="bslJoin" type="button">JOIN</button></div></div>
     </div>
+    <div class="bsl-box bsl-friends" id="bslFriends"><div class="bsl-fh"><h3>👥 My friends</h3><span class="bsl-mycode">YOUR CODE<b id="bslMyCode">----</b></span><button class="bsl-btn dark" id="bslMyShare" type="button">SHARE</button></div>
+     <ul class="bsl-fl" id="bslFl"></ul>
+     <div class="bsl-fadd"><input class="bsl-in" id="bslFAddN" maxlength="12" placeholder="FRIEND'S NAME" autocomplete="off" aria-label="Friend's name"><input class="bsl-in" id="bslFAddC" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" aria-label="Friend's code"><button class="bsl-btn" id="bslFAdd" type="button">ADD</button></div>
+     <p class="bsl-note" style="margin:0">When a friend creates a room, press JOIN next to their name. You can also add someone from a room with + FRIEND.</p></div>
     <div class="bsl-two" id="bslFrIn" hidden>
      <div class="bsl-box"><span class="bsl-grp" id="bslCodeL" style="margin:0">ROOM CODE</span><div class="bsl-code"><b id="bslCodeB">----</b></div>
+      <button class="bsl-btn bsl-rdyb n" id="bslRdy" type="button">READY?</button>
       <div class="bsl-row" style="margin:0"><button class="bsl-btn" id="bslInvite" type="button">📨 INVITE FRIENDS</button><button class="bsl-btn red" id="bslLeave" type="button">LEAVE</button></div>
       <p class="bsl-note" id="bslHostNote" style="margin:0"></p></div>
      <div class="bsl-box"><span class="bsl-grp" style="margin:0">PLAYERS <span id="bslPCount">1/6</span></span><ol class="bsl-pl" id="bslPl"></ol></div>
@@ -4669,6 +4690,8 @@ function ensureOwned(){var L=chars(),c=cur();if(!L.length||!c)return;if(owned(c.
 
 // ---------- lobby screen ----------
 var myRd=false,myRdAt=0,myRdWait=false;   // my READY in a room (the host's copy can lag a moment)
+function rdSync(){var n=NETo(),meP=n.players.filter(function(p){return p.pid===n.myPid})[0];var hr=!!(meP&&meP.rd);if(hr===myRd)myRdWait=false;if(!myRdWait||Date.now()-myRdAt>6000){myRd=hr;myRdWait=false}return myRd}
+function toggleReady(){var n=NETo(),meP=n.players.filter(function(p){return p.pid===n.myPid})[0],rd=!myRd;myRd=rd;myRdAt=Date.now();myRdWait=true;window.BSMP.ready&&window.BSMP.ready(rd);if(meP)meP.rd=rd;toast(rd?'You are ready!':'Not ready');draw();frDraw()}
 function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return;
  var pc=PAINTS[PROF?PROF.sp:0].c||c.col;
  $('bsl').style.setProperty('--cc',c.col);
@@ -4680,8 +4703,8 @@ function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return
  $('bslNameT').textContent=myName();$('bslTitleT').textContent=TITLES[PROF?PROF.ti:0];$('bslStageName').textContent=myName();
  var chip=$('bslRoomChip'),pb=$('bslPlay');
  if(inRoom()){var rn=n.qm?'QUICK RACE':'ROOM '+n.code;chip.classList.remove('off');$('bslRoomT').textContent=rn+' · '+n.players.length+'/6';$('bslVFr').textContent=rn+' · '+n.players.length+' PLAYER'+(n.players.length>1?'S':'');
-  if(isHost()){var nr=n.players.filter(function(p){return p.pid!=='H'&&p.rd}).length,no=n.players.length-1;pb.className='bsl-play';$('bslPlayB').textContent='START';$('bslPlayS').textContent=no?nr+'/'+no+' READY':'1 PLAYER + BOTS'}
-  else{var meP=n.players.filter(function(p){return p.pid===n.myPid})[0];var hr=!!(meP&&meP.rd);if(hr===myRd)myRdWait=false;if(!myRdWait||Date.now()-myRdAt>6000){myRd=hr;myRdWait=false}var rd=myRd;pb.className='bsl-play'+(rd?' rdy':' wait');$('bslPlayB').textContent=rd?'READY ✓':'READY?';$('bslPlayS').textContent=rd?'TAP TO CANCEL':'TAP WHEN YOU ARE READY'}}
+  if(isHost()){var nr=n.players.filter(function(p){return p.pid!=='H'&&p.rd}).length,no=n.players.length-1;pb.className='bsl-play';$('bslPlayB').textContent='ROOM';$('bslPlayS').textContent=(no?nr+'/'+no+' READY':'1 PLAYER + BOTS')+' · OPEN'}
+  else{var rd=rdSync();pb.className='bsl-play'+(rd?' rdy':' wait');$('bslPlayB').textContent='ROOM';$('bslPlayS').textContent=(rd?'YOU ARE READY ✓':'NOT READY YET')+' · OPEN'}}
  else{chip.classList.add('off');$('bslRoomT').textContent='OFFLINE';$('bslVFr').textContent='FIND RACE · OR MAKE A ROOM';pb.className='bsl-play';$('bslPlayB').textContent='PLAY';$('bslPlayS').textContent=(md==='race'?'RACE NOW':modeOf(md).n.toUpperCase()+' NOW')}
  if($('bslPDrv').classList.contains('on'))drvDraw();if($('bslPMode').classList.contains('on'))modeDraw();if($('bslPFr').classList.contains('on'))frDraw();if($('bslPSync').classList.contains('on'))syncDraw();
 }
@@ -4773,17 +4796,41 @@ $('bslBackPad').onclick=window.BSBackToPad;
 // friends / online room
 function frMsg(t){$('bslFrMsg').textContent=t||''}
 var TC=['ROOKIE','SPEEDY','TURBO','BRICK BOSS','DRIFT KING','NO BRAKES','BRICK LEGEND','CHAMPION'];
-function frDraw(){var n=NETo(),inr=inRoom();$('bslFrOut').hidden=inr;$('bslFindBox').hidden=inr;$('bslFrIn').hidden=!inr;$('bslInvite').hidden=!!(n&&n.qm);
+function frDraw(){var n=NETo(),inr=inRoom();$('bslFrOut').hidden=inr;$('bslFindBox').hidden=inr;$('bslFriends').hidden=inr;$('bslFrIn').hidden=!inr;$('bslInvite').hidden=!!(n&&n.qm);
+ if(!inr)flDraw();else if(/^(Creating|Joining)/.test($('bslFrMsg').textContent))frMsg('');
+ else{var rb=$('bslRdy');if(isHost()){var nr=n.players.filter(function(p){return p.pid!=='H'&&p.rd}).length,no=n.players.length-1;rb.className='bsl-btn bsl-rdyb y';rb.textContent=n.qm?'START NOW':'START RACE'+(no?' · '+nr+'/'+no+' READY':'')}else{var rd=rdSync();rb.className='bsl-btn bsl-rdyb '+(rd?'y':'n');rb.textContent=rd?'READY ✓ · TAP TO CANCEL':'READY?'}}
  var m=window.BSMP&&window.BSMP.msg();if(m)frMsg(m);
  if(!inr)return;$('bslCodeB').textContent=n.qm?'QUICK RACE':n.code;$('bslCodeL').textContent=n.qm?'FIND RACE':'ROOM CODE';$('bslPCount').textContent=n.players.length+'/6';
  $('bslHostNote').textContent=n.qm?'Quick race with players from anywhere. It starts by itself.':n.host?'You are the host: pick the mode and track in the lobby, then press START.':'The host picks the game. Pick your driver and wait for START.';
  var h='',L=chars();n.players.forEach(function(p){var c=null;L.forEach(function(x){if(x.id===p.char)c=x});var pcol=(p.kk&&SKN[p.kk-1]?'#'+('00000'+SKN[p.kk-1][2].toString(16)).slice(-6):'')||(p.sk&&PAINTS[p.sk]&&PAINTS[p.sk].c)||(c?c.col:'#334');
-  h+='<li class="'+(p.pid===n.myPid?'me':'')+'" style="--pc:'+pcol+'"><span class="c"></span><span style="min-width:0"><b>'+(p.pid==='H'?'👑 ':'')+esc(p.name)+(p.pid===n.myPid?' (YOU)':'')+'</b><small>'+(p.ti?esc(TC[p.ti]||'')+' · ':'')+(c?esc(p.kk&&SKN[p.kk-1]?SKN[p.kk-1][0]:c.name)+' LV '+(p.lv||1):'')+'</small></span><span class="bsl-rd '+(p.pid==='H'?'h':p.rd?'y':'n')+'">'+(p.pid==='H'?'HOST':p.rd?'✓ READY':'NOT READY')+'</span></li>'});
+  h+='<li class="'+(p.pid===n.myPid?'me':'')+'" style="--pc:'+pcol+'"><span class="c"></span><span style="min-width:0"><b>'+(p.pid==='H'?'👑 ':'')+esc(p.name)+(p.pid===n.myPid?' (YOU)':'')+'</b><small>'+(p.ti?esc(TC[p.ti]||'')+' · ':'')+(c?esc(p.kk&&SKN[p.kk-1]?SKN[p.kk-1][0]:c.name)+' LV '+(p.lv||1):'')+'</small></span>'+(p.pid!==n.myPid&&p.fc&&p.fc!==myCode()?'<button class="af'+(isFriend(p.fc)?' on':'')+'" type="button" data-af="'+esc(p.fc)+'" data-an="'+esc(p.name)+'">'+(isFriend(p.fc)?'★ FRIEND':'+ FRIEND')+'</button>':'')+'<span class="bsl-rd '+(p.pid==='H'?'h':p.rd?'y':'n')+'">'+(p.pid==='H'?'HOST':p.rd?'✓ READY':'NOT READY')+'</span></li>'});
  for(var k=n.players.length;k<6;k++)h+='<li class="empty">Free spot · a bot drives</li>';
  var pl=$('bslPl');if(pl.__h!==h){pl.__h=h;pl.innerHTML=h}}
 setInterval(function(){if($('bslPFr').classList.contains('on')&&inRoom())frDraw()},500);
 $('bslFind').onclick=function(){if(!window.BSMP||!window.BSMP.find){frMsg('Online rooms are still loading. Try again in a second.');return}vib(15);window.BSMP.find(myName());frMsg('Looking for a race…')};
-$('bslCreate').onclick=function(){if(!window.BSMP){frMsg('Online rooms are still loading. Try again in a second.');return}window.BSMP.create(myName());frMsg('Creating a room…')};
+$('bslCreate').onclick=function(){if(!window.BSMP){frMsg('Online rooms are still loading. Try again in a second.');return}if(window.BSMP.createMine)window.BSMP.createMine(myName(),myCode());else window.BSMP.create(myName());frMsg('Creating a room…')};
+$('bslRdy').onclick=function(){vib(20);if(!inRoom())return;if(isHost()){window.BSMP.start();return}toggleReady()};
+// ---------- friends (saved on this phone) ----------
+function myCode(){var FCA='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c=store('bs-my-room');if(!c||!/^[A-HJ-NP-Z2-9]{4}$/.test(c)){c='';for(var i=0;i<4;i++)c+=FCA[Math.floor(Math.random()*FCA.length)];store('bs-my-room',c)}return c}
+window.BSMyCode=myCode;
+function friends(){try{var a=JSON.parse(store('bs-friends')||'[]');return Array.isArray(a)?a.filter(function(f){return f&&/^[A-Z0-9]{4}$/.test(f.c)}):[]}catch(e){return []}}
+function saveFriends(a){store('bs-friends',JSON.stringify(a.slice(0,30)))}
+function isFriend(code){return friends().some(function(f){return f.c===code})}
+function addFriend(name,code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4||code===myCode())return false;var a=friends().filter(function(f){return f.c!==code});a.unshift({n:cleanName(name)||'FRIEND',c:code,t:Date.now()});saveFriends(a);return true}
+function flDraw(){$('bslMyCode').textContent=myCode();var a=friends(),h='';
+ a.forEach(function(f){h+='<li><span><b>'+esc(f.n)+'</b><small>CODE '+esc(f.c)+'</small></span><button class="bsl-btn blue" type="button" data-j="'+esc(f.c)+'">JOIN</button><button class="x" type="button" data-x="'+esc(f.c)+'" aria-label="Remove '+esc(f.n)+'">✕</button></li>'});
+ if(!a.length)h='<li class="none">No friends yet. Add one with their code, or press + FRIEND next to a player in a room.</li>';
+ var fl=$('bslFl');if(fl.__h!==h){fl.__h=h;fl.innerHTML=h}}
+$('bslFl').onclick=function(e){var j=e.target.closest('[data-j]'),x=e.target.closest('[data-x]');
+ if(j){var f=friends().filter(function(q){return q.c===j.dataset.j})[0];doJoin(j.dataset.j);frMsg('Joining '+(f?f.n:'your friend')+'… (they need to be in their room)')}
+ if(x){saveFriends(friends().filter(function(f){return f.c!==x.dataset.x}));flDraw()}};
+$('bslFAdd').onclick=function(){var n=$('bslFAddN').value,c=String($('bslFAddC').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+ if(c.length!==4){frMsg("Type your friend's 4-letter code.");return}if(c===myCode()){frMsg('That is your own code.');return}
+ addFriend(n,c);$('bslFAddN').value='';$('bslFAddC').value='';frMsg('Friend saved!');vib(15);flDraw()};
+$('bslMyShare').onclick=function(){var c=myCode(),url=location.origin+location.pathname+'?room='+c+'#lobby',txt='Add me on BrickSpeed! My code: '+c;
+ if(navigator.share){navigator.share({title:'BrickSpeed',text:txt,url:url}).catch(function(){});return}
+ try{navigator.clipboard.writeText(txt+' · '+url).then(function(){toast('Your code is copied. Send it to your friends!')},function(){toast('Your code: '+c)})}catch(e){toast('Your code: '+c)}};
+$('bslPl').addEventListener('click',function(e){var b=e.target.closest('[data-af]');if(!b||b.classList.contains('on'))return;if(addFriend(b.dataset.an,b.dataset.af)){toast(b.dataset.an+' is now your friend!');vib(15);$('bslPl').__h='';frDraw()}});
 function doJoin(code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4){frMsg('Type the 4-letter room code.');return}if(!window.BSMP){frMsg('Online rooms are still loading. Try again in a second.');return}window.BSMP.join(myName(),code);frMsg('Joining room '+code+'…')}
 $('bslJoin').onclick=function(){doJoin($('bslCode').value)};$('bslCode').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doJoin($('bslCode').value)}});
 $('bslLeave').onclick=function(){if(window.BSMP)window.BSMP.leave();frMsg('You left the room.');draw()};
@@ -4797,7 +4844,7 @@ $('bslAuto').onclick=function(){auto=!auto;store('bsl-auto',auto?'1':'0');this.s
 
 // PLAY
 $('bslPlay').onclick=function(){vib(20);
- if(inRoom()){if(isHost()){window.BSMP.start();return}var n=NETo(),meP=n.players.filter(function(p){return p.pid===n.myPid})[0],rd=!myRd;myRd=rd;myRdAt=Date.now();myRdWait=true;window.BSMP.ready&&window.BSMP.ready(rd);if(meP)meP.rd=rd;toast(rd?'You are ready!':'Not ready');draw&&draw();frDraw();return}
+ if(inRoom()){panel('bslPFr');return}
  if(!window.BSRace){toast('The game is still loading');return}
  var c=cur();if(!owned(c.id)){ensureOwned();c=cur()}window.BSRace.start(window.BSPaint(c),window.BSMakeCar,null,opts())};
 // after a race: "Pick a character" opens the driver panel here instead of scrolling the page
@@ -4832,7 +4879,22 @@ function car3d(){if(R3||!window.THREE||!window.BSMakeCar)return;var T=window.THR
  function size(){var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();frame3()}
  new ResizeObserver(size).observe(cv);size();
 }
-function frame3(){if(!R3)return;var s=R3.size,a=R3.cam.aspect||1.6,d=s*(a<1.3?2.4:1.75);R3.cam.position.set(0,s*.42,d);R3.cam.lookAt(0,s*.12,0)}
+function frame3(){if(!R3)return;var s=R3.size,a=R3.cam.aspect||1.6,far=R3.others&&R3.others.length,d=s*(a<1.3?2.4:1.75)*(far?(R3.others.length>2?1.85:1.55):1);R3.cam.position.set(0,s*(far?.8:.42),d);R3.cam.lookAt(0,s*(far?.1:.12),far?-s*.45:0)}
+// in a room: the other players' cars stand around yours, with their name and READY
+function othersKey(){if(!inRoom())return '';var n=NETo();return n.players.filter(function(p){return p.pid!==n.myPid}).slice(0,5).map(function(p){return p.pid+'|'+p.char+'|'+(p.kk|0)+'|'+(p.sk|0)+'|'+(p.rd?1:0)+'|'+p.name}).join(';')}
+function nameTag(T,p,s){var cv=document.createElement('canvas');cv.width=320;cv.height=96;var x=cv.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+ x.font='italic 900 42px "Saira Extra Condensed",Impact,sans-serif';x.lineWidth=8;x.strokeStyle='rgba(0,0,0,.9)';var nm=String(p.name||'PLAYER').slice(0,12);x.strokeText(nm,160,32);x.fillStyle='#fff';x.fillText(nm,160,32);
+ var rt=p.pid==='H'?'👑 HOST':p.rd?'READY ✓':'NOT READY';x.font='900 26px system-ui';x.lineWidth=6;x.strokeText(rt,160,76);x.fillStyle=p.pid==='H'?'#ffd23a':p.rd?'#3dff8a':'#9aa6c8';x.fillText(rt,160,76);
+ var sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv),depthTest:false,transparent:true}));sp.renderOrder=9;sp.scale.set(s*.85,s*.85*96/320,1);return sp}
+function othersSet(){if(!R3)return;var k=othersKey();if(R3.ok===k)return;R3.ok=k;var T=R3.T;
+ (R3.others||[]).forEach(function(o){R3.sc.remove(o);o.traverse(function(q){if(q.material&&q.material.map&&q.isSprite)q.material.map.dispose()})});R3.others=[];
+ if(k){var n=NETo(),L=chars(),s=R3.size,SL=[[-.85,.95],[.85,.95],[-1.75,1.55],[1.75,1.55],[0,2.1]];
+  n.players.filter(function(p){return p.pid!==n.myPid}).slice(0,5).forEach(function(p,i){var c=null;L.forEach(function(q){if(q.id===p.char)c=q});c=c||L[0];if(!c)return;var ch=c;
+   if(window.BSSkinOf&&p.kk)ch=window.BSSkinOf(ch,(p.kk|0)-1);if(window.BSPaintSk&&p.sk)ch=window.BSPaintSk(ch,p.sk);
+   var m;try{m=window.BSMakeCar(ch)}catch(e){return}var g=new T.Group(),spin=new T.Group();spin.add(m);g.add(spin);
+   var bx=new T.Box3().setFromObject(m),ctr=new T.Vector3();bx.getCenter(ctr);m.position.x-=ctr.x;m.position.z-=ctr.z;m.position.y-=bx.min.y;
+   g.position.set(SL[i][0]*s,0,-SL[i][1]*s);spin.rotation.y=SL[i][0]<0?.6:-.6;g.userData.spin=spin;var tg=nameTag(T,p,s);tg.position.y=s*.62;g.add(tg);R3.sc.add(g);R3.others.push(g)})}
+ frame3()}
 function carKey(){var c=cur();return c?c.id+'/'+(PROF?PROF.sp:0)+'/'+skinIdx(c.id):''}
 function carSet(){car3d();if(!R3)return;var c=cur();if(!c||R3.id===carKey())return;R3.id=carKey();
  if(R3.car){R3.holder.remove(R3.car)}var m;try{m=window.BSMakeCar(window.BSPaint(c))}catch(e){return}R3.car=m;R3.holder.add(m);
@@ -4841,7 +4903,7 @@ function carSet(){car3d();if(!R3)return;var c=cur();if(!c||R3.id===carKey())retu
 var lastT=0;
 function loop(t){requestAnimationFrame(loop);if(!B.classList.contains('bsl-on')||B.classList.contains('racing'))return;
  if(t-lastT<33)return;var dt=Math.min(.1,(t-lastT)/1000);lastT=t;
- dvFrame(dt);if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();R3.holder.rotation.y+=dt*.5;if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam)}}
+ dvFrame(dt);if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();othersSet();(R3.others||[]).forEach(function(o){o.userData.spin.rotation.y+=dt*.35});R3.holder.rotation.y+=dt*.5;if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam)}}
 requestAnimationFrame(loop);
 
 // ---------- keep everything fresh ----------
