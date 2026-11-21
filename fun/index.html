@@ -5212,6 +5212,10 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 #bstrip .bs-pin{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#ffcf00;box-shadow:0 0 12px #ffcf00}
 #bstrip .bs-m{margin-top:8px;font:900 italic clamp(16px,4vh,24px) "Saira Extra Condensed",Impact,sans-serif;color:#ffcf00;text-shadow:0 3px 0 #000;min-height:1.2em}
 #bstrip.done .bs-win{animation:bspop .5s}@keyframes bspop{40%{transform:scale(1.06)}}
+.bsl-ask{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(2,5,16,.7);padding:16px}
+.bsl-ask[hidden]{display:none}
+.bsl-ask-in{max-width:420px;width:100%;background:#0e1730;border:3px solid #2a7bff;border-radius:18px;padding:18px;display:grid;gap:10px;box-shadow:0 0 0 3px #000}
+.bsl-ask-in b{font:900 italic 26px/1 var(--display)}.bsl-ask-in p{margin:0;color:var(--mute);font:600 14px var(--body)}
 .bsl-friends{margin-top:12px}
 .bsl-fh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bsl-fh h3{flex:1}
 .bsl-mycode{font:700 11px var(--hud);letter-spacing:.08em;color:var(--mute)}.bsl-mycode b{font:900 italic 24px/1 var(--display);letter-spacing:.12em;color:#ffcf00;margin-left:6px;vertical-align:-3px}
@@ -5932,13 +5936,13 @@ function modeDraw(){var o=gameOpts(),md=o.mode||'race',lock=inRoom()&&!isHost(),
  $('bslModes').innerHTML=h;[].forEach.call($('bslModes').children,function(b){b.onclick=function(){setOpt('mode',b.dataset.m);vib(10)}});
  var mh='';MAPS.forEach(function(m){var g=MG[m.id]||['#2a7bff','#0a1630'];mh+='<button class="bsl-m" type="button" data-map="'+m.id+'" style="--mg:linear-gradient(150deg,'+g[0]+','+g[1]+')" aria-pressed="'+(o.map===m.id)+'"'+(lock?' disabled':'')+'><small>TRACK</small><b>'+m.name+'</b></button>'});
  var mb=$('bslMaps');if(mb.__h!==mh){mb.__h=mh;mb.innerHTML=mh;[].forEach.call(mb.children,function(b){b.onclick=function(){setOpt('map',b.dataset.map);vib(10)}})}
- $('bslTrackH').hidden=mb.hidden=tag;
+ $('bslTrackH').hidden=mb.hidden=tag||md==='bomb';
  var lh='';[1,2,3,5].forEach(function(n){lh+='<button type="button" data-l="'+n+'" aria-pressed="'+(+o.laps===n)+'"'+(lock?' disabled':'')+'>'+n+'</button>'});$('bslLaps').innerHTML=lh;[].forEach.call($('bslLaps').children,function(b){b.onclick=function(){setOpt('laps',+b.dataset.l)}});
  $('bslLapsRow').hidden=md!=='race';
  var ah='';ARENAS.forEach(function(a){ah+='<button type="button" data-a="'+a.id+'" aria-pressed="'+((o.arena||'fun')===a.id)+'"'+(lock?' disabled':'')+'>'+a.n+'</button>'});$('bslArena').innerHTML=ah;[].forEach.call($('bslArena').children,function(b){b.onclick=function(){setOpt('arena',b.dataset.a)}});
  $('bslArenaRow').hidden=!tag;
  var th='';[['0','Everyone'],['1','Red vs Blue']].forEach(function(t){th+='<button type="button" data-t="'+t[0]+'" aria-pressed="'+(String(+o.teams||0)===t[0])+'"'+(lock?' disabled':'')+'>'+t[1]+'</button>'});$('bslTeams').innerHTML=th;[].forEach.call($('bslTeams').children,function(b){b.onclick=function(){setOpt('teams',+b.dataset.t)}});
- $('bslTeamsRow').hidden=md==='race'||md==='battle';
+ $('bslTeamsRow').hidden=md==='race'||md==='battle'||md==='bomb';
  $('bslMapSub').textContent=inRoom()?(isHost()?'YOU ARE THE HOST':'THE HOST PICKS'):'SOLO AGAINST 5 BOTS';
  $('bslModeNote').textContent=lock?'Only the host can change the game.':''}
 // paints (bought on the pad)
@@ -5964,13 +5968,14 @@ function topLoad(){var o=gameOpts();if(!topMap)topMap=MAPS.some(function(m){retu
 function syncDraw(){var P=pending();$('bslPend').textContent=P.t+' coin'+(P.t===1?'':'s');$('bslPendX').textContent='+'+P.x+' XP for the BrickSpeed Pass';
  $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET · SAVED ON THIS PHONE (MAX '+GUEST_MAX+')';$('bslOpenPad').disabled=!PROF;$('bslOpenPad').textContent=(P.t||P.x)?'OPEN PAD':'BACK TO PAD'}
 // go back the same way you came: pad Wi-Fi -> the pad's own page (192.168.4.1), Bluetooth app -> the app (same tab, same app)
+function padAsk(){var d=$('bslPadAsk');if(!d){d=document.createElement('div');d.id='bslPadAsk';d.className='bsl-ask';d.innerHTML='<div class="bsl-ask-in" role="dialog" aria-label="Go back to your pad"><b>Go back to your pad?</b><p>Your coins are saved and go with you. You leave the online game.</p><div class="bsl-row" style="margin:0"><button class="bsl-btn dark" type="button" data-no>STAY HERE</button><button class="bsl-btn blue" type="button" data-yes>GO TO PAD</button></div></div>';$('bsl').appendChild(d);d.addEventListener('click',function(e){if(e.target.closest('[data-yes]')){d.hidden=true;window.BSBackToPad()}else if(e.target.closest('[data-no]')||e.target===d)d.hidden=true})}d.hidden=false}
 window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your pad first');return}freeze(E);saveEarn(E);var ble=PROF.src==='b';
  if(window.parent!==window){try{window.parent.postMessage({bs:'back',sync:{id:E.pad,b:E.sent}},'*');return}catch(e){}}   // opened inside the Bluetooth app: just close
  $('bslSyncMsg').textContent=ble?'Opening the BrickSpeed app… your coins go to the pad over Bluetooth.':'Opening your pad… if nothing loads, join the pad Wi-Fi (Settings > Wi-Fi) and tap again.';
  if(ble){location.href=new URL('../',location.href).href;return}
  location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};
 $('bslOpenPad').onclick=window.BSBackToPad;
-$('bslBackPad').onclick=window.BSBackToPad;
+$('bslBackPad').onclick=function(){padAsk()};
 // Christmas season (Dec 1 - Jan 6): snow over the neon city
 (function(){var d=new Date(),m=d.getUTCMonth(),dd=d.getUTCDate();if(m==11||(m==0&&dd<=6)){var c=$('bslCity');if(c)c.insertAdjacentHTML('beforeend','<div class="snow"></div><div class="snow s2"></div>')}})();$('bslBackPad').hidden=!PROF;
 // friends / online room
