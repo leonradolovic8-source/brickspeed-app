@@ -2848,7 +2848,7 @@ function startRace(ch,makeCar,roster,opts){
   if(!NET.on&&o.mode==='battle'){ /* 1v1 touge battle against the fastest bot */
     var rv=allCars[5];allCars.forEach(function(c){if(!c.me)c.model.visible=c===rv});cars=[me,rv];rv.vmax=27.6;race.battle=true;race.rival=rv;grid=[rv,me];
   }
-  race.earned=0;race.earnTxt='';race.chase=null;race.on=true;race.ch=ch;race.phase='intro';race.t=0;introFrom=null;RUI.count.textContent='';race.finish=[];race.cd=0;race.cdMax=Math.max(1,AB[ch.id]);race.gear=3;race.glide=false;race.selfUntil=0;race.immuneUntil=0;race.rew=null;race.hist=[];hero.classList.remove('rewinding');race.lbInit=false;race.lbSent=false;race.thist=[];race.launched=false;race.falseStart=false;race.launchPct=null;me.flyUntil=0;
+  race.earned=0;race.earnTxt='';race.chase=null;race.on=true;race.ch=ch;race.phase='intro';race.t=0;race.syncAt=0;introFrom=null;RUI.count.textContent='';race.finish=[];race.cd=0;race.cdMax=Math.max(1,AB[ch.id]);race.gear=3;race.glide=false;race.selfUntil=0;race.immuneUntil=0;race.rew=null;race.hist=[];hero.classList.remove('rewinding');race.lbInit=false;race.lbSent=false;race.thist=[];race.launched=false;race.falseStart=false;race.launchPct=null;me.flyUntil=0;
   race.bombs.forEach(function(b){scene.remove(b.mesh)});race.bombs=[];
   window.BSRacing=true;
   scene.remove(me.model);me.model=makeCarExt?makeCarExt(ch):defaultModel;scene.add(me.model);
@@ -2920,7 +2920,11 @@ function showResult(){
   var again=document.getElementById('again');again.textContent=race.mp?(NET.host?'Back to room (everyone)':'Back to room'):'Race again';again.disabled=false;document.getElementById('pickc').textContent=race.mp?'Change car':'Pick a character';
 }
 function raceUpdate(dt){
-  race.t+=dt;
+  if(race.mp&&race.syncAt&&(race.phase==='intro'||race.phase==='count')){ /* online: the intro and 3-2-1 follow the shared clock, not this device's frames */
+    var el=Math.max(0,(Date.now()-race.syncAt)/1000);
+    if(race.phase==='intro'&&el>=INTRO){race.phase='count';race.introToast=false;var fm1=MAPS[curMap].fog;scene.fog.near=fm1[0];scene.fog.far=fm1[1]}
+    race.t=race.phase==='intro'?el:el-INTRO;
+  }else race.t+=dt;
   if(race.phase==='intro'){
     if(!race.introToast&&race.t>.25){race.introToast=true;toast3(race.mode!=='race'?modeName():MAPS[curMap].name.toUpperCase(),race.mode==='tag'?(race.teams?'RED catches, BLUE runs and rescues':'Tag someone, do not be IT at the end'):race.mode==='dozer'?'Stay ahead of the bulldozer':race.laps+(race.laps>1?' laps':' lap')+' · '+cars.length+' cars')}
     if(race.t>=INTRO){race.phase='count';race.t=0;race.introToast=false;var fm=MAPS[curMap].fog;scene.fog.near=fm[0];scene.fog.far=fm[1]}
@@ -3071,6 +3075,7 @@ function createRoom(retry,fixed,onTaken){
 }
 function hostData(conn,m){
   if(!m||typeof m!=='object')return;
+  if(m.t==='ping'){send(conn,{t:'pong',c:+m.c,h:Date.now()});return}
   if(m.t==='hello'){
     if(NET.players.length>=6){send(conn,{t:'full'});setTimeout(function(){conn.close()},300);return}
     if(NET.racing){send(conn,{t:'busy'});setTimeout(function(){conn.close()},300);return}
@@ -3122,15 +3127,27 @@ function qmHostTimer(){clearInterval(qmT);var since=Date.now(),two=0;qmT=setInte
   var allR=n>=2&&NET.players.every(function(p){return p.pid==='H'||p.rd});if(allR&&!NET.qmAll){NET.qmAll=Date.now()}if(!allR)NET.qmAll=0;if(allR)left=Math.min(left,Math.ceil((NET.qmAll+3000-Date.now())/1000));
   if(n>=6)left=0;mpMsg(n>=2?n+' players! Race starts in '+Math.max(0,left)+' s':'Waiting for players… bots join in '+Math.max(0,left)+' s');
   if(left<=0){clearInterval(qmT);hostStart()}},500)}
+function clockOff(){ /* host clock minus ours (ms), from the fastest ping; null = not known yet */
+  var b=null;(NET.syncs||[]).forEach(function(x){if(!b||x.rtt<b.rtt)b=x});return b?b.off:null}
+function clockPing(code){
+  if(NET.syncCode!==code){NET.syncCode=code;NET.syncs=[]}
+  if(NET.pingT)return;
+  var n=0;NET.pingT=setInterval(function(){
+    if(!NET.on||NET.host||!NET.hostConn){clearInterval(NET.pingT);NET.pingT=0;return}
+    if(race.on&&race.phase==='go')return;
+    if(++n>6&&n%4)return; /* quick at first, then every 2 s */
+    send(NET.hostConn,{t:'ping',c:Date.now()})},500)}
 function clientData(m,code){
   if(!m||typeof m!=='object')return;
+  if(m.t==='pong'){var now=Date.now(),rtt=now-(+m.c);if(rtt>=0&&rtt<5000){NET.syncs=(NET.syncs||[]).concat([{rtt:rtt,off:(+m.h)+rtt/2-now}]).slice(-10)}return}
+  if(m.t==='lobby')clockPing(code);
   if(m.t==='lobby'){NET.on=true;NET.host=false;NET.code=code;if(m.opts&&MAPS[m.opts.map])NET.opts={map:m.opts.map,laps:[1,2,3,5].indexOf(+m.opts.laps)>=0?+m.opts.laps:1,mode:['race','tag','dozer'].indexOf(m.opts.mode)>=0?m.opts.mode:'race',teams:+m.opts.teams?1:0,arena:m.opts.arena==='city'?'city':'fun'};NET.players=(m.players||[]).map(function(p){return{pid:String(p.pid),name:cleanName(p.name),char:(charById(p.char)||{id:'blaze'}).id,ti:cosm(p.ti,7),lv:Math.max(1,cosm(p.lv,10)),sk:cosm(p.sk,7),kk:cosm(p.kk,20)}});
     if(!race.on)renderLobby();mpMsg('');return}
   if((m.t==='full'||m.t==='busy')&&NET.qmFail){var f=NET.qmFail;NET.qmFail=null;mpLeave(true);f(m.t);return}
   if(m.t==='lobby')NET.qmFail=null;
   if(m.t==='full'){mpMsg('That room is full (6 players).');return}
   if(m.t==='busy'){mpMsg('That room is racing right now. Try again in a minute.');return}
-  if(m.t==='start'){mpClose();startRace(window.BSPaint?window.BSPaint(myChar()):myChar(),window.BSMakeCar,m.roster,m.opts);return}
+  if(m.t==='start'){mpClose();startRace(window.BSPaint?window.BSPaint(myChar()):myChar(),window.BSMakeCar,m.roster,m.opts);var off=clockOff();race.syncAt=+m.at&&off!=null?(+m.at)-off:Date.now();return}
   if(m.t==='all'){Object.keys(m.s||{}).forEach(function(pid){if(pid===NET.myPid)return;var c=carByPid(pid);if(c)applyState(c,m.s[pid])});return}
   if(m.t==='fx'){if(m.to===NET.myPid)takeFx(m);return}
   if(m.t==='bomb'){addBomb(m.x,m.z,m.from,m.col);return}
@@ -3151,7 +3168,7 @@ function hostStart(){
   /* mix humans and bots on the grid so nobody always starts last */
   var order=[roster[0]];var rest=roster.slice(1);for(var j=0;j<rest.length;j++)order.push(rest[j]);
   NET.opts.flip=Math.random()<.5?1:0;NET.opts.it0=Math.floor(Math.random()*order.length);
-  NET.racing=true;broadcast({t:'start',roster:order,opts:NET.opts});mpClose();startRace(window.BSPaint?window.BSPaint(myChar()):myChar(),window.BSMakeCar,order,NET.opts);
+  var at=Date.now()+400;NET.racing=true;broadcast({t:'start',roster:order,opts:NET.opts,at:at});mpClose();startRace(window.BSPaint?window.BSPaint(myChar()):myChar(),window.BSMakeCar,order,NET.opts);race.syncAt=at;
 }
 document.getElementById('mpCreate').addEventListener('click',function(){createRoom(0)});
 document.getElementById('mpJoin').addEventListener('click',joinRoom);
