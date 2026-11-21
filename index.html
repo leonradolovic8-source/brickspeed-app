@@ -72,6 +72,7 @@ body.swap .main{direction:rtl}body.swap .main>*{direction:ltr}
 .gb{height:52px;border-radius:14px;background:var(--p2);border:1px solid var(--ln);display:grid;place-items:center;font:900 22px system-ui}
 .gb:active,.gb.hit{background:var(--bl);border-color:var(--bl)}
 .gl{font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--mu);text-align:center;line-height:1.3}
+.shrow{display:flex;gap:6px;min-width:0}.shrow .show{flex:1;min-width:0}.shrow .horn{flex:0 0 52px;font-size:20px;letter-spacing:0}.horn:active{background:#ffcf00;color:#000}
 .show{height:46px;border-radius:14px;border:1px solid var(--ln);background:var(--p1);font:800 13px system-ui;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:8px}
 .show .led{background:var(--mu);box-shadow:none}
 .show.on{background:var(--gr);color:#032014;border-color:var(--gr)}.show.on .led{background:#032014}
@@ -800,7 +801,7 @@ body.xmas #lob .podium{box-shadow:0 0 0 4px #000,0 0 0 10px transparent,0 0 30px
   <svg class="mwheel" id="mw" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
   <button class="abil" id="ab" aria-label="Use ability"><div><b>ABILITY</b><span>TAP</span></div></button>
   <div class="gears" id="gears"><button class="gb" id="dn" aria-label="Gear down">‹</button><span class="gl">GEAR</span><button class="gb" id="up" aria-label="Gear up">›</button></div>
-  <button class="show" id="bc"><span class="led"></span>HOLD · SHOW CAR</button>
+  <div class="shrow"><button class="show" id="bc"><span class="led"></span>HOLD · SHOW CAR</button><button class="show horn" id="hn" aria-label="Horn">📯</button></div>
  </div>
  <div class="zone" id="str">
   <span class="lab">STEERING</span><span class="read" id="strV">0<small>°</small></span>
@@ -1076,6 +1077,7 @@ function hold(el,down,up){var id=null;el.addEventListener('pointerdown',function
 hold($('ab'),function(){send('A');buzz(35);$('ab').classList.add('hit')},function(){$('ab').classList.remove('hit')});
 hold($('up'),function(){send('U');buzz(12);$('up').classList.add('hit')},function(){$('up').classList.remove('hit')});
 hold($('dn'),function(){send('D');buzz(12);$('dn').classList.add('hit')},function(){$('dn').classList.remove('hit')});
+$('hn').addEventListener('click',function(){send('h');buzz(25)});
 hold($('bc'),function(){send('B1');buzz(15);$('bc').classList.add('on')},function(){send('B0');$('bc').classList.remove('on')});
 function scan(){send('S');toast('Scanning for cars…')}
 var svT=0,svA=40,svOk=false,svTm=0,svLast=0;
