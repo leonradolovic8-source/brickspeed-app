@@ -559,6 +559,7 @@ body.s-box #box,body.s-upd #upd,body.s-pass #pass{display:grid}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;z-index:20;display:none;place-items:center;text-align:center;padding:24px;background:rgba(4,8,26,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .ov.on{display:grid}
+.ovx{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:44px;height:44px;font-size:20px;z-index:2}
 .ov h2{margin:12px 0 6px;font:900 24px system-ui}
 .ov p{margin:0;color:var(--mu);font-size:15px}
 .spin{width:46px;height:46px;border-radius:50%;border:4px solid var(--ln);border-top-color:var(--bl);animation:spin .9s linear infinite;margin:auto}
@@ -864,7 +865,8 @@ body.xmas #lob .podium{box-shadow:0 0 0 4px #000,0 0 0 10px transparent,0 0 30px
 </div></div>
 <div class="lights" id="litOv" aria-live="polite"><div class="lrow" id="lRow"></div><b class="lgo" id="lGo">GO!</b></div>
 <div id="toast" role="status"></div>
-<div class="ov" id="lost"><div><div class="spin"></div><h2>Connection lost</h2><p>Your car has been stopped. Reconnecting…</p></div></div>
+<div class="ov" id="lost"><button class="ib ovx" id="lostX" aria-label="Close">✕</button><div><div class="spin"></div><h2>Connection lost</h2><p>Your car has been stopped. Reconnecting…</p><p id="lostHelp" style="opacity:.75;font-size:13px" hidden>Is the pad switched on? Your phone must be on the pad's Wi-Fi.</p></div></div>
+<div class="ov" id="carOv"><button class="ib ovx" id="carX" aria-label="Stop looking">✕</button><div><div class="spin"></div><h2 id="carH">Your car isn't answering</h2><p>Is it switched on? The pad keeps looking for it.</p><br><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="ab" id="carWait" style="padding:0 22px">KEEP WAITING</button><button class="ab pri" id="carStop" style="padding:0 22px">✕ STOP LOOKING</button></div></div></div>
 <div class="ov" id="turn"><div><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#2f7bff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M2 14a8 8 0 0 0 5 6"/></svg><h2>Turn your phone sideways</h2><p>The pad drives in landscape.</p></div></div>
 <div class="ov" id="tiltOv"><div><h2>Tilt wheel</h2><p id="tiltP">Hold the phone like a wheel and tap to switch tilt on.</p><br><div style="display:flex;gap:10px;justify-content:center"><button class="ab pri" id="tiltGo" style="padding:0 26px">Enable tilt</button><button class="ab" id="tiltNo" style="padding:0 22px">Use Touch wheel</button></div></div></div>
 <div class="ov" id="openOv"><div class="ostage" id="ostage">
@@ -957,7 +959,12 @@ function conn(){
 function reopen(){$('busyOv').classList.remove('on');if(curScr=='upd')setTimeout(function(){send('Y1')},300)}
 function send(t){if(!ok)return;if(T){T.send(t);return}if(ws&&ws.readyState==1){try{ws.send(t)}catch(e){}}}
 function lostOv(on){$('lost').classList.toggle('on',on)}
-setInterval(function(){var bad=!ok||(lastMsg&&Date.now()-lastMsg>2000);if(bad){if(!lostT)lostT=Date.now();if(Date.now()-lostT>1200)lostOv(true)}else{lostT=0;lostOv(false)}},300);
+var lostHide=0,carHide=false;
+setInterval(function(){var bad=!ok||(lastMsg&&Date.now()-lastMsg>2000);if(bad){if(!lostT)lostT=Date.now();lostOv(Date.now()-lostT>1200&&Date.now()>lostHide);$('lostHelp').hidden=Date.now()-lostT<8000}else{lostT=0;lostHide=0;lostOv(false)}
+ var cl=!bad&&st.cl==1&&st.s>=0;if(!cl)carHide=false;$('carH').textContent='CAR '+(st.s+1)+' isn\'t answering';$('carOv').classList.toggle('on',cl&&!carHide)},300);
+$('lostX').onclick=function(){lostHide=Date.now()+20000;lostOv(false)};   /* hide for 20 s, then show again if still lost */
+$('carWait').onclick=function(){carHide=true;$('carOv').classList.remove('on')};
+$('carStop').onclick=$('carX').onclick=function(){carHide=true;$('carOv').classList.remove('on');send('X');buzz(15);toast('Stopped looking for your car');if(curScr=='drive')show('lobby')};
 function status(){
  if(!spinning){colDraw();if(curScr=='box')boxesDraw()}
  lobbyDraw();searchTick();if(curScr=='cars')carsDraw();
@@ -1396,12 +1403,12 @@ var SKN=[['RALLY LEGEND',2,'#f5f6fa','#143cc8'],['TAXI TURBO',1,'#ffc814','#1414
  ['PAPER PLANE',2,'#fafaf5','#3c78e6'],['SKY KING',4,'#6ebeff','#ffcd3c'],['CLOCKWORK',3,'#be8c3c','#ffe6a0'],['GLITCH',4,'#0c0c10','#ff28c8'],['CHECKERED',1,'#f0f0f0','#141418'],['PIT BOSS',3,'#b6f22e','#141418'],['CHEER SQUAD',2,'#ff8cc8','#ffffff'],['HYPE',4,'#7828c8','#ff4fd8'],['PORTAL',2,'#1a1440','#00e5ff'],['MIRROR WORLD',4,'#c0c8d8','#ff3df2'],['SHARK',3,'#6c7a89','#ffffff'],['HEAT SEEKER',4,'#1a1a1a','#ff2d2d'],['CANDY CANE',2,'#ffffff','#e5243b'],['GOLDEN SLEIGH',4,'#d4a017','#e5243b'],['GINGERBREAD',1,'#a0522d','#ffffff'],['TINSEL',3,'#1f8a3a','#ffd700'],['RUDOLPH',2,'#8b5a2b','#ff2020'],['NORTHERN LIGHTS',4,'#0a1a3a','#3dffb0'],['ICICLE',2,'#dff3ff','#7fd4ff'],['BLIZZARD',4,'#f5fbff','#3a8cff']];
 var SKIN_GEMS=[0,25,50,90,150],FRC=['#3cc864','#3cc864','#3b8cff','#b25cff','#ffc400'];
 var PAINTS=[{n:'STOCK',c:'#8ea5cc'},{n:'FIRE RED',c:'#ff3b30'},{n:'OCEAN',c:'#1e90ff'},{n:'LIME',c:'#7dff3a'},{n:'GOLD',c:'#ffc400'},{n:'GALAXY',c:'#8a3dff'},{n:'CARBON',c:'#3a3f4d'},{n:'NEON PINK',c:'#ff4fd8'}],PAINT_COST=[0,15,15,15,40,60,30,40];
-var PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[3,5],[1,40],[4,2],[2,30],[8,1],[1,50],[9,2],[2,40],[7,1],[3,10],[1,60],[4,2],[2,50],[1,80],[4,3]];
-var PP=[[3,15],[6,2],[8,3],[9,4],[1,80],[5,1],[4,3],[3,25],[2,60],[9,7],[4,3],[8,5],[6,5],[1,120],[3,35],[4,4],[8,7],[5,1],[6,7],[9,15]];
+var PASS_TIERS=30,PF=[[1,20],[2,15],[4,1],[1,30],[6,1],[3,5],[1,40],[4,2],[2,30],[8,1],[1,50],[9,2],[2,40],[7,1],[3,10],[1,60],[4,2],[2,50],[1,80],[4,3],[1,90],[2,60],[4,2],[3,15],[1,100],[7,1],[2,70],[4,3],[1,120],[4,4]];
+var PP=[[3,15],[6,2],[8,3],[9,4],[1,80],[5,1],[4,3],[3,25],[2,60],[9,7],[4,3],[8,5],[6,5],[1,120],[3,35],[4,4],[8,7],[5,1],[6,7],[9,15],[9,11],[6,3],[8,2],[3,40],[9,19],[4,4],[6,4],[2,150],[9,13],[6,6]];
 function chestI(r){var c=RC[r];return '<svg viewBox="0 0 40 34" aria-hidden="true"><rect x="3" y="13" width="34" height="18" rx="3" fill="'+c+'" stroke="#15171f" stroke-width="2"/><rect x="2" y="6" width="36" height="9" rx="3" fill="'+shade(c,1.3)+'" stroke="#15171f" stroke-width="2"/><rect x="8" y="6" width="3" height="25" fill="#15171f"/><rect x="29" y="6" width="3" height="25" fill="#15171f"/><rect x="15" y="16" width="10" height="9" rx="2" fill="#15171f"/><rect x="18" y="11" width="4" height="6" fill="#15171f"/></svg>'}
 function rwIcon(t,a){return t==1?'<span class="coin"></span>':t==2?BOLTI.replace('class="bi"','class="bi" style="width:100%;height:100%"'):t==3?GEMI:t==4?chestI(a):t==5?'<span class="tkI">LV<b>+1</b></span>':t==6?'<span class="ttI">'+TITLES[a]+'</span>':t==8?'<span class="pnI" style="--pc:'+PAINTS[a].c+'"></span>':t==9?'<span class="skI" style="--fr:'+FRC[SKN[a][1]]+'">'+carSvg2(SKN[a][2],SKN[a][3])+'</span>':'<span class="x2I">x2</span>'}
 function rwText(t,a){return t==1?'+'+a+' TOKENS':t==2?'+'+a+' POWER':t==3?'+'+a+' GEMS':t==4?RN[a].toUpperCase()+' BOX':t==5?'LEVEL UP':t==6?'TITLE':t==8?PAINTS[a].n+' GLOW':t==9?SKN[a][0]+' SKIN':'x2 RACE'}
-function tierNow(){return Math.min(20,Math.floor((PS.xp||0)/TIER_XP))}
+function tierNow(){return Math.min(PASS_TIERS,Math.floor((PS.xp||0)/TIER_XP))}
 function canClaim(){var n=tierNow(),k=0;for(var i=0;i<n;i++){if(!((PS.cf>>>i)&1))k++;if(PS.pr&&!((PS.cp>>>i)&1))k++}return k}
 function shopTab(t){if(t=='pass'){show('pass');return}shopT=t;shopRefresh();var r=$('shrow'),sec=r&&r.querySelector('.shsec[data-s="'+t+'"]');if(r&&sec)r.scrollTo({left:sec.offsetLeft-r.offsetLeft-6,behavior:t=='boxes'?'auto':'smooth'})}
 function passOpen(){passDraw();setTimeout(function(){var tr=$('ptrack'),c=tr.querySelector('.rw.ready')||tr.querySelector('.tcol.cur');if(c){c=c.closest('.tcol');tr.scrollLeft=Math.max(0,c.offsetLeft-tr.offsetLeft-4)}},30)}
@@ -1430,9 +1437,9 @@ function ptResult(d){if(!d.pt){toast(d.msg||'Could not buy');return}PS.sk=d.sk;P
  if(d.pt==1){confetti([PAINTS[d.i].c,'#ffffff'],90);buzz([30,30,90]);bigToast('NEW GLOW: '+PAINTS[d.i].n+'!')}else toast(d.i?PAINTS[d.i].n+' glow on':'Glow off')}
 window.BSShop=function(t){show('box');shopTab(t)};window.BSShowPass=function(){show('pass')};
 function passDraw(){var n=tierNow(),xp=PS.xp||0,h='';
- $('pTierB').setAttribute('data-n',n);var into=n>=20?TIER_XP:xp%TIER_XP;$('pXpF').style.width=(into/TIER_XP*100)+'%';$('pXpT').textContent=n>=20?'MAX TIER':into+'/'+TIER_XP+' XP';
+ $('pTierB').setAttribute('data-n',n);var into=n>=PASS_TIERS?TIER_XP:xp%TIER_XP;$('pXpF').style.width=(into/TIER_XP*100)+'%';$('pXpT').textContent=n>=PASS_TIERS?'MAX TIER':into+'/'+TIER_XP+' XP';
  var bp=$('buyP');bp.className='buyP'+(PS.pr?' own':'');bp.innerHTML=PS.pr?'PASS ACTIVE ★':'GET PASS · '+PASS_PRICE+' '+GEMI;
- for(var i=0;i<20;i++){var got=i<n,cell=function(tr,w){var cl=tr=='p'?((PS.cp>>>i)&1):((PS.cf>>>i)&1),ok=got&&!cl&&(tr=='f'||PS.pr);
+ for(var i=0;i<PASS_TIERS;i++){var got=i<n,cell=function(tr,w){var cl=tr=='p'?((PS.cp>>>i)&1):((PS.cf>>>i)&1),ok=got&&!cl&&(tr=='f'||PS.pr);
    return '<button class="rw'+(tr=='p'?' pr':'')+(cl?' done':ok?' ready':(!got||(tr=='p'&&!PS.pr))?' lock':'')+'" data-tr="'+tr+'" data-i="'+i+'"><span class="ri">'+rwIcon(w[0],w[1])+'</span><b>'+(w[0]==6?'NEW TITLE':rwText(w[0],w[1]))+'</b></button>'};
   h+='<div class="tcol'+(got?' got':'')+(i==n?' cur':'')+'">'+cell('p',PP[i])+'<span class="tnum">'+(i+1)+'</span>'+cell('f',PF[i])+'</div>'}
  var tr=$('ptrack');if(tr.__h===h)return;tr.__h=h;var sl=tr.scrollLeft;tr.innerHTML=h;tr.scrollLeft=sl;
@@ -2139,7 +2146,7 @@ var pt=document.createElement('button');pt.className='tile';pt.id='tPass';
 pt.innerHTML='<span class="crown2">'+ICO.crown+'</span><b>BRICKSPEED PASS</b><span id="lPassT">TIER 0</span><span class="pxb"><i id="lPassB"></i><em id="lPassX">0/100 XP</em></span><i class="chev">›</i>';
 document.querySelector('#lob .lcol').appendChild(pt);
 pt.onclick=function(){window.BSShowPass&&window.BSShowPass()};
-setInterval(function(){var P=window.__PS;if(!P)return;var t=Math.min(20,Math.floor(P.xp/100)),x=t>=20?100:P.xp%100;var cc=0;for(var i=0;i<t;i++){if(!((P.cf>>>i)&1))cc++;if(P.pr&&!((P.cp>>>i)&1))cc++}$('lPassT').textContent=cc?'CLAIM '+cc+' REWARD'+(cc>1?'S':'')+'!':'TIER '+t+(P.pr?' · PASS ★':'');pt.classList.toggle('claim',!!cc);$('lPassB').style.setProperty('--px',x+'%');$('lPassX').textContent=t>=20?'MAX':x+'/100 XP'},500);
+setInterval(function(){var P=window.__PS;if(!P)return;var t=Math.min(30,Math.floor(P.xp/100)),x=t>=30?100:P.xp%100;var cc=0;for(var i=0;i<t;i++){if(!((P.cf>>>i)&1))cc++;if(P.pr&&!((P.cp>>>i)&1))cc++}$('lPassT').textContent=cc?'CLAIM '+cc+' REWARD'+(cc>1?'S':'')+'!':'TIER '+t+(P.pr?' · PASS ★':'');pt.classList.toggle('claim',!!cc);$('lPassB').style.setProperty('--px',x+'%');$('lPassX').textContent=t>=20?'MAX':x+'/100 XP'},500);
 })();
 </script>
 </body></html>
