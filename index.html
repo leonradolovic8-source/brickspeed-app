@@ -642,6 +642,7 @@ body.s-box #box,body.s-upd #upd,body.s-pass #pass{display:grid}
 .row span{flex:1;font:600 15px system-ui}
 .row em{font:800 13px ui-monospace,Menlo,monospace;font-style:normal;color:var(--cy);min-width:46px;text-align:right}
 .row input[type=range]{flex:1.4;accent-color:var(--bl);height:30px;touch-action:pan-x}
+.row .svS,.row .svA{min-height:36px;min-width:36px;padding:0;font:800 18px system-ui}
 .tg{width:52px;height:30px;border-radius:999px;background:#2a3a63;position:relative;transition:.2s;flex:none}
 .tg::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
 .tg.on{background:var(--gr)}.tg.on::after{left:25px}
@@ -897,6 +898,10 @@ body.xmas #lob .podium{box-shadow:0 0 0 4px #000,0 0 0 10px transparent,0 0 30px
  <div class="row"><span>Steering feel</span><input type="range" id="sSen" min="1" max="10"><em id="vSen"></em></div>
  <div class="row"><span>Dead zone</span><input type="range" id="sDz" min="0" max="20"><em id="vDz"></em></div>
  <div class="row"><span>Tilt range</span><input type="range" id="sTlt" min="15" max="60" step="5"><em id="vTlt"></em></div>
+ <div class="sec">CAR STEERING <small id="svNote" style="font:600 11px system-ui;opacity:.7;letter-spacing:0">· saved on the car</small></div>
+ <div class="row"><span>Straight ahead</span><button class="ab svS" data-d="-1" aria-label="Straight ahead left half a degree">‹</button><input type="range" id="sSvT" min="-30" max="30" step="1" value="0" aria-label="Straight ahead"><button class="ab svS" data-d="1" aria-label="Straight ahead right half a degree">›</button><em id="vSvT">–</em></div>
+ <div class="row"><span>Turn angle</span><button class="ab svA" data-d="-1" aria-label="Less turn">‹</button><input type="range" id="sSvA" min="20" max="45" step="1" value="40" aria-label="Turn angle"><button class="ab svA" data-d="1" aria-label="More turn">›</button><em id="vSvA">–</em></div>
+ <div class="row"><span class="apNote" id="svMsg">Put the car down, let go of the sticks and slide until the wheels point straight.</span><button class="ab" id="svDef" style="min-height:40px;padding:0 12px">Default</button></div>
  <div class="sec">PAD</div>
  <div class="row"><span>Left-handed (swap sides)</span><button class="tg" id="tSwap" aria-label="Swap sides"></button></div>
  <div class="row"><span>Vibration</span><button class="tg" id="tVib" aria-label="Vibration"></button></div>
@@ -925,7 +930,7 @@ function save(){try{localStorage.setItem('bspad',JSON.stringify(S))}catch(e){}}
 load();
 // ---------- link ----------
 var ws=null,ok=false,lostT=0,lastMsg=0,st={c:0,s:-1,sc:0,t:0,x:0,l:0},tokShown=0;
-function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();syncOut();return}if(d.pt!=null){ptResult(d);return}if(d.kb!=null){kbResult(d);return}if(d.bb!=null){window.__bbResult&&window.__bbResult(d);return}if(d.onl!=null){onlAck(d);return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}if(d.dr!=null){if(d.dc>=d.dm)bigToast('+'+d.c+' COIN · DAILY DRIVING COINS DONE');else toast('+'+d.c+' COIN · '+(d.dr>=1000?(d.dr/1000).toFixed(2)+' km':d.dr+' m')+' driven');return}st=d;status();if(!window.__dy||Date.now()-window.__dy>600000){window.__dy=Date.now();send('d'+Math.floor(Date.now()/86400000))}}
+function handle(txt){lastMsg=Date.now();var d;try{d=JSON.parse(txt)}catch(er){return}if(d.ap!=null){apGot(d);return}if(d.apoff!=null)return;if(d.toast!=null){bigToast(d.toast);return}if(d.ri!=null){raceInfo(d);return}if(d.ps!=null){PS=d;window.__PS=d;shopRefresh();syncOut();return}if(d.pt!=null){ptResult(d);return}if(d.kb!=null){kbResult(d);return}if(d.bb!=null){window.__bbResult&&window.__bbResult(d);return}if(d.onl!=null){onlAck(d);return}if(d.rn!=null){RNM=d.rn;if(RI)rdyDraw();return}if(d.ex!=null){exResult(d);return}if(d.pb!=null){pbResult(d);return}if(d.cl!=null){clResult(d);return}if(d.w!=null){wheelResult(d);return}if(d.lv!=null){upgResult(d);return}if(d.u!=null||d.us!=null||d.uc!=null){updMsg(d);return}if(d.sv!=null){svMsg(d);return}if(d.dr!=null){if(d.dc>=d.dm)bigToast('+'+d.c+' COIN · DAILY DRIVING COINS DONE');else toast('+'+d.c+' COIN · '+(d.dr>=1000?(d.dr/1000).toFixed(2)+' km':d.dr+' m')+' driven');return}st=d;status();if(!window.__dy||Date.now()-window.__dy>600000){window.__dy=Date.now();send('d'+Math.floor(Date.now()/86400000))}}
 var T=null;
 function conn(){
  // inside the BrickSpeed app the link is Bluetooth (src/ble.js sets window.BS_TRANSPORT)
@@ -1061,7 +1066,15 @@ hold($('up'),function(){send('U');buzz(12);$('up').classList.add('hit')},functio
 hold($('dn'),function(){send('D');buzz(12);$('dn').classList.add('hit')},function(){$('dn').classList.remove('hit')});
 hold($('bc'),function(){send('B1');buzz(15);$('bc').classList.add('on')},function(){send('B0');$('bc').classList.remove('on')});
 function scan(){send('S');toast('Scanning for cars…')}
-function openSet(){$('set').classList.add('on');send('Z?');var n=$('nmIn');if(document.activeElement!==n)n.value=st.nm||'';titlesDraw()}
+var svT=0,svA=40,svOk=false,svTm=0,svLast=0;
+function svShow(){$('sSvT').value=svT;$('sSvA').value=svA;$('vSvT').textContent=svOk?(svT==0?'0°':(svT>0?'R ':'L ')+(Math.abs(svT)/2).toFixed(1)+'°'):'–';$('vSvA').textContent=svOk?'±'+svA+'°':'–'}
+function svPush(){svShow();clearTimeout(svTm);var go=function(){svLast=Date.now();send('v'+svT+','+svA)};var w=120-(Date.now()-svLast);if(w<=0)go();else svTm=setTimeout(go,w)}
+function svMsg(d){if(d.sv===0){svOk=false;$('svMsg').textContent='Connect to a car first, then open Settings again.'}else{svOk=true;svT=d.sv[0];svA=d.sv[1];$('svMsg').textContent='Put the car down, let go of the sticks and slide until the wheels point straight.'}svShow()}
+$('sSvT').oninput=function(){if(!svOk)return svShow();svT=+this.value;svPush()};
+$('sSvA').oninput=function(){if(!svOk)return svShow();svA=+this.value;svPush()};
+[].forEach.call(document.querySelectorAll('.svS,.svA'),function(b){b.onclick=function(){if(!svOk)return;var d=+b.dataset.d;if(b.classList.contains('svS'))svT=Math.max(-30,Math.min(30,svT+d));else svA=Math.max(20,Math.min(45,svA+d));svPush()}});
+$('svDef').onclick=function(){if(!svOk)return;svT=0;svA=40;svPush()};
+function openSet(){$('set').classList.add('on');send('Z?');send('v?');var n=$('nmIn');if(document.activeElement!==n)n.value=st.nm||'';titlesDraw()}
 $('setB').onclick=openSet;
 function closeSet(){$('set').classList.remove('on')}
 $('closeB').onclick=closeSet;$('set').addEventListener('pointerdown',function(e){if(e.target.id=='set')closeSet()});
