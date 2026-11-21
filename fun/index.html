@@ -2234,19 +2234,20 @@ function bombResult(){var B=race.bomb,res=race.modeRes&&race.modeRes.bomb,S=B.sh
 /* ================= THREE PARTY MODES on the open field: 🥔 HOT POTATO, 👑 KING OF THE HILL, 🌋 FLOOR IS LAVA =================
    All are "last one standing" or "most points" games. Online the host decides (who holds the potato, points, which tile falls)
    and tells everyone; every player only reports their own fall into the lava. */
-var M2={potato:{n:'HOT POTATO',d:'Pass the bomb before it blows'},koth:{n:'KING OF THE HILL',d:'Hold the circle alone to score'},lava:{n:'FLOOR IS LAVA',d:'The floor falls away. Stay up!'}};
+var M2={potato:{n:'HOT POTATO',d:'Pass the bomb before it blows'},koth:{n:'KING OF THE HILL',d:'Sit in the gold circle to score · alone = 3× points'},lava:{n:'FLOOR IS LAVA',d:'The floor falls away. Stay up!'}};
 function m2Auth(){return !race.mp||NET.host}
 function m2Init(o){
   var S=race.m2={kind:race.mode,mark:null,sendT:0,t0:0,rows:null};
   cars.forEach(function(c){c.m2Imm=0;c.m2Pts=0});
   if(S.kind==='potato'){S.holder=null;S.fuse=0;S.fuseMax=0;S.round=0;S.potato=potatoMesh();scene.add(S.potato);S.potato.visible=false}
-  if(S.kind==='koth'){S.pts={};cars.forEach(function(c){S.pts[c.pid]=0});S.zx=0;S.zz=0;S.zr=12;S.goal=40;S.moveT=30;S.king=null;
+  if(S.kind==='koth'){S.pts={};cars.forEach(function(c){S.pts[c.pid]=0});S.zx=0;S.zz=0;S.zr=12;S.goal=100;S.moveT=20;S.king=null;S.nx=null;S.nz=null;S.react={};S.tickT=0;
     var zm=new T.Group(),disc=new T.Mesh(new T.CircleGeometry(1,64),new T.MeshBasicMaterial({color:0xffcf00,transparent:true,opacity:.22,depthWrite:false})),ring=new T.Mesh(new T.RingGeometry(.94,1,96),new T.MeshBasicMaterial({color:0xffcf00,transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide}));
     disc.rotation.x=ring.rotation.x=-Math.PI/2;zm.add(disc);zm.add(ring);var beam=new T.Mesh(new T.CylinderGeometry(1,1,30,48,1,true),new T.MeshBasicMaterial({color:0xffcf00,transparent:true,opacity:.08,depthWrite:false,side:T.DoubleSide}));beam.position.y=15;zm.add(beam);
-    zm.position.y=.12;scene.add(zm);S.zm=zm;S.disc=disc;S.ring=ring}
+    zm.position.y=.12;scene.add(zm);S.zm=zm;S.disc=disc;S.ring=ring;
+    var gh=new T.Mesh(new T.RingGeometry(.9,1,96),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55,depthWrite:false,side:T.DoubleSide}));gh.rotation.x=-Math.PI/2;gh.visible=false;scene.add(gh);S.ghost=gh}
   if(S.kind==='lava'){S.next=2.5;S.fallen={};S.warn={};S.drops=0}
 }
-function m2Clean(){var S=race.m2;if(!S)return;if(S.potato)scene.remove(S.potato);if(S.zm)scene.remove(S.zm);cars.forEach(function(c){c.m2Imm=0})}
+function m2Clean(){var S=race.m2;if(!S)return;if(S.potato)scene.remove(S.potato);if(S.zm)scene.remove(S.zm);if(S.ghost)scene.remove(S.ghost);cars.forEach(function(c){c.m2Imm=0})}
 /* ---------- 🥔 HOT POTATO ---------- */
 function potatoMesh(){var g=new T.Group(),b=new T.Mesh(new T.SphereGeometry(1.1,18,14),new T.MeshStandardMaterial({color:0x15161b,roughness:.25,metalness:.3,emissive:new T.Color(0xff2d2d),emissiveIntensity:0}));g.add(b);g.body=b;
   var cap=new T.Mesh(new T.CylinderGeometry(.3,.3,.4,10),new T.MeshStandardMaterial({color:0x9aa0aa,metalness:.8,roughness:.3}));cap.position.y=1.15;g.add(cap);
@@ -2272,27 +2273,37 @@ function potatoTick(dt){var S=race.m2;
   if(alive2.length<=1){m2End(alive2[0]?alive2[0].pid:'');return}
   if(!S.holder||!alive(S.holder)){S.round++;var pick=alive2[Math.floor(Math.random()*alive2.length)],fz=Math.max(9,20-S.round*2)+Math.random()*5;potatoGive(pick,fz);if(race.mp)broadcast({t:'pg',pid:pick.pid,f:+fz.toFixed(2)});return}
   /* pass it by touching */
-  var h=S.holder;cars.forEach(function(c){if(c===h||!alive(c)||c.m2Imm>t||S.holder!==h)return;if(Math.hypot(c.x-h.x,c.z-h.z)<3.4&&Math.abs((c.y||0)-(h.y||0))<2.5){potatoGive(c,null);if(race.mp)broadcast({t:'pg',pid:c.pid})}});
+  var h=S.holder;cars.forEach(function(c){if(c===h||!alive(c)||c.m2Imm>t||S.holder!==h)return;if(Math.hypot(c.x-h.x,c.z-h.z)<3.9&&Math.abs((c.y||0)-(h.y||0))<2.5){potatoGive(c,null);if(race.mp)broadcast({t:'pg',pid:c.pid})}});
   if(S.fuse<=0){var vic=S.holder;potatoBoom(vic);if(race.mp)broadcast({t:'pb',pid:vic.pid})}
   if(race.mp){S.sendT-=dt;if(S.sendT<=0){S.sendT=.5;broadcast({t:'pf',pid:S.holder?S.holder.pid:'',f:+S.fuse.toFixed(2),m:+S.fuseMax.toFixed(2)})}}}
 /* ---------- 👑 KING OF THE HILL ---------- */
 function kothTick(dt){var S=race.m2;
   S.zm.position.set(S.zx,.12+(ARENA?arenaH(S.zx,S.zz):0),S.zz);S.zm.scale.set(S.zr,1,S.zr);
+  if(S.nx!=null){S.ghost.visible=true;S.ghost.position.set(S.nx,.15+(ARENA?arenaH(S.nx,S.nz):0),S.nz);S.ghost.scale.set(S.zr,S.zr,1);S.ghost.material.opacity=.3+.3*Math.sin(t*10)}else S.ghost.visible=false;
   var inside=cars.filter(function(c){return alive(c)&&Math.hypot(c.x-S.zx,c.z-S.zz)<S.zr});
-  var col=inside.length===1?(inside[0].me?0x3dff6a:0xffcf00):inside.length>1?0xff2d55:0xffffff;S.ring.material.color.setHex(col);S.disc.material.color.setHex(col);S.disc.material.opacity=.16+.08*Math.sin(t*4);
+  var meIn=inside.indexOf(me)>=0,col=meIn?(inside.length===1?0x3dff6a:0x9dff3d):0xffcf00;   /* green = you are scoring, gold = get in */
+  S.ring.material.color.setHex(col);S.disc.material.color.setHex(col);S.disc.material.opacity=(meIn?.26:.16)+.08*Math.sin(t*4);
   S.mark=S.king;
-  if(race.phase!=='go'||!m2Auth())return;
+  if(race.phase!=='go')return;
+  /* floating +points over your car once a second */
+  S.tickT-=dt;if(S.tickT<=0){S.tickT=1;if(meIn&&!me.out)tag(me,inside.length===1?'+3 👑':'+1','#3dff6a',.8)}
+  if(!m2Auth())return;
   var e=t-race.startT;S.moveT-=dt;
-  if(S.moveT<=0){S.moveT=25;var A=ARENA,lim=A?A.half-30:60,nx=0,nz=0;for(var tr=0;tr<12;tr++){nx=(Math.random()*2-1)*lim;nz=(Math.random()*2-1)*lim;if(Math.hypot(nx-S.zx,nz-S.zz)>50)break}
-    kothMove(nx,nz);if(race.mp)broadcast({t:'kz',x:+nx.toFixed(1),z:+nz.toFixed(1)})}
-  var king=inside.length===1?inside[0]:null;if(king){S.pts[king.pid]=(S.pts[king.pid]||0)+dt}
+  if(S.moveT<=5&&S.nx==null){var A=ARENA,lim=A?A.half-30:60,nx=0,nz=0;for(var tr=0;tr<12;tr++){nx=(Math.random()*2-1)*lim;nz=(Math.random()*2-1)*lim;if(Math.hypot(nx-S.zx,nz-S.zz)>50)break}
+    kothNext(nx,nz);if(race.mp)broadcast({t:'kn',x:+nx.toFixed(1),z:+nz.toFixed(1)})}
+  if(S.moveT<=0&&S.nx!=null){var mx=S.nx,mz=S.nz;kothMove(mx,mz);if(race.mp)broadcast({t:'kz',x:+mx.toFixed(1),z:+mz.toFixed(1)})}
+  /* everyone inside scores; alone in the hill scores 3x */
+  var rate=inside.length===1?3:1;inside.forEach(function(c){S.pts[c.pid]=(S.pts[c.pid]||0)+dt*rate});
+  var king=inside.length===1?inside[0]:null;
   if(king!==S.king){S.king=king;if(race.mp)broadcast({t:'kk',pid:king?king.pid:''});kothKing(king)}
   var best=null;cars.forEach(function(c){if(!best||(S.pts[c.pid]||0)>(S.pts[best.pid]||0))best=c});
   if(best&&S.pts[best.pid]>=S.goal){m2End(best.pid);return}
   if(e>=150){m2End(best?best.pid:'');return}
   if(race.mp){S.sendT-=dt;if(S.sendT<=0){S.sendT=.5;var ps={};Object.keys(S.pts).forEach(function(k){ps[k]=+S.pts[k].toFixed(1)});broadcast({t:'kp',p:ps})}}}
-function kothMove(x,z){var S=race.m2;S.zx=x;S.zz=z;S.moveT=25;comic('THE HILL MOVED!','#ffcf00');shock(x,0,z,0xffcf00,S.zr*1.4)}
-function kothKing(c){var S=race.m2;S.king=c;S.mark=c;if(c){tag(c,'👑 KING','#ffcf00',1.2);if(c.me)comic('👑 YOU ARE KING!','#ffcf00')}}
+function kothNext(x,z){var S=race.m2;S.nx=x;S.nz=z;comic('HILL MOVES IN 5!','#ffffff');
+  cars.forEach(function(c){if(!c.me&&!c.remote)S.react[c.pid]=t+.4+Math.random()*2.6})}   /* bots notice the new hill at different times */
+function kothMove(x,z){var S=race.m2;S.zx=x;S.zz=z;S.moveT=20;S.nx=null;S.nz=null;comic('THE HILL MOVED!','#ffcf00');shock(x,0,z,0xffcf00,S.zr*1.4)}
+function kothKing(c){var S=race.m2;S.king=c;S.mark=c;if(c){tag(c,'👑 KING ×3','#ffcf00',1.2);if(c.me)comic('👑 ALONE! 3× POINTS','#ffcf00')}}
 /* ---------- 🌋 FLOOR IS LAVA ---------- */
 function lavaTile(x,z){var A=ARENA;if(!A||!A.tiles)return -1;var n=A.tn,s=A.ts,i=Math.floor((x+A.half)/s),j=Math.floor((z+A.half)/s);if(i<0||j<0||i>=n||j>=n)return -1;return j*n+i}
 function lavaWarn(i){var S=race.m2,A=ARENA;if(!S||!A||!A.tiles||S.fallen[i]||S.warn[i])return;S.warn[i]=t}
@@ -2330,6 +2341,7 @@ function m2Net(m,from){var S=race.m2;if(!S||!race.on)return false;
   if(m.t==='pb'){if(!NET.host){var c2=carByPid(String(m.pid));if(c2)potatoBoom(c2)}return true}
   if(m.t==='pf'){if(!NET.host){S.fuse=+m.f;S.fuseMax=+m.m;var h=carByPid(String(m.pid));if(h&&S.holder!==h){S.holder=h;S.mark=h;S.potato.visible=true}}return true}
   if(m.t==='kz'){if(!NET.host)kothMove(+m.x,+m.z);return true}
+  if(m.t==='kn'){if(!NET.host)kothNext(+m.x,+m.z);return true}
   if(m.t==='kk'){if(!NET.host)kothKing(m.pid?carByPid(String(m.pid)):null);return true}
   if(m.t==='kp'){if(!NET.host&&m.p)Object.keys(m.p).forEach(function(k){S.pts[k]=+m.p[k]});return true}
   if(m.t==='lw'){if(!NET.host)lavaWarn(+m.i);return true}
@@ -2339,15 +2351,21 @@ function m2Net(m,from){var S=race.m2;if(!S||!race.on)return false;
   if(m.t==='m2end'){if(m.p)S.pts=m.p;if(race.phase!=='done'){race.modeRes={m2:String(m.w||'')};race.phase='done';setTimeout(showResult,900)}return true}
   return false}
 function m2Goal(c){var S=race.m2;
-  if(S.kind==='potato'){if(S.holder===c){var tg=null,bd=1e9;cars.forEach(function(o){if(o===c||!alive(o)||o.m2Imm>t)return;var d=dist(o,c);if(d<bd){bd=d;tg=o}});return tg?{mode:'chase',x:tg.x,z:tg.z}:{mode:'wander'}}
+  if(S.kind==='potato'){if(S.holder===c){var tg=null,bd=1e9;cars.forEach(function(o){if(o===c||!alive(o)||o.m2Imm>t)return;var d=dist(o,c)-((o.me||o.human)?22:0);if(d<bd){bd=d;tg=o}});
+      if(!tg)return {mode:'wander'};var dd=dist(tg,c),lead=Math.min(1.4,dd/28),v=tg.v||0;   /* aim where you will be, not where you are */
+      if(dd<20&&!(c.m2DashCd>t)){c.m2Dash=t+.9;c.m2DashCd=t+3.2;tag(c,'💨','#ff8a1f',.6)}
+      return {mode:'chase',x:tg.x+Math.sin(tg.a||0)*v*lead,z:tg.z+Math.cos(tg.a||0)*v*lead}}
     return S.holder&&dist(S.holder,c)<70?{mode:'flee',threats:[S.holder]}:{mode:'wander'}}
-  if(S.kind==='koth')return {mode:'chase',x:S.zx+(Math.random()-.5)*4,z:S.zz+(Math.random()-.5)*4};
+  if(S.kind==='koth'){var rx=S.zx,rz=S.zz;if(S.nx!=null&&S.react[c.pid]&&t>S.react[c.pid]+1.5){rx=S.nx;rz=S.nz}   /* smart ones leave early for the next hill */
+    c.ai=c.ai||{};if(!c.ai.ko||t>c.ai.koT){c.ai.ko=[(Math.random()-.5)*S.zr*1.2,(Math.random()-.5)*S.zr*1.2];c.ai.koT=t+2}
+    return {mode:'chase',x:rx+c.ai.ko[0],z:rz+c.ai.ko[1]}}
   if(S.kind==='lava'){var A=ARENA,ti=lavaTile(c.x,c.z),bad=ti<0||S.fallen[ti]!=null||S.warn[ti]!=null;
     if(!bad&&Math.random()<.97&&c.ai&&c.ai.lt&&t<c.ai.lt)return {mode:'chase',x:c.ai.lx,z:c.ai.lz};
     var best=null,bs=-1e9,n=A.tn,s=A.ts;for(var i=0;i<n*n;i++){if(S.fallen[i]!=null||S.warn[i]!=null)continue;var gx=-A.half+s*(i%n)+s/2,gz=-A.half+s*Math.floor(i/n)+s/2,sc=-Math.hypot(gx-c.x,gz-c.z)*.6-Math.hypot(gx,gz)*.15+Math.random()*8;if(sc>bs){bs=sc;best=[gx,gz]}}
     if(!best)return {mode:'wander'};c.ai=c.ai||{};c.ai.lx=best[0];c.ai.lz=best[1];c.ai.lt=t+1.5;return {mode:'chase',x:best[0],z:best[1]}}
   return {mode:'wander'}}
-function m2Speed(c){var S=race.m2;if(S.kind==='potato'&&S.holder===c)return 1.12;return 1}
+function m2Speed(c){var S=race.m2;if(S.kind==='potato'&&S.holder===c){var held=S.fuseMax?S.fuseMax-Math.max(0,S.fuse):0;return (c.m2Dash>t?1.75:1.3)+Math.min(.25,held*.02)}   /* faster the longer it holds the bomb, dash when close */
+  if(S.kind==='koth'&&Math.hypot(c.x-S.zx,c.z-S.zz)>S.zr)return 1.08;return 1}
 function m2Hud(){var S=race.m2,e=race.phase==='go'?Math.max(0,t-race.startT):0,left=cars.filter(function(c){return alive(c)}).length;
   if(S.kind==='potato'){lapnEl.textContent='HOT POTATO';if(race.phase==='go')laptEl.textContent=left+' LEFT';
     if(me.out)return ['WATCHING · you lasted '+fmt(me.outT),''];
@@ -2355,12 +2373,14 @@ function m2Hud(){var S=race.m2,e=race.phase==='go'?Math.max(0,t-race.startT):0,l
     return ['🥔 '+(S.holder?(S.holder.me?'YOU':S.holder.d.name):'…')+' has the bomb'+(S.fuse<5&&S.holder?' · '+Math.max(0,S.fuse).toFixed(1)+' s':'')+' · stay away!','lead']}
   if(S.kind==='koth'){lapnEl.textContent='KING OF THE HILL';if(race.phase==='go')laptEl.textContent=fmt(Math.max(0,150-e));
     var mine=Math.floor(S.pts[me.pid]||0),best=0,bn='';cars.forEach(function(c){var p=S.pts[c.pid]||0;if(p>best){best=p;bn=c.me?'YOU':c.d.name}});
-    return ['👑 YOU '+mine+'/'+S.goal+(bn&&bn!=='YOU'?' · LEADER '+bn+' '+Math.floor(best):'')+(S.king===me?' · SCORING!':''),S.king===me||bn==='YOU'?'lead':'trail']}
+    var dz=Math.hypot(me.x-S.zx,me.z-S.zz),n=cars.filter(function(c){return alive(c)&&Math.hypot(c.x-S.zx,c.z-S.zz)<S.zr}).length,inn=dz<S.zr;
+    var st=inn?(n===1?'👑 ALONE +3/s':'+1/s · push them out!'):'➜ GOLD CIRCLE '+Math.round(dz-S.zr)+' m';
+    return ['👑 '+mine+'/'+S.goal+(bn&&bn!=='YOU'?' · '+bn+' '+Math.floor(best):'')+' · '+st,inn||bn==='YOU'?'lead':'trail']}
   if(S.kind==='lava'){lapnEl.textContent='FLOOR IS LAVA';if(race.phase==='go')laptEl.textContent=left+' LEFT';
     if(me.out)return ['WATCHING · you lasted '+fmt(me.outT),''];var ti=lavaTile(me.x,me.z);return [(ti>=0&&S.warn[ti]!=null?'⚠ YOUR TILE IS FALLING! MOVE!':'🌋 Stay on the tiles · red = falling')+' · '+left+' left',ti>=0&&S.warn[ti]!=null?'trail':'lead']}
   return ['','']}
 function m2Result(){var S=race.m2,w=race.modeRes&&race.modeRes.m2,wc=w?carByPid(w):null,head,my;
-  if(S.kind==='koth'){head=wc===me?'👑 YOU ARE KING!':wc?wc.d.name+' IS KING':'TIME UP';my='You held the hill for '+Math.floor(S.pts[me.pid]||0)+' s';
+  if(S.kind==='koth'){head=wc===me?'👑 YOU ARE KING!':wc?wc.d.name+' IS KING':'TIME UP';my='You scored '+Math.floor(S.pts[me.pid]||0)+' points';
     var rows=cars.filter(function(c){return !c.left}).sort(function(a,b){return (S.pts[b.pid]||0)-(S.pts[a.pid]||0)}).map(function(c){return [c,Math.floor(S.pts[c.pid]||0)+' points']});return {head:head,my:my,rows:rows}}
   head=wc===me?'LAST ONE STANDING!':wc?wc.d.name+' WINS':'DRAW';my=me.out?'You lasted '+fmt(me.outT):(wc===me?'Nobody could get you':'You survived to the end');
   var rows2=cars.filter(function(c){return !c.left}).sort(function(a,b){var sa=a.out?a.outT:1e9,sb=b.out?b.outT:1e9;return sb-sa}).map(function(c){return [c,c.out?'out at '+fmt(c.outT):'still standing']});
