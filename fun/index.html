@@ -1980,7 +1980,7 @@ function nearest(c){
   return (c.x-P[bk].x)*NX[bk]+(c.z-P[bk].z)*NZ[bk];   /* lateral offset */
 }
 function autopilot(c,lane){
-  var look=Math.round((7+c.v*.42)/DS),k=(c.k+look)%N,tx,tz;
+  var look=Math.round((7+c.v*.42)/DS),k=(((c.k+look)%N)+N)%N,tx,tz;
   if(SC){var ahA=(SC.kA-c.k+N)%N;if(ahA>110&&ahA<118)c.takeSC=!c.me&&!c.human&&Math.random()<.35;
     if(c.sc){var si=c.sk+Math.round(look*DS/SC.ds);if(si<SC.N){tx=SC.P[si].x;tz=SC.P[si].z}else{var k3=(SC.kB+Math.round((si-SC.N)*SC.ds/DS))%N;tx=P[k3].x;tz=P[k3].z}}
     else if(c.takeSC&&ahA<=look&&ahA<200){var si2=Math.min(SC.N-1,Math.max(4,Math.round((look-ahA)*DS/SC.ds)+4));tx=SC.P[si2].x;tz=SC.P[si2].z}
@@ -3141,7 +3141,7 @@ function clientData(m,code){
   if(!m||typeof m!=='object')return;
   if(m.t==='pong'){var now=Date.now(),rtt=now-(+m.c);if(rtt>=0&&rtt<5000){NET.syncs=(NET.syncs||[]).concat([{rtt:rtt,off:(+m.h)+rtt/2-now}]).slice(-10)}return}
   if(m.t==='lobby')clockPing(code);
-  if(m.t==='lobby'){NET.on=true;NET.host=false;NET.code=code;if(m.opts&&MAPS[m.opts.map])NET.opts={map:m.opts.map,laps:[1,2,3,5].indexOf(+m.opts.laps)>=0?+m.opts.laps:1,mode:['race','tag','dozer'].indexOf(m.opts.mode)>=0?m.opts.mode:'race',teams:+m.opts.teams?1:0,arena:m.opts.arena==='city'?'city':'fun'};NET.players=(m.players||[]).map(function(p){return{pid:String(p.pid),name:cleanName(p.name),char:(charById(p.char)||{id:'blaze'}).id,ti:cosm(p.ti,7),lv:Math.max(1,cosm(p.lv,10)),sk:cosm(p.sk,7),kk:cosm(p.kk,20)}});
+  if(m.t==='lobby'){NET.on=true;NET.host=false;NET.code=code;if(m.opts&&MAPS[m.opts.map])NET.opts={map:m.opts.map,laps:[1,2,3,5].indexOf(+m.opts.laps)>=0?+m.opts.laps:1,mode:['race','tag','dozer'].indexOf(m.opts.mode)>=0?m.opts.mode:'race',teams:+m.opts.teams?1:0,arena:m.opts.arena==='city'?'city':'fun'};NET.players=(m.players||[]).map(function(p){return{pid:String(p.pid),name:cleanName(p.name),char:(charById(p.char)||{id:'blaze'}).id,ti:cosm(p.ti,7),lv:Math.max(1,cosm(p.lv,10)),sk:cosm(p.sk,7),kk:cosm(p.kk,20),rd:!!p.rd}});
     if(!race.on)renderLobby();mpMsg('');return}
   if((m.t==='full'||m.t==='busy')&&NET.qmFail){var f=NET.qmFail;NET.qmFail=null;mpLeave(true);f(m.t);return}
   if(m.t==='lobby')NET.qmFail=null;
@@ -3268,8 +3268,8 @@ function frame(now){
   if(!running)return;
   var dt=Math.min(.05,(now-last)/1000);last=now;
   var reps=race.on&&race.dz&&race.phase==='go'&&!cars.some(function(c){return alive(c)&&(c.me||c.human)})?4:1;   /* every human is out: fast forward to the end */
-  for(var rp=0;rp<reps;rp++)step(dt);renderer.render(scene,activeCam());
-  requestAnimationFrame(frame);
+  requestAnimationFrame(frame);   /* first, so one bad frame can never stop the game */
+  try{for(var rp=0;rp<reps;rp++)step(dt)}catch(e){if(!window.__bsErr){window.__bsErr=1;console.error(e)}}renderer.render(scene,activeCam());
 }
 function setRunning(v){if(v===running)return;running=v;if(v){last=performance.now();requestAnimationFrame(frame)}}
 if('IntersectionObserver' in window){
