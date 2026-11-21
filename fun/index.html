@@ -2898,7 +2898,7 @@ document.getElementById('lbSend').addEventListener('click',function(){
 document.getElementById('again').addEventListener('click',function(){if(race.mp){backToRoom(true);return}startRace(race.ch)});
 function backToRoom(all){ /* after an online game everyone goes back to the room, where the host can change everything */
   if(all&&NET.host&&NET.on)broadcast({t:'lobbyback'});
-  if(race.on)endRace(true);NET.racing=false;if(NET.on){mpOpen();renderLobby();if(NET.host&&NET.qm)qmHostTimer()}}
+  if(race.on)endRace(true);NET.racing=false;if(NET.on){if(NET.host){NET.players.forEach(function(p){p.rd=false});broadcast({t:'lobby',code:NET.code,players:NET.players,opts:NET.opts})}mpOpen();renderLobby();if(NET.host&&NET.qm)qmHostTimer()}}
 document.getElementById('pickc').addEventListener('click',function(){if(race.mp&&NET.on){backToRoom(false);return}endRace();var r=document.getElementById('rage');if(r)r.scrollIntoView({behavior:reduce?'auto':'smooth'})});
 window.BSRace={start:startRace,end:endRace};
 
@@ -3083,6 +3083,7 @@ function hostData(conn,m){
   if(m.t==='char'){var cc=charById(m.char);NET.players.forEach(function(p){if(p.pid===conn.peer&&cc){p.char=cc.id;if(m.lv!=null)p.lv=Math.max(1,cosm(m.lv,10));if(m.sk!=null)p.sk=cosm(m.sk,7);if(m.kk!=null)p.kk=cosm(m.kk,20)}});broadcast({t:'lobby',code:NET.code,players:NET.players,opts:NET.opts});if(!race.on)renderLobby();return}
   if(m.t==='rewind'){m.name=cleanName(m.name);broadcast(m,conn.peer);takeRewind(m);return}
   if(m.t==='swap'){m.name=cleanName(m.name);broadcast(m,conn.peer);takeSwap(m);return}
+  if(m.t==='ready'){NET.players.forEach(function(p){if(p.pid===conn.peer)p.rd=!!m.r});broadcast({t:'lobby',code:NET.code,players:NET.players,opts:NET.opts});if(!race.on)renderLobby();return}
   if(m.t==='tshield'){if(race.tag)race.tag.imm[conn.peer]=t+3;return}
   if(m.t==='tagme'){if(race.tag&&race.on&&race.phase==='go'&&!race.rew){var vy=carByPid(conn.peer),bx=carByPid(String(m.by));if(vy&&bx&&dist(vy,bx)<30)applyTag(bx,vy,String(m.k))}return}
   if(m.t==='decoy'){m.pid=conn.peer;broadcast(m,conn.peer);if(ARENA)spawnDecoy({x:+m.x,z:+m.z,a:+m.a,v:+m.v,until:t+4,pid:conn.peer,col:String(m.col)});return}
@@ -3108,7 +3109,7 @@ function joinRoom(qcode,onFail){
     conn.on('close',function(){if(NET.on){mpMsg('The host left the room.');if(race.on&&race.mp){toast3('HOST LEFT','The room is closed')}}mpLeave(true);MPUI.box.hidden=race.on;});
   });
   peer.on('error',function(e){var f=NET.qmFail;if(f&&e&&e.type==='peer-unavailable'){NET.qmFail=null;mpLeave(true);f('empty');return}mpMsg(errText(e));mpLeave(true)});
-  if(onFail)setTimeout(function(){if(NET.qmFail===onFail&&!NET.on){NET.qmFail=null;mpLeave(true);onFail('slow')}},8000);
+  if(onFail)setTimeout(function(){if(NET.qmFail===onFail&&!NET.on){NET.qmFail=null;mpLeave(true);onFail('slow')}},12000);
 }
 /* quick match: try QUICK rooms 1-4. Join one that is waiting; if nobody is in it, become its host and wait for others */
 var QM_CODES=['Q1MA','Q1MB','Q1MC','Q1MD'],qmT=0;
@@ -3118,6 +3119,7 @@ function quickMatch(i,tries){i=i||0;tries=tries||0;if(i>=QM_CODES.length){mpMsg(
 function qmHostTimer(){clearInterval(qmT);var since=Date.now(),two=0;qmT=setInterval(function(){if(!NET.on||!NET.host||!NET.qm||NET.racing){if(!NET.on)clearInterval(qmT);return}
   var n=NET.players.length;if(n>=2&&!two)two=Date.now();if(n<2)two=0;
   var left=n>=2?Math.ceil((two+10000-Date.now())/1000):Math.ceil((since+30000-Date.now())/1000);
+  var allR=n>=2&&NET.players.every(function(p){return p.pid==='H'||p.rd});if(allR&&!NET.qmAll){NET.qmAll=Date.now()}if(!allR)NET.qmAll=0;if(allR)left=Math.min(left,Math.ceil((NET.qmAll+3000-Date.now())/1000));
   if(n>=6)left=0;mpMsg(n>=2?n+' players! Race starts in '+Math.max(0,left)+' s':'Waiting for players… bots join in '+Math.max(0,left)+' s');
   if(left<=0){clearInterval(qmT);hostStart()}},500)}
 function clientData(m,code){
@@ -3161,7 +3163,7 @@ MPUI.box.addEventListener('click',function(e){if(e.target===MPUI.box)mpClose()})
 window.addEventListener('keydown',function(e){if(e.key==='Escape'&&!MPUI.box.hidden)mpClose()});
 ['mpOpen1','mpOpen2','mpOpen3'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',mpOpen)});
 /* player lobby hooks (bsl) */
-window.BSMP={net:NET,create:function(n){MPUI.name.value=n;createRoom(0)},join:function(n,code){MPUI.name.value=n;MPUI.code.value=code;joinRoom()},start:hostStart,leave:function(){mpLeave()},setOpt:function(k,v){setOpt(k,v);renderOpts()},pickChar:function(i){var L=window.BSChars||[],c=myChar();changeChar(i-L.indexOf(c))},msg:function(){return MPUI.msg.textContent},find:function(n){MPUI.name.value=n;quickMatch(0,0)}};
+window.BSMP={net:NET,create:function(n){MPUI.name.value=n;createRoom(0)},join:function(n,code){MPUI.name.value=n;MPUI.code.value=code;joinRoom()},start:hostStart,leave:function(){mpLeave()},setOpt:function(k,v){setOpt(k,v);renderOpts()},pickChar:function(i){var L=window.BSChars||[],c=myChar();changeChar(i-L.indexOf(c))},msg:function(){return MPUI.msg.textContent},find:function(n){MPUI.name.value=n;quickMatch(0,0)},ready:function(v){if(NET.on&&!NET.host&&NET.hostConn)send(NET.hostConn,{t:'ready',r:!!v})}};
 
 /* ---------- cars from other players ---------- */
 function carByPid(pid){for(var i=0;i<cars.length;i++)if(cars[i].pid===pid)return cars[i];return null}
@@ -4141,6 +4143,8 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
 .bsl-find{display:flex;align-items:center;gap:14px;margin-bottom:10px;border:2px solid #3dff8a;background:linear-gradient(90deg,rgba(61,255,138,.16),rgba(10,22,48,.85))}.bsl-find>div{flex:1;min-width:0}
 .bsl-findb{min-width:170px;font-size:20px!important;background:linear-gradient(180deg,#5dff9c,#1fc463)!important;color:#03250f!important;box-shadow:0 4px 0 #0a6b31!important}
 @media (max-width:560px){.bsl-find{flex-direction:column;align-items:stretch}}
+.bsl-rd{margin-left:auto;flex:none;font:900 10px/1 system-ui;letter-spacing:.08em;padding:5px 8px;border-radius:999px;border:2px solid currentColor;white-space:nowrap}.bsl-rd.y{color:#3dff8a;background:rgba(61,255,138,.12)}.bsl-rd.n{color:#9aa6c8;opacity:.8}.bsl-rd.h{color:#ffd23a}
+.bsl-play.rdy{filter:saturate(.6) hue-rotate(60deg)}
 .bsl-back{color:#ffd23a;border-color:#ffd23a}
 .bsl-dpop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(3,6,16,.74);padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));animation:bslPopIn .18s ease-out}
 .bsl-dpop[hidden]{display:none}.bsl-dpop-in{position:relative;width:min(900px,100%);max-height:100%;display:flex}
@@ -4667,6 +4671,7 @@ var PROF=jget('bs-prof');
    lv:(j.lv||[]).slice(0,16).map(function(v){return Math.max(1,num(v,10))}),sk:num(j.sk,255)|1,sp:num(j.sp,7),kn:num(j.kn,4294967295),ks:String(j.ks||'').replace(/[^0-2]/g,'').slice(0,16),xp:num(j.xp,1e7),pr:j.pr?1:0,on:(j.on||[]).map(function(v){return +v||0}),at:Date.now(),src:(/[#&]src=b/.test(location.hash)?'b':'w')};
   jset('bs-prof',PROF);store('bs-mp-name',PROF.nm);
   var E=earn();if(E.pad&&E.pad!==PROF.id&&E.sent)E.sent.forEach(function(x){x.k=onlSum(PROF.id,x.b,x.t,x.x)});E.pad=PROF.id;
+  if(E.gq&&E.gq.length){E.gq.forEach(function(b){b.k=onlSum(PROF.id,b.b,b.t,b.x);E.sent.push(b)});E.gq=[];setTimeout(function(){toast('The coins you saved on this phone go to your pad now!')},1800)}   /* coins saved on this phone before it had a pad go to the first pad */
   E.sent=(E.sent||[]).filter(function(x){return PROF.on.indexOf(x.b)<0});saveEarn(E);
  }catch(e){}
  try{history.replaceState(null,'',location.pathname+location.search+'#lobby')}catch(e){}
@@ -4720,12 +4725,14 @@ window.BSGlow=function(g,col,T){try{
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
 function earn(){var E=jget('bs-earn')||{};if(!E.cur)E.cur=newBatch();if(!E.sent)E.sent=[];if(E.day!==today()){E.day=today();E.dt=0;E.dx=0}if(!E.pad&&PROF)E.pad=PROF.id;return E}
 function saveEarn(E){jset('bs-earn',E)}
-function pending(){var E=earn(),t=E.cur.t,x=E.cur.x;E.sent.forEach(function(s){t+=s.t;x+=s.x});return {t:t,x:x}}
+function pending(){var E=earn(),t=E.cur.t,x=E.cur.x;E.sent.concat(E.gq||[]).forEach(function(s){t+=s.t;x+=s.x});return {t:t,x:x}}
 window.BSEarn=function(place,online,mode){var E=earn(),c,x;
  if(mode==='race'){c=online?[0,30,20,15,10,10,10][place]||10:[0,10,6,4,2,2,2][place]||2;x=online?20:10}else{c=online?12:4;x=online?15:6}
- c=Math.min(c,Math.max(0,300-E.dt));x=Math.min(x,Math.max(0,300-E.dx));if(!c&&!x)return 'DAILY COIN LIMIT';
+ c=Math.min(c,Math.max(0,300-E.dt));x=Math.min(x,Math.max(0,300-E.dx));if(!E.pad){var room=Math.max(0,GUEST_MAX-guestT(E));c=Math.min(c,room);if(!room&&!x)return 'PHONE FULL: GET A PAD'}if(!c&&!x)return 'DAILY COIN LIMIT';
  E.cur.t+=c;E.cur.x+=x;E.dt+=c;E.dx+=x;if(E.cur.t>=500||E.cur.x>=500)freeze(E);saveEarn(E);draw();return '+'+c+' COINS · +'+x+' XP'};
-function freeze(E){if(!E.cur.t&&!E.cur.x)return;if(!E.pad)return;var c=E.cur;c.k=onlSum(E.pad,c.b,c.t,c.x);E.sent.push(c);E.cur=newBatch()}
+var GUEST_MAX=1800;   // coins a phone without a pad can save up (6 days of online play; at most 4 batches, the pad remembers the last 4)
+function guestT(E){var t=E.cur.t;(E.gq||[]).forEach(function(b){t+=b.t});return t}
+function freeze(E){if(!E.cur.t&&!E.cur.x)return;if(!E.pad){if(E.cur.t>=500||E.cur.x>=500){(E.gq=E.gq||[]).push(E.cur);E.cur=newBatch()}return}var c=E.cur;c.k=onlSum(E.pad,c.b,c.t,c.x);E.sent.push(c);E.cur=newBatch()}
 
 // logo from the site header
 (function(){var m=document.querySelector('.brand .lm'),w=document.querySelector('.brand .lw'),L=$('bslLogo');if(m){var a=m.cloneNode();L.appendChild(a)}if(w){var b=w.cloneNode();b.className='w';L.appendChild(b)}})();
@@ -4765,6 +4772,7 @@ function step(d){var L=chars(),i=L.indexOf(cur());for(var k=1;k<=L.length;k++){v
 function ensureOwned(){var L=chars(),c=cur();if(!L.length||!c)return;if(owned(c.id))return;for(var i=0;i<L.length;i++)if(owned(L[i].id)){pickChar(i,true);return}}
 
 // ---------- lobby screen ----------
+var myRd=false,myRdAt=0,myRdWait=false;   // my READY in a room (the host's copy can lag a moment)
 function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return;
  var pc=PAINTS[PROF?PROF.sp:0].c||c.col;
  $('bsl').style.setProperty('--cc',c.col);
@@ -4772,12 +4780,12 @@ function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return
  $('bslVMode').textContent=modeOf(md).n.toUpperCase()+' · '+(md==='tag'?(o.arena==='city'?'TAG CITY':'TAG FUNPARK'):mapName(o.map).toUpperCase()+(md==='race'?' · '+o.laps+' LAP'+(o.laps>1?'S':''):''))+(+o.teams&&md!=='race'&&md!=='battle'?' · TEAMS':'');
  var sp=PROF?PROF.sp:0;$('bslVPaint').textContent=sp?PAINTS[sp].n:'NO GLOW';$('bslPaintSw').style.setProperty('--pc',pc);
  var P=pending();$('bslCoinN').textContent=((PROF?PROF.t:0)).toLocaleString();$('bslCoinP').textContent=P.t?'+'+P.t:'';$('bslGemN').textContent=PROF?PROF.g:0;
- $('bslVSync').textContent=!PROF?'CONNECT YOUR PAD':P.t||P.x?'+'+P.t+' COINS TO SEND':'ALL SENT ✓';
+ $('bslVSync').textContent=!PROF?(P.t?P.t+' COINS SAVED ON THIS PHONE':'CONNECT YOUR PAD'):P.t||P.x?'+'+P.t+' COINS TO SEND':'ALL SENT ✓';
  $('bslNameT').textContent=myName();$('bslTitleT').textContent=TITLES[PROF?PROF.ti:0];$('bslStageName').textContent=myName();
  var chip=$('bslRoomChip'),pb=$('bslPlay');
  if(inRoom()){var rn=n.qm?'QUICK RACE':'ROOM '+n.code;chip.classList.remove('off');$('bslRoomT').textContent=rn+' · '+n.players.length+'/6';$('bslVFr').textContent=rn+' · '+n.players.length+' PLAYER'+(n.players.length>1?'S':'');
-  if(isHost()){pb.className='bsl-play';$('bslPlayB').textContent='START';$('bslPlayS').textContent=n.players.length+' PLAYER'+(n.players.length>1?'S':'')+' + BOTS'}
-  else{pb.className='bsl-play wait';$('bslPlayB').textContent='READY';$('bslPlayS').textContent='WAITING FOR THE HOST'}}
+  if(isHost()){var nr=n.players.filter(function(p){return p.pid!=='H'&&p.rd}).length,no=n.players.length-1;pb.className='bsl-play';$('bslPlayB').textContent='START';$('bslPlayS').textContent=no?nr+'/'+no+' READY':'1 PLAYER + BOTS'}
+  else{var meP=n.players.filter(function(p){return p.pid===n.myPid})[0];var hr=!!(meP&&meP.rd);if(hr===myRd)myRdWait=false;if(!myRdWait||Date.now()-myRdAt>6000){myRd=hr;myRdWait=false}var rd=myRd;pb.className='bsl-play'+(rd?' rdy':' wait');$('bslPlayB').textContent=rd?'READY ✓':'READY?';$('bslPlayS').textContent=rd?'TAP TO CANCEL':'TAP WHEN YOU ARE READY'}}
  else{chip.classList.add('off');$('bslRoomT').textContent='OFFLINE';$('bslVFr').textContent='FIND RACE · OR MAKE A ROOM';pb.className='bsl-play';$('bslPlayB').textContent='PLAY';$('bslPlayS').textContent=(md==='race'?'RACE NOW':modeOf(md).n.toUpperCase()+' NOW')}
  if($('bslPDrv').classList.contains('on'))drvDraw();if($('bslPMode').classList.contains('on'))modeDraw();if($('bslPFr').classList.contains('on'))frDraw();if($('bslPSync').classList.contains('on'))syncDraw();
 }
@@ -4855,7 +4863,7 @@ function topLoad(){var o=gameOpts();if(!topMap)topMap=MAPS.some(function(m){retu
  .catch(function(){ol.innerHTML='<li class="empty">Could not load the ranking. Try again in a moment.</li>'})}
 // my pad: send online coins back
 function syncDraw(){var P=pending();$('bslPend').textContent=P.t+' coin'+(P.t===1?'':'s');$('bslPendX').textContent='+'+P.x+' XP for the BrickSpeed Pass';
- $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET';$('bslOpenPad').disabled=!PROF;$('bslOpenPad').textContent=(P.t||P.x)?'OPEN PAD':'BACK TO PAD'}
+ $('bslSyncSub').textContent=PROF?'PAD '+PROF.id+' · LAST SYNC '+new Date(PROF.at).toLocaleString():'NO PAD YET · SAVED ON THIS PHONE (MAX '+GUEST_MAX+')';$('bslOpenPad').disabled=!PROF;$('bslOpenPad').textContent=(P.t||P.x)?'OPEN PAD':'BACK TO PAD'}
 // go back the same way you came: pad Wi-Fi -> the pad's own page (192.168.4.1), Bluetooth app -> the app (same tab, same app)
 window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your pad first');return}freeze(E);saveEarn(E);var ble=PROF.src==='b';
  if(window.parent!==window){try{window.parent.postMessage({bs:'back',sync:{id:E.pad,b:E.sent}},'*');return}catch(e){}}   // opened inside the Bluetooth app: just close
@@ -4874,7 +4882,7 @@ function frDraw(){var n=NETo(),inr=inRoom();$('bslFrOut').hidden=inr;$('bslFindB
  if(!inr)return;$('bslCodeB').textContent=n.qm?'QUICK RACE':n.code;$('bslCodeL').textContent=n.qm?'FIND RACE':'ROOM CODE';$('bslPCount').textContent=n.players.length+'/6';
  $('bslHostNote').textContent=n.qm?'Quick race with players from anywhere. It starts by itself.':n.host?'You are the host: pick the mode and track in the lobby, then press START.':'The host picks the game. Pick your driver and wait for START.';
  var h='',L=chars();n.players.forEach(function(p){var c=null;L.forEach(function(x){if(x.id===p.char)c=x});var pcol=(p.kk&&SKN[p.kk-1]?'#'+('00000'+SKN[p.kk-1][2].toString(16)).slice(-6):'')||(p.sk&&PAINTS[p.sk]&&PAINTS[p.sk].c)||(c?c.col:'#334');
-  h+='<li class="'+(p.pid===n.myPid?'me':'')+'" style="--pc:'+pcol+'"><span class="c"></span><span style="min-width:0"><b>'+(p.pid==='H'?'👑 ':'')+esc(p.name)+(p.pid===n.myPid?' (YOU)':'')+'</b><small>'+(p.ti?esc(TC[p.ti]||'')+' · ':'')+(c?esc(p.kk&&SKN[p.kk-1]?SKN[p.kk-1][0]:c.name)+' LV '+(p.lv||1):'')+'</small></span></li>'});
+  h+='<li class="'+(p.pid===n.myPid?'me':'')+'" style="--pc:'+pcol+'"><span class="c"></span><span style="min-width:0"><b>'+(p.pid==='H'?'👑 ':'')+esc(p.name)+(p.pid===n.myPid?' (YOU)':'')+'</b><small>'+(p.ti?esc(TC[p.ti]||'')+' · ':'')+(c?esc(p.kk&&SKN[p.kk-1]?SKN[p.kk-1][0]:c.name)+' LV '+(p.lv||1):'')+'</small></span><span class="bsl-rd '+(p.pid==='H'?'h':p.rd?'y':'n')+'">'+(p.pid==='H'?'HOST':p.rd?'✓ READY':'NOT READY')+'</span></li>'});
  for(var k=n.players.length;k<6;k++)h+='<li class="empty">Free spot · a bot drives</li>';
  var pl=$('bslPl');if(pl.__h!==h){pl.__h=h;pl.innerHTML=h}}
 setInterval(function(){if($('bslPFr').classList.contains('on')&&inRoom())frDraw()},500);
@@ -4893,7 +4901,7 @@ $('bslAuto').onclick=function(){auto=!auto;store('bsl-auto',auto?'1':'0');this.s
 
 // PLAY
 $('bslPlay').onclick=function(){vib(20);
- if(inRoom()){if(isHost())window.BSMP.start();else toast('Waiting for the host to start');return}
+ if(inRoom()){if(isHost()){window.BSMP.start();return}var n=NETo(),meP=n.players.filter(function(p){return p.pid===n.myPid})[0],rd=!myRd;myRd=rd;myRdAt=Date.now();myRdWait=true;window.BSMP.ready&&window.BSMP.ready(rd);if(meP)meP.rd=rd;toast(rd?'You are ready!':'Not ready');draw&&draw();frDraw();return}
  if(!window.BSRace){toast('The game is still loading');return}
  var c=cur();if(!owned(c.id)){ensureOwned();c=cur()}window.BSRace.start(window.BSPaint(c),window.BSMakeCar,null,opts())};
 // after a race: "Pick a character" opens the driver panel here instead of scrolling the page
