@@ -6177,7 +6177,7 @@ window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your
  location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};
 $('bslOpenPad').onclick=window.BSBackToPad;
 $('bslBackPad').onclick=function(){padAsk()};
-$('bslTutAgain').onclick=function(){panel(null);draw();setTimeout(function(){tutStart(true)},300)};
+$('bslTutAgain').onclick=function(){panel(null);draw();setTimeout(function(){tutStart(0)},300)};
 // iPad/iPhone: swiping from the screen edge (or Safari's back arrow) went "back" to the pad page in the middle of a game.
 // Keep one extra history step: a back swipe now lands here, and outside a race it asks first.
 (function(){if(!forced)return;try{   /* only on the game page, never on the shop page */
@@ -6321,47 +6321,63 @@ setInterval(function(){sync();var r=B.classList.contains('racing');if(!owned0&&c
 // invite links: ?room=ABCD#lobby joins that room
 if(Q.get('room')){var code=Q.get('room');var tries=0;(function tj(){if(window.BSMP&&window.BSChars){panel('bslPFr');$('bslCode').value=String(code).toUpperCase().slice(0,4);doJoin(code)}else if(++tries<40)setTimeout(tj,250)})()}
 sync();draw();
-/* ===== First-time tutorial: dims the screen, lights up one thing, you tap it ===== */
-var TUT=null;
-function tutDone(){try{return localStorage.getItem('bsTut')==='1'}catch(e){return true}}
-function tutSave(){try{localStorage.setItem('bsTut','1')}catch(e){}}
-var TSTEPS=[
+/* ===== Tutorial: dims the screen, lights up one thing, you tap it.
+   Part 1 (first visit): driver -> Race -> first track -> laps -> DONE -> PLAY.
+   Part 2 (after that first race): what the pad is and how coins get to it. ===== */
+var TUT=null,tutRaced=false;
+function tutStage(){try{return +(localStorage.getItem('bsTut')||0)}catch(e){return 2}}   /* 0 = new, 1 = part 2 waiting, 2 = done */
+function tutSet(n){try{localStorage.setItem('bsTut',String(n))}catch(e){}}
+var TPART=[[
  {id:null,h:'Welcome to BrickSpeed! 🏁',p:'Quick tour, 30 seconds. Tap the glowing things.',btn:'START',skip:1},
  {id:'bslNext',h:'Pick your driver',p:'Tap the arrow to see the next driver. Each one has their own power.',tap:1},
- {id:'bslTMode',h:'Choose what you play',p:'Tap here to open the game modes.',tap:1},
- {id:'bslModes',h:'Pick a game mode',p:'Race, Tag, Bomb Rush, Floor is Lava… tap one!',tap:1,any:1},
- {id:'bslMaps',h:'Pick a track',p:'For races you can pick the track here. Tap one, or NEXT.',tap:1,any:1,btn:'NEXT',opt:1},
+ {id:'bslTMode',h:'Choose what you play',p:'Tap MODE to open the game modes.',tap:1},
+ {sel:'#bslModes [data-m="race"]',h:'Pick Race',p:'Tap RACE: laps on a track against other drivers.',tap:1,scroll:1},
+ {sel:'#bslMaps > button:first-child',h:'Pick a track',p:'Tap the first track.',tap:1,scroll:1},
+ {id:'bslLaps',h:'How many laps?',p:'Tap how many laps you want to drive.',tap:1,scroll:1},
  {sel:'#bslPMode .bsl-btn[data-back]',h:'All set',p:'Tap DONE to go back.',tap:1},
- {id:'bslTFr',h:'Play with friends',p:'Here you find a race online, make a room or join a friend.',btn:'NEXT'},
- {id:'bslPlay',h:'Ready? Go!',p:'Tap PLAY to start. Steer, drive and have fun!',tap:1,end:1}];
+ {id:'bslPlay',h:'Your turn! 🏎️',p:'Tap PLAY and drive your first race.',tap:1,end:1}
+],[
+ {id:null,h:'Nice race! 🏆',p:'Now the important part: your BrickSpeed Pad, the controller for your real car.',btn:'SHOW ME',skip:1},
+ {id:'bslTSync',h:'Your pad',p:'Tap MY PAD. Everything you win here belongs to your pad.',tap:1},
+ {sel:'#bslPSync .bsl-box',h:'Coins you won',p:'Coins and XP from online races wait here, up to 300 coins a day.',btn:'NEXT'},
+ {sel:'#bslPSync .bsl-box:nth-child(2)',h:'Send them to your pad',p:"Join your pad's Wi-Fi (BrickSpeed-Pad-…) and tap OPEN PAD. The pad adds the coins, and you spend them on boxes, drivers and skins.",btn:'NEXT',scroll:1},
+ {sel:'#bslPSync .bsl-ib[data-back]',h:'Back',p:'Tap ‹ to go back.',tap:1},
+ {id:'bslBackPad',h:'Drive your real car',p:'‹ PAD takes you to the pad: pick your car, drive, honk 📯 and race at the station.',btn:'NEXT'},
+ {id:'bslTFr',h:'Play with friends',p:'Find an online race, make a room or join a friend.',btn:'NEXT'},
+ {id:null,h:"You're ready! 🎉",p:'Have fun! You can watch this tour again in Settings.',btn:"LET'S GO",end:1}
+]];
 function tutEl(s){var e=s.sel?document.querySelector(s.sel):s.id?$(s.id):null;if(!e)return null;var r=e.getBoundingClientRect();if(r.width<4||r.height<4||getComputedStyle(e).visibility==='hidden')return null;return e}
-function tutStart(force){if(TUT||(!force&&tutDone()))return;
+function tutStart(part){if(TUT)return;
  var o=document.createElement('div');o.id='bslTut';o.innerHTML='<div class="tut-hole"></div><div class="tut-card"><b></b><p></p><div class="tut-bt"><button type="button" class="bsl-btn dark tut-skip">SKIP</button><button type="button" class="bsl-btn tut-go"></button></div></div><div class="tut-hand">👆</div>';
- $('bsl').appendChild(o);TUT={o:o,i:0};
- o.querySelector('.tut-skip').onclick=function(e){e.stopPropagation();tutEnd()};
- o.querySelector('.tut-go').onclick=function(e){e.stopPropagation();tutNext()};
- o.addEventListener('click',function(e){var s=TSTEPS[TUT.i];if(!s.tap||e.target.closest('.tut-card'))return;var el=tutEl(s);if(!el)return;var r=el.getBoundingClientRect();
+ $('bsl').appendChild(o);TUT={o:o,i:0,part:part,S:TPART[part]};
+ o.querySelector('.tut-skip').onclick=function(e){e.stopPropagation();tutEnd(true)};
+ o.querySelector('.tut-go').onclick=function(e){e.stopPropagation();if(TUT.S[TUT.i].end)tutEnd();else tutNext()};
+ o.addEventListener('click',function(e){var s=TUT.S[TUT.i];if(!s.tap||e.target.closest('.tut-card'))return;var el=tutEl(s);if(!el)return;var r=el.getBoundingClientRect();
   if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){vib(15);o.classList.remove('nudge');void o.offsetWidth;o.classList.add('nudge');return}
   o.style.pointerEvents='none';var hit=document.elementFromPoint(e.clientX,e.clientY);o.style.pointerEvents='';
-  var b=hit&&hit.closest('button');if(b&&el.contains(b)||b===el){b.click();if(s.end){tutEnd();return}setTimeout(tutNext,380)}});
- window.addEventListener('resize',tutPlace);tutShow()}
-function tutNext(){if(!TUT)return;TUT.i++;if(TUT.i>=TSTEPS.length){tutEnd();return}var s=TSTEPS[TUT.i];if(s.opt&&!tutEl(s)){tutNext();return}tutShow()}
-function tutShow(){var s=TSTEPS[TUT.i],o=TUT.o;o.querySelector('b').textContent=s.h;o.querySelector('p').textContent=s.p;
- var go=o.querySelector('.tut-go');go.hidden=!s.btn;go.textContent=s.btn||'';o.querySelector('.tut-skip').hidden=!(s.skip||TUT.i>0);
- o.querySelector('.tut-bt').hidden=go.hidden&&o.querySelector('.tut-skip').hidden;
- o.querySelector('.tut-card').dataset.n=TUT.i?TUT.i+'/'+(TSTEPS.length-1):'';tutPlace()}
-function tutPlace(){if(!TUT)return;var s=TSTEPS[TUT.i],o=TUT.o,h=o.querySelector('.tut-hole'),c=o.querySelector('.tut-card'),hd=o.querySelector('.tut-hand'),el=tutEl(s),W=innerWidth,H=innerHeight;
- if(!el){h.style.cssText='left:50%;top:50%;width:0;height:0';c.style.cssText='left:50%;top:50%;transform:translate(-50%,-50%)';hd.hidden=true;return}
+  var b=hit&&hit.closest('button');if(b&&(b===el||el.contains(b))){if(s.end)tutEnd();b.click();if(!s.end)setTimeout(tutNext,380)}});
+ window.addEventListener('resize',tutPlace);document.addEventListener('scroll',tutPlace,true);tutShow()}
+function tutNext(){if(!TUT)return;TUT.i++;if(TUT.i>=TUT.S.length){tutEnd();return}tutShow()}
+function tutShow(){var s=TUT.S[TUT.i],o=TUT.o;o.querySelector('b').textContent=s.h;o.querySelector('p').textContent=s.p;
+ var go=o.querySelector('.tut-go'),sk=o.querySelector('.tut-skip');go.hidden=!s.btn;go.textContent=s.btn||'';sk.hidden=!(s.skip||TUT.i>0);
+ o.querySelector('.tut-bt').hidden=go.hidden&&sk.hidden;o.querySelector('.tut-card').dataset.n=TUT.i?TUT.i+'/'+(TUT.S.length-1):'';
+ var el=tutEl(s);if(el&&s.scroll){try{el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){el.scrollIntoView()}}   /* scroll the list so the next thing is on screen */
+ tutPlace()}
+function tutPlace(){if(!TUT)return;var s=TUT.S[TUT.i],o=TUT.o,h=o.querySelector('.tut-hole'),c=o.querySelector('.tut-card'),hd=o.querySelector('.tut-hand'),el=tutEl(s),W=innerWidth,H=innerHeight;
+ if(!el){h.style.cssText='left:50%;top:50%;width:0;height:0';c.style.cssText='width:'+Math.min(300,W-24)+'px;left:50%;top:50%;transform:translate(-50%,-50%)';hd.hidden=true;return}
  var r=el.getBoundingClientRect(),pad=6;h.style.cssText='left:'+(r.left-pad)+'px;top:'+(r.top-pad)+'px;width:'+(r.width+pad*2)+'px;height:'+(r.height+pad*2)+'px';
  hd.hidden=!s.tap;hd.style.left=(r.left+r.width/2-14)+'px';hd.style.top=(r.top+r.height/2-6)+'px';
  var cw=Math.min(300,W-24),ch=c.offsetHeight||120,m=10,hr={l:r.left-pad,t:r.top-pad,r:r.right+pad,b:r.bottom+pad},mid=Math.max(m,Math.min(W-cw-m,r.left+r.width/2-cw/2));
  /* try below, above, right, left, then the corners: pick the spot that covers the lit-up thing the least */
  var C=[[mid,hr.b+12],[mid,hr.t-12-ch],[hr.r+12,r.top+r.height/2-ch/2],[hr.l-12-cw,r.top+r.height/2-ch/2],[m,m],[W-cw-m,m],[m,H-ch-m],[W-cw-m,H-ch-m]],best=null,bs=1e18;
  C.forEach(function(q,k){var x=Math.max(m,Math.min(W-cw-m,q[0])),y=Math.max(m,Math.min(H-ch-m,q[1])),ox=Math.max(0,Math.min(x+cw,hr.r)-Math.max(x,hr.l)),oy=Math.max(0,Math.min(y+ch,hr.b)-Math.max(y,hr.t)),sc=ox*oy*10+k;if(sc<bs){bs=sc;best=[x,y]}});
- var st='width:'+cw+'px;left:'+best[0]+'px;top:'+best[1]+'px';
- c.style.cssText=st}
-function tutEnd(){if(!TUT)return;tutSave();window.removeEventListener('resize',tutPlace);TUT.o.remove();TUT=null}
-setInterval(function(){if(TUT)tutPlace();else if(!tutDone()&&document.body.classList.contains('bsl-on')&&!document.body.classList.contains('racing')&&!inRoom()&&!document.querySelector('.bslp.on')){tutStart.w=(tutStart.w||0)+1;if(tutStart.w>=3)tutStart()}else tutStart.w=0},500);
+ c.style.cssText='width:'+cw+'px;left:'+best[0]+'px;top:'+best[1]+'px'}
+function tutEnd(skipAll){if(!TUT)return;var part=TUT.part;tutSet(skipAll||part===1?2:1);tutRaced=false;
+ window.removeEventListener('resize',tutPlace);document.removeEventListener('scroll',tutPlace,true);TUT.o.remove();TUT=null}
+setInterval(function(){var B=document.body.classList;if(B.contains('racing'))tutRaced=true;
+ if(TUT){tutPlace();return}
+ var st=tutStage(),ok=B.contains('bsl-on')&&!B.contains('racing')&&!inRoom()&&!document.querySelector('.bslp.on');
+ if(ok&&(st===0||(st===1&&tutRaced))){tutStart.w=(tutStart.w||0)+1;if(tutStart.w>=3){tutStart.w=0;tutStart(st===0?0:1)}}else tutStart.w=0},500);
 })();
 </script>
 <div style="position:fixed;left:50%;top:max(4px,env(safe-area-inset-top));transform:translateX(-50%);z-index:99999;background:#ff3b5c;color:#fff;font:800 11px/1 system-ui;letter-spacing:.12em;padding:4px 10px;border-radius:99px;pointer-events:none">TEST VERSION</div>
