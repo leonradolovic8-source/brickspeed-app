@@ -6291,6 +6291,7 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
     <div class="r"><span>Driver name</span><input class="bsl-in" id="bslNameIn" maxlength="12" style="max-width:200px" aria-label="Driver name"><button class="bsl-btn" id="bslNameSave" type="button">SAVE</button></div>
     <div class="r"><span>Full screen</span><button class="bsl-tg" id="bslFs" type="button" aria-pressed="false" aria-label="Full screen"></button></div>
     <div class="r"><span>Open this lobby when I turn my phone sideways</span><button class="bsl-tg" id="bslAuto" type="button" aria-pressed="true" aria-label="Open the lobby automatically"></button></div>
+    <div class="r"><span>Story mode: start again from the prison</span><button class="bsl-btn dark" id="bslStoryReset" type="button">RESTART STORY</button></div>
     <div class="r"><span>Show the tutorial again</span><button class="bsl-btn dark" id="bslTutAgain" type="button">START TOUR</button></div>
     <div class="r" hidden><span></span><button class="bsl-btn dark" id="bslSite" type="button"></button></div>
    </div></div></div>
@@ -6888,6 +6889,7 @@ window.BSBackToPad=function(){var E=earn();if(!PROF){toast('Press ONLINE on your
  location.href='http://192.168.4.1/'+(E.sent.length?'#sync='+b64u(JSON.stringify({id:E.pad,b:E.sent})):'')};
 $('bslOpenPad').onclick=window.BSBackToPad;
 $('bslBackPad').onclick=function(){padAsk()};
+$('bslStoryReset').onclick=function(){var b=this;if(b.dataset.sure){try{localStorage.removeItem('bsStory')}catch(e){}b.textContent='DONE ✓';b.dataset.sure='';toast('Story restarted: next time you start in the prison');setTimeout(function(){b.textContent='RESTART STORY'},2500)}else{b.dataset.sure='1';b.textContent='TAP AGAIN TO CONFIRM';setTimeout(function(){if(b.dataset.sure){b.dataset.sure='';b.textContent='RESTART STORY'}},3000)}};
 $('bslTutAgain').onclick=function(){panel(null);draw();setTimeout(function(){tutStart(0)},300)};
 // iPad/iPhone: swiping from the screen edge (or Safari's back arrow) went "back" to the pad page in the middle of a game.
 // Keep one extra history step: a back swipe now lands here, and outside a race it asks first.
