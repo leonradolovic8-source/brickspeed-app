@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
+<meta name="bs-build" content="1795468921">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5837,6 +5838,14 @@ document.addEventListener('visibilitychange',function(){setRun(vis&&!document.hi
 })();
 </script>
 
+<script>(function(){var cur=(document.querySelector('meta[name=bs-build]')||{}).content,shown=false;if(!cur)return;
+  function racing(){var h=document.getElementById('hero');return !!(h&&h.classList.contains('racing'))}
+  function chk(){if(document.hidden)return;fetch(location.pathname+'?u='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/name="bs-build" content="(\d+)"/);if(!m||m[1]===cur||+m[1]<+cur)return;
+    var tried=false;try{tried=sessionStorage.getItem('bs-upd')===m[1];sessionStorage.setItem('bs-upd',m[1])}catch(_){}
+    if(!racing()&&!tried){location.replace(location.pathname+'?v='+m[1]+location.hash);return}
+    if(shown)return;shown=true;var b=document.createElement('button');b.type='button';b.textContent='🔄 New version ready · tap to update';b.style.cssText='position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:99999;padding:10px 16px;border-radius:99px;border:2px solid #fff;background:#2a7bff;color:#fff;font:800 13px system-ui;box-shadow:0 6px 20px rgba(0,0,0,.5)';
+    b.onclick=function(){location.replace(location.pathname+'?v='+m[1]+location.hash)};document.body.appendChild(b)}).catch(function(){})}
+  setTimeout(chk,4000);setInterval(chk,90000);document.addEventListener('visibilitychange',function(){if(!document.hidden)chk()});window.addEventListener('pageshow',function(){chk()})})();</script>
 <script>
 /* BrickSpeed Driver Garage: 16 drivers x 2 skins, built from bricks (from the Driver Garage design file) */
 (function(){
