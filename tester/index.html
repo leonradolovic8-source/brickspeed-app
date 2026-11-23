@@ -1435,25 +1435,65 @@ function treeAt(G,x,z,s,A,solid){var tr=new T.Mesh(new T.CylinderGeometry(.25*s,
   var cr=new T.Mesh(new T.SphereGeometry(1.9*s,12,10),plastic([0x3f9a3a,0x58b04a,0x2f8a4a][(Math.abs(x*7+z*3)|0)%3],.8));cr.position.set(x,3.4*s,z);cr.castShadow=true;G.add(cr);if(solid)A.blocks.push([x-.7,x+.7,z-.7,z+.7])}
 function signPlane(G,txt,colr,x,y,z,ry,w){var p=new T.Mesh(new T.PlaneGeometry(w,w*.25),new T.MeshBasicMaterial({map:signTex(txt,colr),toneMapped:false}));p.position.set(x,y,z);p.rotation.y=ry;G.add(p);return p}
 
-/* ================= BOMB FIELD (Bomb Rush): an open field with a soft colour gradient, a few small trees, gentle mounds ================= */
+/* ================= THE FIELD (Bomb Rush, Hot Potato, King of the Hill): a farm meadow ================= */
 function buildField(m,G){
-  var A=ARENA={R:18,half:130,c:[-120,-72,-24,24,72,120],blocks:[],tun:[],open:true,zones:[]},rr=srng(41),i;
-  /* ground: one big plate, warm in the middle and cooler at the edges */
-  var gt=canvasTex(512,512,function(c){var g=c.createRadialGradient(256,256,20,256,256,360);g.addColorStop(0,'#f5b94a');g.addColorStop(.3,'#6cc24a');g.addColorStop(.65,'#1f9a74');g.addColorStop(1,'#27408f');c.fillStyle=g;c.fillRect(0,0,512,512);
-    for(var k=0;k<900;k++){var x=Math.random()*512,y=Math.random()*512;c.fillStyle='rgba(255,255,255,'+(Math.random()*.06)+')';c.fillRect(x,y,3,3)}});
+  var A=ARENA={R:18,half:130,c:[-120,-72,-24,24,72,120],blocks:[],tun:[],open:true,zones:[]},rr=srng(41),i,R=Math.random,V=scVMat();
+  /* ground: mowed grass stripes, worn dirt tracks along the lanes, clover patches and little flowers */
+  var gt=canvasTex(1024,1024,function(c){c.fillStyle='#5fae45';c.fillRect(0,0,1024,1024);
+    for(var b=0;b<16;b++){c.fillStyle=b%2?'rgba(255,255,255,.07)':'rgba(0,40,0,.07)';c.fillRect(b*64,0,64,1024)}
+    for(var k=0;k<9000;k++){var x=R()*1024,y=R()*1024,v=R();c.fillStyle=v<.5?'rgba(30,90,20,'+(R()*.25)+')':'rgba(190,230,120,'+(R()*.2)+')';c.fillRect(x,y,2,3+R()*3)}
+    for(var p=0;p<22;p++){var px=R()*1024,py=R()*1024,pr=20+R()*50,g=c.createRadialGradient(px,py,0,px,py,pr);g.addColorStop(0,'rgba(60,140,40,.35)');g.addColorStop(1,'rgba(60,140,40,0)');c.fillStyle=g;c.fillRect(px-pr,py-pr,pr*2,pr*2)}
+    /* dirt tracks where cars keep driving (the lanes) */
+    var lane=function(v){return (v+A.half+20)/(2*A.half+40)*1024};c.lineCap='round';
+    A.c.forEach(function(v){[0,1].forEach(function(o){c.beginPath();if(o){c.moveTo(lane(v),0);c.lineTo(lane(v),1024)}else{c.moveTo(0,lane(v));c.lineTo(1024,lane(v))}c.strokeStyle='rgba(150,110,60,.32)';c.lineWidth=16;c.stroke();c.strokeStyle='rgba(120,85,45,.22)';c.lineWidth=6;c.stroke()})});
+    for(var f=0;f<1600;f++){c.fillStyle=['#ffffff','#ffe04a','#ff8ab0','#c79bff'][f%4];c.globalAlpha=.75;c.fillRect(R()*1024,R()*1024,2.5,2.5)}c.globalAlpha=1});
   var ground=new T.Mesh(new T.PlaneGeometry(2*A.half+40,2*A.half+40),new T.MeshStandardMaterial({map:gt,roughness:.95}));ground.rotation.x=-Math.PI/2;ground.position.y=.02;ground.receiveShadow=true;G.add(ground);
-  /* faint rings so you can judge distances (bomb circles stand out against them) */
-  for(i=1;i<=4;i++){var rg=new T.Mesh(new T.RingGeometry(i*30-.25,i*30+.25,96),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.12,depthWrite:false}));rg.rotation.x=-Math.PI/2;rg.position.y=.05;G.add(rg)}
-  /* a few small trees and rocks, kept off the driving lines the computer cars use */
-  var spots=[];for(i=0;i<5;i++)for(var j=0;j<5;j++)if(rr()<.55){var cx=(A.c[i]+A.c[i+1])/2+(rr()-.5)*18,cz=(A.c[j]+A.c[j+1])/2+(rr()-.5)*18;if(Math.hypot(cx,cz)<20)continue;spots.push([cx,cz])}
-  spots.forEach(function(p,k){if(k%3===2){var rk=new T.Mesh(new T.DodecahedronGeometry(1.6+rr(),0),plastic([0x8a8f9a,0x6f7480,0xa3a8b2][k%3],.85));rk.position.set(p[0],.9,p[1]);rk.scale.y=.7;rk.rotation.y=rr()*6;rk.castShadow=true;G.add(rk);A.blocks.push([p[0]-1.8,p[0]+1.8,p[1]-1.8,p[1]+1.8])}
+  /* outside the fence: a wider meadow that runs to the horizon */
+  var ot=canvasTex(256,256,function(c){c.fillStyle='#4f9c3c';c.fillRect(0,0,256,256);for(var k=0;k<2500;k++){c.fillStyle=R()<.5?'rgba(30,80,20,.25)':'rgba(170,220,110,.18)';c.fillRect(R()*256,R()*256,2,3)}});ot.wrapS=ot.wrapT=T.RepeatWrapping;ot.repeat.set(40,40);
+  var outer=new T.Mesh(new T.PlaneGeometry(900,900),new T.MeshStandardMaterial({map:ot,roughness:1}));outer.rotation.x=-Math.PI/2;outer.position.y=-.03;G.add(outer);
+  G.children.forEach(function(ch){if(ch.material===M.ground)ch.visible=false});
+  /* faint distance rings (bomb circles stand out against them) */
+  for(i=1;i<=4;i++){var rg=new T.Mesh(new T.RingGeometry(i*30-.25,i*30+.25,96),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.1,depthWrite:false}));rg.rotation.x=-Math.PI/2;rg.position.y=.05;G.add(rg)}
+  /* trees, rocks and hay bales inside, kept off the lanes the computer cars use */
+  var spots=[];for(i=0;i<5;i++)for(var j=0;j<5;j++)if(rr()<.6){var cx=(A.c[i]+A.c[i+1])/2+(rr()-.5)*18,cz=(A.c[j]+A.c[j+1])/2+(rr()-.5)*18;if(Math.hypot(cx,cz)<20)continue;spots.push([cx,cz])}
+  var hay=scMerge([[new T.CylinderGeometry(1.5,1.5,2.2,14),0xe8c45a,scM(0,1.5,0,0,0,Math.PI/2)],[new T.CylinderGeometry(1.52,1.52,.25,14),0xc99a34,scM(.55,1.5,0,0,0,Math.PI/2)],[new T.CylinderGeometry(1.52,1.52,.25,14),0xc99a34,scM(-.55,1.5,0,0,0,Math.PI/2)]]),hays=[];
+  spots.forEach(function(p,k){if(k%4===2){var rk=new T.Mesh(new T.DodecahedronGeometry(1.6+rr(),0),plastic([0x8a8f9a,0x6f7480,0xa3a8b2][k%3],.85));rk.position.set(p[0],.9,p[1]);rk.scale.y=.7;rk.rotation.y=rr()*6;rk.castShadow=true;G.add(rk);A.blocks.push([p[0]-1.8,p[0]+1.8,p[1]-1.8,p[1]+1.8])}
+    else if(k%4===3){hays.push([p[0],0,p[1],rr()*6,1]);hays.push([p[0]+2.6,0,p[1]+.4,rr()*6,1]);A.blocks.push([p[0]-1.8,p[0]+4.4,p[1]-1.8,p[1]+2.2])}
     else treeAt(G,p[0],p[1],.55+rr()*.3,A,true)});
-  /* gentle mounds: jump them and the bombs miss */
-  [[-48,-48],[48,48],[48,-48],[-48,48]].forEach(function(q){var R=11,Hh=2.2,md=new T.Mesh(new T.SphereGeometry(R,32,12,0,Math.PI*2,0,Math.PI/2),plastic(0x7fd06a,.9));md.scale.y=Hh/R;md.position.set(q[0],0,q[1]);md.receiveShadow=true;G.add(md);
-    A.zones.push({r:[q[0]-R,q[0]+R,q[1]-R,q[1]+R],h:function(x,z){var d=Math.hypot(x-q[0],z-q[1]);return d>=R?0:Hh*Math.sqrt(1-d*d/(R*R))}})});
-  /* low colourful fence */
-  var fc=[0xff5a7a,0xffcf3a,0x3a9bff,0x5ad86a],bg=new T.BoxGeometry(1,1,1);
-  [[0,-A.half-1,2*A.half+4,1],[0,A.half+1,2*A.half+4,1],[-A.half-1,0,1,2*A.half+4],[A.half+1,0,1,2*A.half+4]].forEach(function(q,k){var w2=new T.Mesh(bg,plastic(fc[k],.4));w2.scale.set(q[2],1.6,q[3]);w2.position.set(q[0],.8,q[1]);w2.castShadow=true;G.add(w2)});
+  scInst(G,hay,V,hays,true);
+  /* gentle mounds with grass on them: jump them and the bombs miss */
+  var mt=canvasTex(128,128,function(c){c.fillStyle='#6cbf52';c.fillRect(0,0,128,128);for(var k=0;k<700;k++){c.fillStyle=R()<.5?'rgba(40,110,30,.35)':'rgba(200,240,140,.25)';c.fillRect(R()*128,R()*128,2,3)}});mt.wrapS=mt.wrapT=T.RepeatWrapping;mt.repeat.set(4,4);
+  [[-48,-48],[48,48],[48,-48],[-48,48]].forEach(function(q){var Rr=11,Hh=2.2,md=new T.Mesh(new T.SphereGeometry(Rr,32,12,0,Math.PI*2,0,Math.PI/2),new T.MeshStandardMaterial({map:mt,roughness:1}));md.scale.y=Hh/Rr;md.position.set(q[0],0,q[1]);md.receiveShadow=true;G.add(md);
+    A.zones.push({r:[q[0]-Rr,q[0]+Rr,q[1]-Rr,q[1]+Rr],h:function(x,z){var d=Math.hypot(x-q[0],z-q[1]);return d>=Rr?0:Hh*Math.sqrt(1-d*d/(Rr*Rr))}})});
+  /* grass tufts and flowers everywhere (no collision, just detail) */
+  var tuft=scMerge([[new T.ConeGeometry(.18,.9,4),0x3f8f2e,scM(0,.45,0,.2,0,.15)],[new T.ConeGeometry(.16,.8,4),0x5aae3e,scM(.2,.4,.1,-.2,0,-.2)],[new T.ConeGeometry(.15,.7,4),0x2f7a24,scM(-.15,.35,-.1,.1,0,.3)]]),tl=[];
+  for(i=0;i<900;i++)tl.push([(R()-.5)*2*A.half,0,(R()-.5)*2*A.half,R()*6,.8+R()*.8]);scInst(G,tuft,V,tl);
+  var flw=scMerge([[new T.CylinderGeometry(.04,.04,.6,4),0x3f8f2e,scM(0,.3,0)],[new T.IcosahedronGeometry(.2,0),0xffffff,scM(0,.65,0)],[new T.IcosahedronGeometry(.09,0),0xffd23c,scM(0,.72,.12)]]),fl=[];
+  for(i=0;i<500;i++)fl.push([(R()-.5)*2*A.half,0,(R()-.5)*2*A.half,R()*6,.8+R()*.7]);var fim=scInst(G,flw,V,fl);
+  /* wooden farm fence: posts + two rails */
+  var post=[],H2=A.half+1.5;for(var s=-H2;s<=H2;s+=4){post.push([s,0,-H2],[s,0,H2],[-H2,0,s],[H2,0,s])}
+  scInst(G,scMerge([[new T.BoxGeometry(.35,1.9,.35),0x8a5a32,scM(0,.95,0)],[new T.ConeGeometry(.28,.3,4),0x6b4426,scM(0,2.05,0,0,Math.PI/4)]]),V,post.map(function(p){return [p[0],0,p[2],0,1]}),true);
+  var wood=new T.MeshStandardMaterial({color:0xa06a3a,roughness:.9});
+  [[0,-H2,2*H2,0],[0,H2,2*H2,0],[-H2,0,2*H2,Math.PI/2],[H2,0,2*H2,Math.PI/2]].forEach(function(q){[.7,1.4].forEach(function(y){var rl=new T.Mesh(new T.BoxGeometry(q[2],.18,.12),wood);rl.position.set(q[0],y,q[1]);rl.rotation.y=q[3];rl.castShadow=true;G.add(rl)})});
+  /* the farm around the field: a red barn, a silo, a windmill, hay stacks, cows and a ring of trees */
+  var barn=new T.Group(),red=new T.MeshStandardMaterial({color:0xb8322a,roughness:.8}),white=new T.MeshStandardMaterial({color:0xf3efe6,roughness:.7}),roofM=new T.MeshStandardMaterial({color:0x4a3a36,roughness:.8});
+  var bb=new T.Mesh(new T.BoxGeometry(22,11,16),red);bb.position.y=5.5;barn.add(bb);
+  var rf=new T.Mesh(new T.CylinderGeometry(9.5,9.5,23,4,1,false,Math.PI/4,Math.PI),roofM);rf.rotation.z=Math.PI/2;rf.scale.set(1,1,.8);rf.position.y=11;barn.add(rf);
+  var dr=new T.Mesh(new T.BoxGeometry(.3,7,7),white);dr.position.set(11.05,3.5,0);barn.add(dr);var dx1=new T.Mesh(new T.BoxGeometry(.32,.5,9.6),white);dx1.position.set(11.06,3.5,0);dx1.rotation.x=.75;barn.add(dx1);var dx2=dx1.clone();dx2.rotation.x=-.75;barn.add(dx2);
+  barn.position.set(-H2-30,0,-40);barn.rotation.y=0;G.add(barn);
+  var silo=new T.Group(),sb=new T.Mesh(new T.CylinderGeometry(4,4,20,16),new T.MeshStandardMaterial({color:0xc9ccd2,roughness:.35,metalness:.5}));sb.position.y=10;silo.add(sb);var sd=new T.Mesh(new T.SphereGeometry(4,16,8,0,Math.PI*2,0,Math.PI/2),new T.MeshStandardMaterial({color:0xb8322a,roughness:.6}));sd.position.y=20;silo.add(sd);silo.position.set(-H2-30,0,-18);G.add(silo);
+  var wm=new T.Group(),tw=new T.Mesh(new T.CylinderGeometry(1.6,2.6,13,8),white);tw.position.y=6.5;wm.add(tw);var cap=new T.Mesh(new T.ConeGeometry(2.4,2.6,8),red);cap.position.y=14.3;wm.add(cap);
+  var hub=new T.Group();hub.position.set(2.1,12.4,0);for(var b=0;b<4;b++){var bl=new T.Mesh(new T.BoxGeometry(.15,7,.7),white);bl.position.y=3.5;var arm=new T.Group();arm.rotation.x=b*Math.PI/2;arm.add(bl);hub.add(arm)}wm.add(hub);wm.position.set(H2+28,0,60);G.add(wm);SCN.spin.push({o:hub,ax:'x',v:.9});
+  var cow=scMerge([[new T.BoxGeometry(2.4,1.2,1.1),0xf4f4f0,scM(0,1.5,0)],[new T.BoxGeometry(.8,.7,.9),0x1b1b1b,scM(.4,1.75,0)],[new T.BoxGeometry(.7,.7,.7),0xf4f4f0,scM(1.45,1.8,0)],[new T.BoxGeometry(.3,.25,.6),0xf0b0b0,scM(1.85,1.6,0)],
+    [new T.BoxGeometry(.25,.9,.25),0x1b1b1b,scM(.9,.45,.35)],[new T.BoxGeometry(.25,.9,.25),0x1b1b1b,scM(.9,.45,-.35)],[new T.BoxGeometry(.25,.9,.25),0x1b1b1b,scM(-.9,.45,.35)],[new T.BoxGeometry(.25,.9,.25),0x1b1b1b,scM(-.9,.45,-.35)],[new T.BoxGeometry(.6,.5,.95),0x1b1b1b,scM(-.6,1.7,0)]]),cows=[];
+  for(i=0;i<9;i++){var a=R()*Math.PI*2,d=H2+14+R()*30;cows.push([Math.cos(a)*d,0,Math.sin(a)*d,R()*6,1+R()*.2])}scInst(G,cow,V,cows,true);
+  var stack=[];for(i=0;i<6;i++){var a2=R()*Math.PI*2,d2=H2+10+R()*20,x2=Math.cos(a2)*d2,z2=Math.sin(a2)*d2;stack.push([x2,0,z2,a2,1],[x2+3,0,z2,a2,1],[x2+1.5,2.6,z2,a2,1])}scInst(G,hay,V,stack,true);
+  var tr=[],pn=[];for(i=0;i<120;i++){var a3=R()*Math.PI*2,d3=H2+45+R()*70,x3=Math.cos(a3)*d3,z3=Math.sin(a3)*d3;if(Math.hypot(x3-(-H2-30),z3+30)<30)continue;(R()<.6?tr:pn).push([x3,0,z3,R()*6,1+R()*.8])}
+  scInst(G,scTreeRound(),V,tr,true);scInst(G,scPine(false),V,pn,true);
+  /* clouds, butterflies and the horizon */
+  for(var k=0;k<12;k++){var cl=new T.Group(),cm=new T.MeshStandardMaterial({color:0xffffff,roughness:1});for(var q=0;q<4;q++){var sp=new T.Mesh(new T.IcosahedronGeometry(3+R()*2,1),cm);sp.position.set(q*3.4-5,R()*1.5,R()*2);cl.add(sp)}var a4=R()*Math.PI*2,r4=40+R()*170;cl.position.set(Math.cos(a4)*r4,42+R()*16,Math.sin(a4)*r4);G.add(cl);SCN.bob.push({o:cl,y:cl.position.y,a:1.2,v:.25,ph:R()*6})}
+  scParticles(G,120,.5,0xfff2a0,110,6,-.05,2.2,false);
+  scBackdrop(G,function(c,W,H){c.clearRect(0,0,W,H);scRidge(c,W,H,130,70,24,'#97bcd8',9);scRidge(c,W,H,180,34,16,'#76b85e',10);scRidge(c,W,H,212,18,9,'#5aa046',11)},72);
   A.movers=null;A.decoys=[];A.oil=[];
 }
 
@@ -1829,7 +1869,7 @@ function scParticles(G,n,size,color,spread,hgt,fall,drift,glow){var pa=new Float
   var pm=new T.Points(g,new T.PointsMaterial({color:color,size:size,transparent:true,opacity:.9,depthWrite:false,blending:glow?T.AdditiveBlending:T.NormalBlending,toneMapped:!glow}));pm.frustumCulled=false;G.add(pm);
   SCN.fx.push({p:pm,n:n,spread:spread,h:hgt,fall:fall,drift:drift,ph:R()*9});return pm}
 function scTick(dt){var c=typeof activeCam==='function'?activeCam():null;if(!c||!trackGroup||!trackGroup.parent)return;var w=SCN._v||(SCN._v=new T.Vector3());c.getWorldPosition(w);
-  if(SCN.back&&SCN.back.parent)SCN.back.position.set(w.x,SCN.back.position.y,w.z);
+  if(SCN.back&&SCN.back.parent){SCN.back.position.set(w.x,SCN.back.position.y,w.z);SCN.back.visible=w.y<28}   /* hide the horizon band for high cameras (the intro fly-over) */
   SCN.fx.forEach(function(f){if(!f.p.parent)return;var a=f.p.geometry.attributes.position.array,ox=w.x,oz=w.z,S=f.spread/2,tt=performance.now()/1000;f.p.position.set(0,0,0);
     for(var i=0;i<f.n;i++){var k=i*3;a[k+1]-=f.fall*dt;a[k]+=Math.sin(tt*.8+i)*f.drift*dt;a[k+2]+=Math.cos(tt*.6+i*1.3)*f.drift*dt;
       if(a[k+1]<0)a[k+1]+=f.h;else if(a[k+1]>f.h)a[k+1]-=f.h;
@@ -1863,7 +1903,8 @@ function scBeside(G,o,k,side,off){var x=P[k].x+NX[k]*side*(E[k]+off),z=P[k].z+NZ
 function scStraights(len){var out=[],run=0;for(var i=0;i<N;i+=4){var j=(i+4)%N,da=Math.abs(wrap(ANG[j]-ANG[i]));if(da<.02){run++;if(run*4*DS>=len){out.push(i-Math.floor(run*2));run=0}}else run=0}return out}
 
 /* ---------- per track ---------- */
-function sceneryAdd(){SCN.back=null;SCN.fx=[];SCN.spin=[];SCN.bob=[];var m=MAPS[curMap];if(!m||m.arena||!trackGroup)return;
+function sceneryReset(){SCN.back=null;SCN.fx=[];SCN.spin=[];SCN.bob=[]}
+function sceneryAdd(){var m=MAPS[curMap];if(!m||m.arena||!trackGroup)return;
   var G=trackGroup,R=scRand(curMap),cx=0,cz=0;for(var i=0;i<N;i+=10){cx+=P[i].x;cz+=P[i].z}var cnt=Math.ceil(N/10);cx/=cnt;cz/=cnt;var V=scVMat();
   var spots=function(n,a,b,gap){return scSpots(R,n,a,b,cx,cz,268,gap)};
   var place=function(geo,list,smin,smax,y,shadow){return scInst(G,geo,V,list.map(function(s){return [s[0],y||0,s[1],s[2],smin+R()*(smax-smin)]}),shadow)};
@@ -1907,7 +1948,7 @@ function sceneryAdd(){SCN.back=null;SCN.fx=[];SCN.spin=[];SCN.bob=[];var m=MAPS[
   else if(curMap==='queens'){scParticles(G,160,.6,0xff9a3d,120,30,1.6,2.4,false)}   /* autumn leaves drifting down */
 }
 
-var _bTrack=buildTrack;buildTrack=function(id){_bTrack(id);try{sceneryAdd()}catch(e){console.warn('scenery',e)}};
+var _bTrack=buildTrack;buildTrack=function(id){sceneryReset();_bTrack(id);try{sceneryAdd()}catch(e){console.warn('scenery',e)}};
 buildTrack('ring');
 
 /* ================= BRICK CARS (original designs) ================= */
@@ -2371,10 +2412,29 @@ function m2Init(o){
     var wt=canvasTex(4,64,function(c){var g=c.createLinearGradient(0,0,0,64);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.55,'rgba(255,255,255,.35)');g.addColorStop(1,'rgba(255,255,255,1)');c.fillStyle=g;c.fillRect(0,0,4,64)});
     var wall=new T.Mesh(new T.CylinderGeometry(1,1,4.5,64,1,true),new T.MeshBasicMaterial({color:0xff2bd6,map:wt,transparent:true,opacity:.75,depthWrite:false,side:T.DoubleSide,toneMapped:false}));wall.position.y=2.25;zm.add(wall);
     zm.position.y=.12;scene.add(zm);S.zm=zm;S.disc=disc;S.ring=ring;S.wall=wall;S.beam=beam;
+    /* the hill looks like a real capture point: a painted crown emblem on the ground, light posts around the edge, a flag in the middle */
+    var em=canvasTex(512,512,function(c){c.clearRect(0,0,512,512);c.translate(256,256);c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.arc(0,0,250,0,7);c.fill();
+      c.globalCompositeOperation='destination-out';c.beginPath();c.arc(0,0,236,0,7);c.fill();c.globalCompositeOperation='source-over';
+      for(var k=0;k<24;k++){c.save();c.rotate(k/24*Math.PI*2);c.fillStyle=k%2?'rgba(255,255,255,.35)':'rgba(255,255,255,.12)';c.beginPath();c.moveTo(0,0);c.arc(0,0,236,-Math.PI/24,Math.PI/24);c.closePath();c.fill();c.restore()}
+      c.fillStyle='rgba(255,255,255,.18)';c.beginPath();c.arc(0,0,120,0,7);c.fill();
+      c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.moveTo(-70,40);c.lineTo(-80,-40);c.lineTo(-38,-5);c.lineTo(0,-62);c.lineTo(38,-5);c.lineTo(80,-40);c.lineTo(70,40);c.closePath();c.fill();c.fillRect(-70,48,140,18);
+      c.font='900 italic 30px Arial';c.textAlign='center';c.textBaseline='middle';for(var w=0;w<3;w++){c.save();c.rotate(w*Math.PI*2/3);c.fillText('KING OF THE HILL',0,-180);c.restore()}});
+    disc.material.map=em;disc.material.needsUpdate=true;
+    var zd=new T.Group(),postM=new T.MeshStandardMaterial({color:0x2b2f3a,roughness:.4,metalness:.6}),topM=new T.MeshBasicMaterial({color:0xff2bd6,toneMapped:false});
+    for(var k=0;k<12;k++){var a=k/12*Math.PI*2,po=new T.Mesh(new T.CylinderGeometry(.18,.25,2.4,8),postM);po.position.set(Math.cos(a)*S.zr,1.2,Math.sin(a)*S.zr);po.castShadow=true;zd.add(po);
+      var tp=new T.Mesh(new T.SphereGeometry(.38,12,8),topM);tp.position.set(Math.cos(a)*S.zr,2.6,Math.sin(a)*S.zr);zd.add(tp)}
+    var pole=new T.Mesh(new T.CylinderGeometry(.12,.16,8,10),new T.MeshStandardMaterial({color:0xd8dde6,roughness:.3,metalness:.7}));pole.position.y=4;zd.add(pole);
+    var knob=new T.Mesh(new T.SphereGeometry(.28,12,8),new T.MeshStandardMaterial({color:0xffcf00,roughness:.3,metalness:.6}));knob.position.y=8.1;zd.add(knob);
+    var ft=canvasTex(128,80,function(c){c.fillStyle='#fff';c.fillRect(0,0,128,80);c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.moveTo(34,56);c.lineTo(30,22);c.lineTo(48,38);c.lineTo(64,14);c.lineTo(80,38);c.lineTo(98,22);c.lineTo(94,56);c.closePath();c.fill()});
+    var flagM=new T.MeshStandardMaterial({color:0xff2bd6,map:ft,side:T.DoubleSide,roughness:.7}),flag=new T.Mesh(new T.PlaneGeometry(3.2,2,8,1),flagM);flag.position.set(1.65,7,0);zd.add(flag);
+    scene.add(zd);S.zd=zd;S.topM=topM;S.flag=flag;S.flagM=flagM;S.flagP=flag.geometry.attributes.position.array.slice();
+    /* an arrow over your car that points at the hill while you are outside */
+    var ar=new T.Group(),am=new T.MeshBasicMaterial({color:0xff2bd6,toneMapped:false,transparent:true,opacity:.95,depthTest:false}),ah=new T.Mesh(new T.ConeGeometry(.7,1.4,4),am);ah.rotation.x=Math.PI/2;ah.position.z=1;ar.add(ah);
+    var as=new T.Mesh(new T.BoxGeometry(.4,.25,1.4),am);as.position.z=-.2;ar.add(as);ar.renderOrder=9;ah.renderOrder=as.renderOrder=9;ar.scale.setScalar(.8);ar.visible=false;scene.add(ar);S.arrow=ar;
     var gh=new T.Mesh(new T.RingGeometry(.9,1,96),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55,depthWrite:false,side:T.DoubleSide}));gh.rotation.x=-Math.PI/2;gh.visible=false;scene.add(gh);S.ghost=gh}
   if(S.kind==='lava'){S.next=2.5;S.fallen={};S.warn={};S.drops=0}
 }
-function m2Clean(){var S=race.m2;if(!S)return;if(S.potato)scene.remove(S.potato);if(S.zm)scene.remove(S.zm);if(S.ghost)scene.remove(S.ghost);cars.forEach(function(c){c.m2Imm=0})}
+function m2Clean(){var S=race.m2;if(!S)return;if(S.potato)scene.remove(S.potato);if(S.zm)scene.remove(S.zm);if(S.zd)scene.remove(S.zd);if(S.arrow)scene.remove(S.arrow);if(S.ghost)scene.remove(S.ghost);cars.forEach(function(c){c.m2Imm=0})}
 /* ---------- 🥔 HOT POTATO ---------- */
 function potatoMesh(){var g=new T.Group(),b=new T.Mesh(new T.SphereGeometry(1.1,18,14),new T.MeshStandardMaterial({color:0x15161b,roughness:.25,metalness:.3,emissive:new T.Color(0xff2d2d),emissiveIntensity:0}));g.add(b);g.body=b;
   var cap=new T.Mesh(new T.CylinderGeometry(.3,.3,.4,10),new T.MeshStandardMaterial({color:0x9aa0aa,metalness:.8,roughness:.3}));cap.position.y=1.15;g.add(cap);
@@ -2410,6 +2470,9 @@ function kothTick(dt){var S=race.m2;
   var inside=cars.filter(function(c){return alive(c)&&Math.hypot(c.x-S.zx,c.z-S.zz)<S.zr});
   var meIn=inside.indexOf(me)>=0,col=meIn?(inside.length===1?0x00ffd0:0x00b3ff):0xff2bd6;   /* cyan = you are scoring, pink = get in (pink stands out on the green field) */
   S.ring.material.color.setHex(col);S.disc.material.color.setHex(col);S.wall.material.color.setHex(col);S.beam.material.color.setHex(col);S.disc.material.opacity=(meIn?.34:.24)+.1*Math.sin(t*4);S.wall.material.opacity=.6+.25*Math.sin(t*3);
+  var gy=ARENA?arenaH(S.zx,S.zz):0;S.zd.position.set(S.zx,gy,S.zz);S.topM.color.setHex(col);S.flagM.color.setHex(S.king?(S.king.me?0x00ffd0:0xffcf00):col);
+  var fa=S.flag.geometry.attributes.position,o=S.flagP;for(var v=0;v<fa.count;v++){var x=o[v*3];fa.array[v*3+2]=Math.sin(x*1.8-t*6)*.22*(x+1.6)/3.2}fa.needsUpdate=true;
+  if(!meIn&&!me.out&&alive(me)){var dxz=S.zx-me.x,dzz=S.zz-me.z;S.arrow.visible=true;S.arrow.position.set(me.x,(me.y||0)+3.4+.2*Math.sin(t*5),me.z);S.arrow.rotation.set(-.55,Math.atan2(dxz,dzz),0,'YXZ')}else S.arrow.visible=false;
   S.mark=S.king;
   if(race.phase!=='go')return;
   /* floating +points over your car once a second */
