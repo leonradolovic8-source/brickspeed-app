@@ -2938,16 +2938,27 @@ function stCopOn(c,S){if(!c.out)return;var A=ARENA,best=null,bd=-1;
 function stCopOff(c,S){c.out=true;c.model.visible=false;c.stCop=false;S.cops=S.cops.filter(function(q){return q!==c})}
 /* ---------- the GPS line: chevrons along the streets to the target ---------- */
 var ST_GN=220;
-function stRoute(S){var A=ARENA,tg=S.target;if(!tg)return [];var pts=[[me.x,me.z]],hr=A.R/2;
-  function nodesOnMyStreet(){var c=[];for(var k=0;k<6;k++){if(Math.abs(me.z-A.c[k])<hr)for(var i=0;i<6;i++)c.push([i,k]);if(Math.abs(me.x-A.c[k])<hr)for(var j=0;j<6;j++)c.push([k,j])}return c}
-  var ap=tg.ap||[tg.x,tg.z],tn=arenaNode(ap[0],ap[1]),cand=nodesOnMyStreet(),start=null,sb=1e9;
-  if(!cand.length){var ex=stInB(S.pr,me.x,me.z)?[S.pr.x1+6,S.pr.cz]:stInB(S.base,me.x,me.z)?[S.base.cx,A.c[4]]:null;if(ex)pts.push(ex);var en=arenaNode((ex||[me.x])[0],(ex||[0,me.z])[1]);cand=[en]}
-  cand.forEach(function(n){var x=A.c[n[0]],z=A.c[n[1]],s=Math.hypot(x-pts[pts.length-1][0],z-pts[pts.length-1][1])+Math.abs(n[0]-tn[0])*58+Math.abs(n[1]-tn[1])*58;if(s<sb){sb=s;start=n}});
-  if(Math.hypot(me.x-ap[0],me.z-ap[1])<40&&sameStreet(me,{x:ap[0],z:ap[1]})){pts.push(ap);if(!tg.ap)return pts;pts.push([tg.x,tg.z]);return pts}
-  pts.push([A.c[start[0]],A.c[start[1]]]);
-  /* L-shaped path over the grid, x first, then z */
-  if(start[0]!==tn[0])pts.push([A.c[tn[0]],A.c[start[1]]]);if(start[1]!==tn[1])pts.push([A.c[tn[0]],A.c[tn[1]]]);
-  pts.push(ap);if(tg.ap)pts.push([tg.x,tg.z]);return pts}
+function stRoute(S){var A=ARENA,tg=S.target;if(!tg)return [];var hr=A.R/2,G=58;
+  /* where can I join the street grid from (x,z)? returns the street point and the crossing nodes at both ends of that street piece */
+  function entry(x,z){var pre=null,onH=-1,onV=-1,k;for(k=0;k<6;k++){if(Math.abs(z-A.c[k])<hr)onH=k;if(Math.abs(x-A.c[k])<hr)onV=k}
+    if(onH<0&&onV<0){var bd=1e9;for(k=0;k<6;k++){var dz=Math.abs(z-A.c[k]),dx=Math.abs(x-A.c[k]);if(dz<bd){bd=dz;pre=[x,A.c[k]];onH=k;onV=-1}if(dx<bd){bd=dx;pre=[A.c[k],z];onV=k;onH=-1}}x=pre[0];z=pre[1]}
+    var ends=[];function seg(v,line,h){var i=0;while(i<4&&A.c[i+1]<v)i++;var lo=A.c[i],hi=A.c[i+1];if(v<lo)hi=lo;
+      ends.push({n:h?[i,line]:[line,i],d:Math.abs(v-A.c[i])});if(i+1<6)ends.push({n:h?[i+1,line]:[line,i+1],d:Math.abs(A.c[i+1]-v)})}
+    if(onH>=0)seg(x,onH,true);if(onV>=0)seg(z,onV,false);return {pre:pre,ends:ends,x:x,z:z,onH:onH,onV:onV}}
+  var ap=tg.ap||[tg.x,tg.z],E1=entry(me.x,me.z),E2=entry(ap[0],ap[1]),pts=[[me.x,me.z]];if(E1.pre)pts.push(E1.pre);
+  /* same street piece: drive straight there */
+  var same=(E1.onH>=0&&E1.onH===E2.onH&&E1.ends.some(function(e){return E2.ends.some(function(f){return e.n+''===f.n+''})}))||(E1.onV>=0&&E1.onV===E2.onV&&E1.ends.some(function(e){return E2.ends.some(function(f){return e.n+''===f.n+''})}));
+  if(same&&Math.hypot(E1.x-E2.x,E1.z-E2.z)<G+1){if(E2.pre)pts.push(E2.pre);pts.push(ap);if(tg.ap)pts.push([tg.x,tg.z]);return pts}
+  /* shortest path over the 6x6 crossings */
+  var dist={},prev={},open=[];function key(n){return n[0]+','+n[1]}
+  E1.ends.forEach(function(e){var kk=key(e.n);if(dist[kk]==null||e.d<dist[kk]){dist[kk]=e.d;prev[kk]=null;open.push(e.n)}});
+  var goal={};E2.ends.forEach(function(e){goal[key(e.n)]=e.d});var best=null,bd=1e9;
+  for(var guard=0;guard<400&&open.length;guard++){open.sort(function(a2,b2){return dist[key(a2)]-dist[key(b2)]});var n=open.shift(),kn=key(n),dn=dist[kn];
+    if(goal[kn]!=null&&dn+goal[kn]<bd){bd=dn+goal[kn];best=n}
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(q){var m=[n[0]+q[0],n[1]+q[1]];if(m[0]<0||m[0]>5||m[1]<0||m[1]>5)return;var km=key(m),nd=dn+G;if(dist[km]==null||nd<dist[km]){dist[km]=nd;prev[km]=n;open.push(m)}})}
+  var chain=[];for(var c=best;c;c=prev[key(c)])chain.unshift(c);
+  chain.forEach(function(n){pts.push([A.c[n[0]],A.c[n[1]]])});
+  if(E2.pre)pts.push(E2.pre);pts.push(ap);if(tg.ap)pts.push([tg.x,tg.z]);return pts}
 function stGpsDraw(S){var pts=stRoute(S),im=S.gps,d=S._d||(S._d=new T.Object3D()),n=0,off=(t*6)%4;
   for(var k=0;k<pts.length-1&&n<ST_GN;k++){var a=pts[k],b=pts[k+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L<.1)continue;var ang=Math.atan2(b[0]-a[0],b[1]-a[1]);
     for(var s=(k?0:3)+off;s<L&&n<ST_GN;s+=4){var x=a[0]+(b[0]-a[0])*s/L,z=a[1]+(b[1]-a[1])*s/L;d.position.set(x,(ARENA?arenaH(x,z):0)+.12,z);d.rotation.set(-Math.PI/2,0,ang+Math.PI);d.updateMatrix();im.setMatrixAt(n++,d.matrix)}}
@@ -3182,7 +3193,9 @@ function stMisBegin(S,k){var m=k.m,A=ARENA,M=S.mis={m:m,t0:t,parts:[]};stBig(S,m
   if(m.id==='bomber'){M.yard=[A.c[5]-4,A.c[0]+4];M.limit=95;M.armT=t+6;M.slow=0;S.target={x:M.yard[0],z:M.yard[1],col:m.col,n:'GET TO THE SCRAPYARD · STAY OVER 40 KM/H'}}
   if(m.id==='vans'){M.vans=stClaim(S,3);M.limit=160;M.down=0;M.vans.forEach(function(c,i){var n=stFarNode(S,50+i*20,140);stDress(c,{style:'muscle',color:0x2c2f38,accent:0x00dcc8,num:'VN'});c.stNpc='thief';c.stSpd=.78;stPut(c,n[0],n[1],0,8);
       var an=new T.Mesh(new T.CylinderGeometry(.05,.05,2.2,6),new T.MeshBasicMaterial({color:0x00dcc8,toneMapped:false}));an.position.set(0,2.4,.6);c.model.add(an);c.vanAnt=an});S.target={x:M.vans[0].x,z:M.vans[0].z,col:m.col,n:'RAM THE VANS · 0/3'}}
-  if(m.id==='tail'){var tn=stFarNode(S,30,60),cc=stClaim(S,1)[0];M.car=cc;stDress(cc,{style:'gt',color:0x8a8f99,accent:0x222222,num:'??'});cc.stNpc='courier';stPut(cc,tn[0],tn[1],0,6);M.hold=0;M.close=0;M.far=0;M.limit=150;S.target={x:tn[0],z:tn[1],col:m.col,n:'FIND THE GREY CAR'}}
+  if(m.id==='tail'){var tn=stFarNode(S,30,60),cc=stClaim(S,1)[0];M.car=cc;stDress(cc,{style:'gt',color:0x8a8f99,accent:0x222222,num:'??'});cc.stNpc='courier';stPut(cc,tn[0],tn[1],0,6);M.hold=0;M.close=0;M.far=0;M.limit=150;var bandG=new T.Group(),okM=new T.MeshBasicMaterial({color:0x3dff8a,transparent:true,opacity:.16,depthWrite:false,side:T.DoubleSide,toneMapped:false}),badM=new T.MeshBasicMaterial({color:0xff3b3b,transparent:true,opacity:.22,depthWrite:false,side:T.DoubleSide,toneMapped:false}),edM=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7,depthWrite:false,side:T.DoubleSide,toneMapped:false});
+    [[new T.RingGeometry(12,60,72),okM],[new T.CircleGeometry(12,48),badM],[new T.RingGeometry(11.7,12.3,72),edM],[new T.RingGeometry(59.4,60.4,96),edM]].forEach(function(q){var mm=new T.Mesh(q[0],q[1]);mm.rotation.x=-Math.PI/2;mm.renderOrder=2;bandG.add(mm)});
+    var lbl=new T.Sprite(new T.SpriteMaterial({map:signTex('STAY IN THE GREEN · 12-60 m','#3dff8a'),depthTest:false,toneMapped:false}));lbl.scale.set(9,2.25,1);lbl.position.y=5;lbl.renderOrder=8;bandG.add(lbl);scene.add(bandG);M.parts.push(bandG);M.band=bandG;M.okM=okM;M.badM=badM;S.target={x:tn[0],z:tn[1],col:m.col,n:'FIND THE GREY CAR'}}
   if(m.id==='fuel'){M.home=[k.x,k.z];M.left=3;M.limit=170;M.crate=100;M.stage=1;M.box=new T.Mesh(new T.CylinderGeometry(.5,.5,1.1,14),new T.MeshStandardMaterial({color:0xd02020,roughness:.4,metalness:.3}));
       var fn=stFarNode(S,60,130);M.pick=[fn[0]+4,fn[1]+4];M.box.position.set(M.pick[0],.7,M.pick[1]);scene.add(M.box);S.target={x:M.pick[0],z:M.pick[1],col:m.col,n:'FUEL CAN 1/3'}}
   if(m.id==='drift'){M.pts=0;M.lds=0;M.limit=90;S.target=null;stSay(S,'DRIFTER','Big open streets help. Hold DRIFT, steer hard and keep it sliding!',4)}
@@ -3228,7 +3241,7 @@ function stMisTick(S,dt){var M=S.mis;if(!M)return;var m=M.m;
     S.target.n=(M.armed?(kmh<40?'⚠ FASTER! ':'')+Math.round(kmh)+' KM/H · ':'ARMING… ')+'SCRAPYARD';if(Math.hypot(me.x-M.yard[0],me.z-M.yard[1])<8){comic('BOMB DEFUSED!','#3dff8a');stMisEnd(S,true)}}
   if(m.id==='vans'){M.vans.forEach(function(v){if(v.out)return;if(dist(me,v)<5.2&&Math.abs(me.v)>3){v.out=true;v.model.visible=false;M.down++;shock(v.x,0,v.z,0x00dcc8,10);debris(v.x,.5,v.z,[0x2c2f38,0x00dcc8,0x111111],22);comic('VAN DOWN '+M.down+'/3',m.col)}});
     if(M.down>=3){stMisEnd(S,true);return}var nv=null,nd=1e9;M.vans.forEach(function(v){if(!v.out){var d=dist(me,v);if(d<nd){nd=d;nv=v}}});if(nv){S.target.x=nv.x;S.target.z=nv.z;S.target.n='RAM THE VANS · '+M.down+'/3'}}
-  if(m.id==='tail'){var cc=M.car,d=dist(me,cc);S.target.x=cc.x;S.target.z=cc.z;
+  if(m.id==='tail'){var cc=M.car,d=dist(me,cc);S.target.x=cc.x;S.target.z=cc.z;if(M.band){M.band.position.set(cc.x,.16,cc.z);var inB=d>=12&&d<=60;M.okM.opacity=inB?.2+.06*Math.sin(t*5):.1;M.badM.opacity=d<12?.35+.15*Math.sin(t*10):.15}
     if(!M.found){if(d<70){M.found=true;stSay(S,'GHOST','There he is. Not too close…',2.6)}}
     else{if(d<12){M.close+=dt;if(M.close>2.5){stMisEnd(S,false,'He saw you! You were too close.');return}}else M.close=Math.max(0,M.close-dt);
       if(d>60){M.far+=dt;if(M.far>6){stMisEnd(S,false,'You lost him… try again.');return}}else M.far=Math.max(0,M.far-dt);
