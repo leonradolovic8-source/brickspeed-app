@@ -1822,6 +1822,15 @@ function miniMap(){
 function danger(){if(!dng)return;var T2=race.on&&race.tag;if(!T2){dng.style.opacity=0;return}var runner=race.teams?(me.team===1&&!T2.fr[me.pid]):!T2.it[me.pid];if(!runner){dng.style.opacity=0;return}
   var d=1e9;cars.forEach(function(c){if(c.me||!alive(c))return;var ch=race.teams?c.team===0:!!T2.it[c.pid];if(ch)d=Math.min(d,dist(c,me))});dng.style.opacity=d<45?Math.min(1,(45-d)/30).toFixed(2):0}
 function inTunA(x,z){if(!ARENA)return 0;for(var i=0;i<ARENA.tun.length;i++){var r=ARENA.tun[i];if(x>r[0]&&x<r[1]&&z>r[2]&&z<r[3])return 1}return 0}
+var CB_P=[[2.15,0],[2.05,.95],[2.05,-.95],[-2.05,.95],[-2.05,-.95],[1,1],[1,-1],[-1,1],[-1,-1],[-2.15,0]];
+function carBox(c,dt,A){ /* push the car's corners, nose and tail out of walls */
+  var any=false;for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x<b[0]-2.6||c.x>b[1]+2.6||c.z<b[2]-2.6||c.z>b[3]+2.6)continue;
+    for(var it=0;it<2;it++){var sa=Math.sin(c.a),ca=Math.cos(c.a),best=0,bx=0,bz=0,ax=false;
+      for(var p=0;p<CB_P.length;p++){var f=CB_P[p][0],s2=CB_P[p][1],px=c.x+sa*f+ca*s2,pz=c.z+ca*f-sa*s2;
+        if(px>b[0]&&px<b[1]&&pz>b[2]&&pz<b[3]){var dl=px-b[0],dr=b[1]-px,dn=pz-b[2],df=b[3]-pz,mn=Math.min(dl,dr,dn,df);
+          if(mn>best){best=mn;if(mn===dl){bx=-dl;bz=0;ax=true}else if(mn===dr){bx=dr;bz=0;ax=true}else if(mn===dn){bx=0;bz=-dn;ax=false}else{bx=0;bz=df;ax=false}}}}
+      if(!best)break;any=true;c.x+=bx*1.02;c.z+=bz*1.02;var want=ax?(Math.cos(c.a)>=0?0:Math.PI):(Math.sin(c.a)>=0?Math.PI/2:-Math.PI/2);c.a+=wrap(want-c.a)*Math.min(1,dt*2);c.va=c.a}}
+  return any}
 function unstick(c,dt,r){var A=ARENA;
   if(c.backT>0){c.backT-=dt;c.x-=Math.sin(c.a)*8*dt;c.z-=Math.cos(c.a)*8*dt;c.a+=c.backDir*2.1*dt;c.va=c.a;c.v=0;return}
   c.stkT=(c.stkT||0)+dt;if(c.stkT<.4)return;var mv=Math.hypot(c.x-(c.stkX==null?c.x+9:c.stkX),c.z-(c.stkZ==null?c.z:c.stkZ));c.stkX=c.x;c.stkZ=c.z;c.stkT=0;
@@ -1831,9 +1840,10 @@ function unstick(c,dt,r){var A=ARENA;
   if(c.stuckN>=2){c.stuckN=0;c.backT=1.1;c.backDir=(c.steer||0)>.1?-1:(c.steer||0)<-.1?1:(Math.random()<.5?1:-1);if(c.me&&typeof comic==='function')comic('BACKING UP','#ffffff')}}
 function arenaDrive(c,dt){
   var A=ARENA,r=1.35,hit=false;
-  for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x>b[0]-r&&c.x<b[1]+r&&c.z>b[2]-r&&c.z<b[3]+r){
-    var dl=c.x-(b[0]-r),dr=(b[1]+r)-c.x,dn=c.z-(b[2]-r),df=(b[3]+r)-c.z,mn=Math.min(dl,dr,dn,df);hit=true;
-    if(mn===dl)c.x=b[0]-r;else if(mn===dr)c.x=b[1]+r;else if(mn===dn)c.z=b[2]-r;else c.z=b[3]+r;
+  var rb=.95;carBox(c,dt,A)&&(hit=true);
+  for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x>b[0]-rb&&c.x<b[1]+rb&&c.z>b[2]-rb&&c.z<b[3]+rb){
+    var dl=c.x-(b[0]-rb),dr=(b[1]+rb)-c.x,dn=c.z-(b[2]-rb),df=(b[3]+rb)-c.z,mn=Math.min(dl,dr,dn,df);hit=true;
+    if(mn===dl)c.x=b[0]-rb;else if(mn===dr)c.x=b[1]+rb;else if(mn===dn)c.z=b[2]-rb;else c.z=b[3]+rb;
     var ax=mn===dl||mn===dr;   /* slide along the face: turn toward the street direction */
     var want=ax?(Math.cos(c.a)>=0?0:Math.PI):(Math.sin(c.a)>=0?Math.PI/2:-Math.PI/2);c.a+=wrap(want-c.a)*Math.min(1,dt*2.5);c.va=c.a}}
   var lim=A.half-r;if(Math.abs(c.x)>lim||Math.abs(c.z)>lim){hit=true;c.x=Math.max(-lim,Math.min(lim,c.x));c.z=Math.max(-lim,Math.min(lim,c.z));c.a+=Math.PI*.5*dt*3}
@@ -2218,7 +2228,7 @@ function persona(){ /* how a bot drives: its favourite side, how hard it uses th
 var TEAMC=['#ff3b3b','#3b8bff'],TEAMN=['RED','BLUE'];
 function alive(c){return !c.left&&!c.out}
 function modeName(){return race.mode==='tag'?(race.teams?'FREEZE TAG':'TAG'):race.mode==='dozer'?(race.teams?'BULLDOZER · TEAMS':'BULLDOZER'):race.mode==='bomb'?'BOMB RUSH':M2[race.mode]?M2[race.mode].n:''}
-function modeFrozen(c){return !!(race.on&&race.tag&&race.tag.fr[c.pid])}
+function modeFrozen(c){if(race.on&&race.m2&&race.m2.cut)return true;return !!(race.on&&race.tag&&race.tag.fr[c.pid])}
 function modeMul(c){if(race.on&&race.bomb)return bombSpeed(c);if(race.on&&race.m2)return m2Speed(c);var T=race.on&&race.tag;if(!T)return 1;var fin=ARENA&&ARENA.final?1.1:1;if(!race.teams&&T.it[c.pid])return 1.08*fin;if(race.teams&&c.team===0)return 1.04*fin;return 1}
 function modeGoal(c){ /* what an AI driver wants in tag: chase, run, rescue or cruise */
   if(race.on&&race.bomb)return bombGoal(c);
@@ -2813,7 +2823,7 @@ function stHud(S){var h=document.createElement('div');h.id='stHud';h.innerHTML='
   '#stHud .bm{position:absolute;left:50%;top:calc(max(56px,env(safe-area-inset-top)) + 4px);transform:translateX(-50%);width:160px;height:8px;border-radius:5px;background:rgba(0,0,0,.5);overflow:hidden;opacity:0}#stHud .bm span{display:block;height:100%;width:0;background:#2a5cff}'+
   '</style><div class="hp"><i>HEALTH</i><b><span></span></b></div><div class="wn"></div><div class="cn"></div><div class="ck"></div><div class="bm"><span></span></div><div class="tk"><em></em><p></p></div><div class="big"></div>';
   var cv=document.getElementById('game'),wrap=cv&&cv.parentNode||document.body;wrap.classList.add('bs-story');wrap.appendChild(h);S.hud=h;S.wrap=wrap}
-var ST_WHO={TECHNO:['#00dcc8','T'],BLAZE:['#ff6e14','B'],DRIFTER:['#ff8a1f','D'],HUNTER:['#3cc864','H'],GLITCH:['#ff2fb4','G'],RADIO:['#2a5cff','📻']};
+var ST_WHO={TECHNO:['#00dcc8','T'],BLAZE:['#ff6e14','B'],DRIFTER:['#ff8a1f','D'],HUNTER:['#3cc864','H'],GLITCH:['#ff2fb4','G'],RADIO:['#8fb0ff','📻'],GHOST:['#d9c8ff','G'],'BOMB SETTER':['#ff3b4b','B'],REWIND:['#be78ff','R'],POLICE:['#5a8cff','P']};
 function stSay(S,who,txt,dur){S.talk.push([who,txt,dur||3.6])}
 function stTalkTick(S,dt){var el=S.hud.querySelector('.tk');if(S.talkT>0){S.talkT-=dt;if(S.talkT<=0)el.classList.remove('on');return}
   if(!S.talk.length)return;var q=S.talk.shift(),w=ST_WHO[q[0]]||['#888','?'];el.querySelector('em').style.background=w[0];el.querySelector('em').textContent=w[1];el.querySelector('p').innerHTML='<b>'+q[0]+'</b>'+q[1];el.classList.add('on');S.talkT=q[2]}
@@ -2821,30 +2831,42 @@ function stBig(S,txt,col,dur){var b=S.hud.querySelector('.big');b.textContent=tx
 function stHudTick(S){var h=S.hud;h.querySelector('.hp span').style.width=Math.max(0,S.hp)+'%';var st=Math.ceil(S.wanted-.001),s='';for(var i=1;i<=5;i++)s+=i<=st?'⭐':'<s>⭐</s>';var wn=h.querySelector('.wn');if(wn.__s!==s){wn.innerHTML=s;wn.__s=s}
   wn.classList.toggle('fl',st>0&&S.evade>1.5);h.querySelector('.cn').textContent='🪙 '+S.coins;var hh=Math.floor(S.clock),mm=Math.floor((S.clock-hh)*60/10)*10;h.querySelector('.ck').textContent=(S.day>.5?'☀️ ':'🌙 ')+(hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm;var bm=h.querySelector('.bm');bm.style.opacity=S.bust>0?1:0;bm.querySelector('span').style.width=Math.min(100,S.bust/2.5*100)+'%'}
 /* ---------- missions: 8 jobs, unlocked one after the other, every one can be replayed for coins ---------- */
+var ST_LOOK={BLAZE:{style:'gt',color:0xff6e14,accent:0x111111,num:'BZ'},TECHNO:{style:'hyper',color:0x00b8a8,accent:0x111111,num:'TK'},DRIFTER:{style:'hyper',color:0xf2f2f2,accent:0xff8a1f,num:'DR'},
+  HUNTER:{style:'muscle',color:0x2fa857,accent:0x111111,num:'HN'},GHOST:{style:'proto',color:0xd9c8ff,accent:0x6b5aa8,num:'GH'},'BOMB SETTER':{style:'muscle',color:0xc8141f,accent:0x111111,num:'BS'},
+  REWIND:{style:'hyper',color:0x9a55e6,accent:0x111111,num:'RW'},GLITCH:{style:'proto',color:0xff2fb4,accent:0x1b1030,num:'GL'}};
 var ST_MIS=[
- {id:'blaze',who:'BLAZE',col:'#ff6e14',n:'FRAGILE CARGO',node:[3,1],pay:60,
-  intro:['Hey rookie! I need a crate of fireworks across town.','Careful: crash too hard and it BLOWS. You have 80 seconds!']},
- {id:'drifter',who:'DRIFTER',col:'#ff8a1f',n:'STREET RACE',node:[1,1],pay:80,
-  intro:["So you're the one who broke out? Three of us race tonight.",'8 gates through town. Win it and the coins are yours.']},
- {id:'hunter',who:'HUNTER',col:'#3cc864',n:'CATCH THE THIEF',node:[4,3],pay:90,
-  intro:['A thief stole my wheels: black car, gold stripes. He has a friend who will block you.','Ram the thief 3 times before he escapes!']},
+ {id:'blaze',who:'BLAZE',col:'#ff6e14',n:'THE SECURITY TAPES',node:[3,1],pay:60,
+  intro:["You're the one GLITCH framed! I'm BLAZE, I drive for the bank.","I hid the bank's security tapes at the docks. They break easily. Bring them to TECHNO at the base!"],
+  after:[['TECHNO','The tapes are wiped. GLITCH erased them!'],['TECHNO','But the city cameras keep their own recordings. Help me hack them.']]},
  {id:'techno',who:'TECHNO',col:'#00dcc8',n:'HACK THE CAMERAS',node:[2,4],pay:100,
-  intro:['GLITCH watches the town with cameras. Park next to each one so I can hack it.','Stay in the circle until it is green. If a patrol car sees you, they come.']},
- {id:'ghost',who:'GHOST',col:'#d9c8ff',n:'GETAWAY DRIVER',node:[5,2],pay:130,
-  intro:["I need a ride out of the bank. The alarm WILL go off.",'Pick me up, lose the cops, bring me to the base.']},
+  intro:["Four street cameras might have seen GLITCH's pink car that night.",'Park at each camera until its light turns green. Do not let a patrol car see you!'],
+  after:[['TECHNO','Camera 3 saw the pink car… at a street race!'],['TECHNO','DRIFTER runs those races. Go and talk to him.']]},
+ {id:'drifter',who:'DRIFTER',col:'#ff8a1f',n:'STREET RACE',node:[1,1],pay:80,
+  intro:['You want to know about the pink car? Nothing is free, rookie.','Beat me and two of my friends through 8 gates. Then we talk.'],
+  after:[['DRIFTER','Fine, you can drive. That pink car pays a courier to move the money.'],['DRIFTER','HUNTER has been after that courier for weeks. Find HUNTER.']]},
+ {id:'hunter',who:'HUNTER',col:'#3cc864',n:'CATCH THE COURIER',node:[4,3],pay:90,
+  intro:["GLITCH's courier drives a black car with gold stripes, and his bodyguard protects him.",'Ram the courier 3 times and he will drop his keycard. Grab it!'],
+  after:[['HUNTER','A bank vault keycard! The stolen money is still in the vault.'],['HUNTER','GHOST can get in anywhere, but he needs a getaway driver.']]},
+ {id:'ghost',who:'GHOST',col:'#d9c8ff',n:'THE GETAWAY',node:[5,2],pay:130,
+  intro:['With that keycard I can take the stolen money back. That is your proof.','Pick me up at the bank. When the alarm rings, lose the cops and get me to the base.'],
+  after:[['GHOST','The money has GLITCH\'s marks all over it. That is real proof!'],['GLITCH','You think you can stop me? Look under your car…'],['TECHNO','A BOMB?! Get to BOMB SETTER, he knows bombs!']]},
  {id:'bomber',who:'BOMB SETTER',col:'#e11d2e',n:'SPEED BOMB',node:[0,4],pay:140,
-  intro:["Bad news: GLITCH put a bomb under YOUR car. It blows if you drive slower than 40 km/h!",'Keep it fast and get to the scrapyard, I can cut it off there. GO!']},
- {id:'rewind',who:'REWIND',col:'#be78ff',n:'TIME TRIAL',node:[4,0],pay:110,
-  intro:['Speed test. Beat my time through 6 gates.','Every gate gives you 6 more seconds. Do not run out!']},
+  intro:["It's armed! It goes off if you drive slower than 40 km/h.",'Drive fast to the scrapyard, I can cut it off there. GO GO GO!'],
+  after:[['BOMB SETTER','Phew. This bomb has GLITCH\'s computer code inside it.'],['BOMB SETTER','REWIND can trace code back to where it came from.']]},
+ {id:'rewind',who:'REWIND',col:'#be78ff',n:'TRACE THE SIGNAL',node:[4,0],pay:110,
+  intro:["I can follow GLITCH's code, but the signal fades fast.",'Drive through the 6 antennas before it is gone. Each antenna gives you more time!'],
+  after:[['REWIND','Traced it! GLITCH\'s server is under the plaza: GLITCH TOWER.'],['TECHNO','That is the last piece. Let\'s finish this.']]},
  {id:'final',who:'TECHNO',col:'#ff2fb4',n:'GLITCH TOWER',node:[2,1],pay:250,
-  intro:["Last job. GLITCH's server is under the plaza. Park on it until I copy the files.",'It will bring every cop in town. When it is done, run for the base!']}];
+  intro:['Park on the server and I will copy everything GLITCH has.','He will send every cop in town. When the copy is done, run for the base!'],after:null}];
 function stMarkers(S,G){var A=ARENA;S.marks=[];ST_MIS.forEach(function(m,i){var x=A.c[m.node[0]]+6,z=A.c[m.node[1]]+6,g=new T.Group(),col=new T.Color(m.col);
   var cyl=new T.Mesh(new T.CylinderGeometry(2.2,2.2,6,28,1,true),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.3,depthWrite:false,side:T.DoubleSide,toneMapped:false}));cyl.position.y=3;g.add(cyl);
   var disc=new T.Mesh(new T.CircleGeometry(2.4,28),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.45,depthWrite:false,toneMapped:false}));disc.rotation.x=-Math.PI/2;disc.position.y=.1;g.add(disc);
   var ic=new T.Sprite(new T.SpriteMaterial({map:canvasTex(128,128,function(c){c.fillStyle=m.col;c.beginPath();c.arc(64,64,58,0,7);c.fill();c.lineWidth=8;c.strokeStyle='#fff';c.stroke();c.fillStyle='#fff';c.font='900 60px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(m.who[0],64,68)}),depthTest:false,toneMapped:false}));
-  ic.scale.set(3,3,1);ic.position.y=7.5;ic.renderOrder=6;g.add(ic);g.position.set(x,0,z);G.add(g);S.marks.push({g:g,x:x,z:z,m:m,ic:ic,i:i})})}
-function stUnlocked(S,i){return i<=S.prog.done.length||S.prog.done.indexOf(ST_MIS[i].id)>=0}
-function stMarkOn(S){S.marks.forEach(function(k){k.g.visible=!S.mis&&S.stage==='free'&&S.wanted<.5&&stUnlocked(S,k.i)})}
+  ic.scale.set(3,3,1);ic.position.y=7.5;ic.renderOrder=6;g.add(ic);g.position.set(x,0,z);G.add(g);
+  var ac=brickCar(ST_LOOK[m.who]),aa=Math.atan2(A.c[m.node[0]]-x,A.c[m.node[1]]-z);ac.position.set(x+Math.cos(aa)*4.2,0,z-Math.sin(aa)*4.2);ac.rotation.y=aa+Math.PI;G.add(ac);
+  S.marks.push({g:g,x:x,z:z,m:m,ic:ic,i:i,actor:ac})})}
+function stUnlocked(S,i){for(var q=0;q<i;q++)if(S.prog.done.indexOf(ST_MIS[q].id)<0)return false;return true}
+function stMarkOn(S){var free=!S.mis&&!S.cut&&S.stage==='free'&&S.wanted<.5;S.marks.forEach(function(k){k.g.visible=free&&stUnlocked(S,k.i)&&(S.prog.done.indexOf(k.m.id)<0||S.prog.part1);k.actor.visible=k.g.visible||!!(S.cut&&S.cut.k===k)})}
 /* mission cars: borrow parked bots (police give their car back if needed) */
 function stClaim(S,n){var out=[],bots=cars.filter(function(c){return !c.me});
   for(var k=bots.length-1;k>=0&&out.length<n;k--){var c=bots[k];if(c.stRole)continue;if(c.stCop)stCopOff(c,S);out.push(c)}
@@ -2857,24 +2879,25 @@ function stZone(col,r){var g=new T.Group(),m=new T.MeshBasicMaterial({color:col,
   var w=new T.Mesh(new T.CylinderGeometry(r,r,2.6,40,1,true),m);w.position.y=1.3;g.add(w);var f=new T.Mesh(new T.CircleGeometry(r,40),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.22,depthWrite:false,toneMapped:false}));f.rotation.x=-Math.PI/2;f.position.y=.1;g.add(f);
   var p=new T.Mesh(new T.RingGeometry(r*.9,r,48,1,0,.001),new T.MeshBasicMaterial({color:0xffffff,side:T.DoubleSide,toneMapped:false,depthWrite:false}));p.rotation.x=-Math.PI/2;p.position.y=.14;g.add(p);g.userData={wall:m,pie:p,r:r};scene.add(g);return g}
 function stPie(z,f){var r=z.userData.r,p=z.userData.pie;p.geometry.dispose();p.geometry=new T.RingGeometry(r*.82,r,48,1,0,Math.max(.001,f*Math.PI*2))}
-function stMisStart(S,k){var m=k.m,A=ARENA,M=S.mis={m:m,t0:t,parts:[]};stSay(S,m.who,m.intro[0],3.8);stSay(S,m.who,m.intro[1],3.8);stBig(S,m.n,m.col,2);
-  if(m.id==='blaze'){M.pick=[A.c[5]-5,A.c[1]];M.drop=[A.c[0]+5,A.c[5]-6];M.limit=80;M.stage=1;M.crate=100;
-    M.box=new T.Mesh(new T.BoxGeometry(1.4,1,1.4),new T.MeshStandardMaterial({map:canvasTex(64,64,function(c){c.fillStyle='#b8864a';c.fillRect(0,0,64,64);c.fillStyle='#e8364a';c.fillRect(0,26,64,12);c.fillStyle='#fff';c.font='900 10px Arial';c.fillText('FRAGILE',10,36)}),roughness:.8}));M.box.position.set(M.pick[0],.6,M.pick[1]);scene.add(M.box);
-    S.target={x:M.pick[0],z:M.pick[1],col:m.col,n:'PICK UP THE FIREWORKS'}}
-  if(m.id==='drifter'||m.id==='rewind'){var nodes=m.id==='drifter'?[[1,0],[4,0],[4,2],[3,4],[5,5],[1,5],[1,3],[1,1]]:[[5,0],[5,3],[2,3],[2,5],[0,5],[0,0]];
+function stMisStart(S,k){stCutPlay(S,stCutGiver(S,k,[[k.m.who,k.m.intro[0]],[k.m.who,k.m.intro[1]]],k.m.n),function(){stMisBegin(S,k)})}
+function stMisBegin(S,k){var m=k.m,A=ARENA,M=S.mis={m:m,t0:t,parts:[]};stBig(S,m.n,m.col,2);
+  if(m.id==='blaze'){M.pick=[A.c[5]-5,A.c[1]];M.drop=[S.base.cx,S.base.cz];M.limit=90;M.stage=1;M.crate=100;
+    M.box=new T.Mesh(new T.BoxGeometry(1.4,1,1.4),new T.MeshStandardMaterial({map:canvasTex(64,64,function(c){c.fillStyle='#b8864a';c.fillRect(0,0,64,64);c.fillStyle='#e8364a';c.fillRect(0,26,64,12);c.fillStyle='#fff';c.font='900 10px Arial';c.fillText('TAPES',16,36)}),roughness:.8}));M.box.position.set(M.pick[0],.6,M.pick[1]);scene.add(M.box);
+    S.target={x:M.pick[0],z:M.pick[1],col:m.col,n:'GET THE TAPES AT THE DOCKS'}}
+  if(m.id==='drifter'||m.id==='rewind'){M.word=m.id==='rewind'?'ANTENNA':'GATE';var nodes=m.id==='drifter'?[[1,0],[4,0],[4,2],[3,4],[5,5],[1,5],[1,3],[1,1]]:[[5,0],[5,3],[2,3],[2,5],[0,5],[0,0]];
     M.cp=nodes.map(function(n){return [A.c[n[0]],A.c[n[1]]]});M.i=0;M.gate=new T.Mesh(new T.TorusGeometry(7,.45,8,40),new T.MeshBasicMaterial({color:new T.Color(m.col),toneMapped:false}));scene.add(M.gate);
     M.next=new T.Mesh(new T.TorusGeometry(7,.25,6,40),new T.MeshBasicMaterial({color:new T.Color(m.col),transparent:true,opacity:.35,toneMapped:false}));scene.add(M.next);
     if(m.id==='drifter'){M.rivals=stClaim(S,3);var looks=[{style:'hyper',color:0xf2f2f2,accent:0xff8a1f,num:'DR'},{style:'muscle',color:0x7a2fd0,accent:0x111111,num:'66'},{style:'gt',color:0x1fb5a0,accent:0x111111,num:'21'}];
       M.rivals.forEach(function(c,i){stDress(c,looks[i]);c.stNpc='racer';c.ni=0;stPut(c,me.x-Math.sin(me.a)*(5+i*4)+Math.cos(me.a)*(i%2?3:-3),me.z-Math.cos(me.a)*(5+i*4)-Math.sin(me.a)*(i%2?3:-3),me.a,0);c.stSpd=[1.06,1.0,.97][i]})}
     else{M.limit=28;}
-    S.target={x:M.cp[0][0],z:M.cp[0][1],col:m.col,n:'GATE 1/'+M.cp.length}}
+    S.target={x:M.cp[0][0],z:M.cp[0][1],col:m.col,n:M.word+' 1/'+M.cp.length}}
   if(m.id==='hunter'){var far=stFarNode(S,70,110),cl=stClaim(S,2);M.thief=cl[0];M.buddy=cl[1];stDress(M.thief,{style:'proto',color:0x0e0e10,accent:0xffc93c,num:'$$'});M.thief.stNpc='thief';stPut(M.thief,far[0],far[1],0,10);
-    if(M.buddy){stDress(M.buddy,{style:'muscle',color:0x3a3a40,accent:0xffc93c,num:'$'});M.buddy.stNpc='blocker';stPut(M.buddy,far[0]+6,far[1],0,8)}M.hits=0;M.limit=110;M.cd=0;S.target={x:far[0],z:far[1],col:m.col,n:'CATCH THE THIEF',car:M.thief}}
+    if(M.buddy){stDress(M.buddy,{style:'muscle',color:0x3a3a40,accent:0xffc93c,num:'$'});M.buddy.stNpc='blocker';stPut(M.buddy,far[0]+6,far[1],0,8)}M.hits=0;M.limit=110;M.cd=0;S.target={x:far[0],z:far[1],col:m.col,n:'CATCH THE COURIER',car:M.thief}}
   if(m.id==='techno'){M.cams=[[2,0],[5,1],[3,3],[0,5]].map(function(n){var x=A.c[n[0]]+(Math.random()<.5?-5:5),z=A.c[n[1]]+(Math.random()<.5?-5:5);return {x:x,z:z,h:0,done:false}});M.i=0;M.zone=stZone(0x00dcc8,5);
     M.cams.forEach(function(c){var p=new T.Group(),pole=new T.Mesh(new T.CylinderGeometry(.12,.15,6,8),new T.MeshStandardMaterial({color:0x444a55})),cam=new T.Mesh(new T.BoxGeometry(.7,.5,1.2),new T.MeshStandardMaterial({color:0xe8ecf3})),led=new T.Mesh(new T.SphereGeometry(.12,8,6),new T.MeshBasicMaterial({color:0xff2030,toneMapped:false}));
       pole.position.y=3;cam.position.set(0,6,.4);led.position.set(0,6.1,1.05);p.add(pole,cam,led);p.position.set(c.x,0,c.z);scene.add(p);c.g=p;c.led=led;M.parts.push(p)});M.patrol=stClaim(S,2);M.patrol.forEach(function(c){c.stNpc='patrol';stDress(c,{style:'muscle',color:0x15171d,accent:0xf2f2f2,num:'PD'});var n=stFarNode(S,60,140);stPut(c,n[0],n[1],0,8)});
     S.target={x:M.cams[0].x,z:M.cams[0].z,col:m.col,n:'CAMERA 1/4'}}
-  if(m.id==='ghost'){M.bank=[A.c[4],A.c[0]+6];M.stage=1;var bk=new T.Group(),col=new T.Mesh(new T.BoxGeometry(14,1,4),new T.MeshStandardMaterial({color:0xe8e2d0}));col.position.y=8;bk.add(col);signPlane(bk,'BRICK BANK','#ffd23c',0,9.6,2.05,0,12);bk.position.set(M.bank[0]+12,0,M.bank[1]+8);scene.add(bk);M.parts.push(bk);
+  if(m.id==='ghost'){M.bank=S.bank.door;M.stage=1;
     S.target={x:M.bank[0],z:M.bank[1],col:m.col,n:'PICK UP GHOST AT THE BANK'}}
   if(m.id==='bomber'){M.yard=[A.c[5]-4,A.c[0]+4];M.limit=95;M.armT=t+6;M.slow=0;S.target={x:M.yard[0],z:M.yard[1],col:m.col,n:'GET TO THE SCRAPYARD · STAY OVER 40 KM/H'}}
   if(m.id==='final'){M.plaza=[A.c[2]+29,A.c[2]+29];M.zone=stZone(0xff2fb4,7);M.zone.position.set(M.plaza[0],0,M.plaza[1]);M.h=0;M.stage=1;S.target={x:M.plaza[0],z:M.plaza[1],col:m.col,n:'GET TO GLITCH TOWER'}}}
@@ -2882,25 +2905,28 @@ function stMisEnd(S,ok,why){var M=S.mis,m=M.m;if(M.box&&M.box.parent)M.box.paren
   if(ok){var stars=Math.ceil(S.wanted-.001),mul=1+.5*stars,pay=Math.round(m.pay*mul);S.coins+=pay;S.prog.coins=(S.prog.coins||0)+pay;if(window.BSEarnStory)window.BSEarnStory(pay);
     stBig(S,'MISSION PASSED','#ffd23c',2.6);comic('+'+pay+' 🪙'+(mul>1?' (×'+mul+')':''),'#ffd23c');
     var first=S.prog.done.indexOf(m.id)<0;if(first)S.prog.done.push(m.id);S.prog.best=S.prog.best||{};var tt=Math.round(t-M.t0);if(!S.prog.best[m.id]||tt<S.prog.best[m.id])S.prog.best[m.id]=tt;storySave(S.prog);
-    if(m.id==='final'&&first){S.prog.part1=true;storySave(S.prog);stSay(S,'TECHNO','WE HAVE THE FILES! GLITCH was behind everything. Your name is clear!',4.2);stSay(S,'GLITCH','You think this is over? Come find me in the volcano…',4.2);stSay(S,'TECHNO','PART 1 COMPLETE! Every job pays again. Part 2 is coming soon.',4.5);stBig(S,'PART 1 COMPLETE','#3dff8a',3.5)}
-    else{var nx=ST_MIS[S.prog.done.length];if(first&&nx)stSay(S,'TECHNO','New job unlocked: '+nx.who+' · '+nx.n+'. Follow the GPS!',3.6);else stSay(S,m.who,'Nice driving! Here are your coins.',3)}}
+    var mk=S.marks[ST_MIS.indexOf(m)];
+    if(m.id==='final'){S.prog.part1=true;storySave(S.prog);setTimeout(function(){if(race.m2===S)stCutPlay(S,stCutEnding(S))},1600)}
+    else if(first&&m.after)setTimeout(function(){if(race.m2===S&&!S.mis)stCutPlay(S,stCutGiver(S,{actor:me.model},m.after,'NEXT CLUE'))},1600);
+    else stSay(S,m.who,'Nice driving! Here are your coins.',3)}
   else{stBig(S,'MISSION FAILED','#ff3b3b',2.4);if(why)stSay(S,m.who,why,3.4)}
   S.mis=null;S.target=null}
 function stGateTick(S,M,dt,racers){var cp=M.cp,c=cp[M.i],n=cp[Math.min(M.i+1,cp.length-1)];M.gate.position.set(c[0],4.2,c[1]);M.gate.rotation.y+=dt*.8;M.next.visible=M.i+1<cp.length;M.next.position.set(n[0],4.2,n[1]);M.next.rotation.y-=dt*.6;
-  if(Math.hypot(me.x-c[0],me.z-c[1])<9){M.i++;if(M.limit)M.limit+=6;if(M.i>=cp.length)return 'win';comic('GATE '+M.i+'/'+cp.length+(M.limit?' +6 s':''),M.m.col);S.target={x:cp[M.i][0],z:cp[M.i][1],col:M.m.col,n:'GATE '+(M.i+1)+'/'+cp.length}}
+  if(Math.hypot(me.x-c[0],me.z-c[1])<9){M.i++;if(M.limit)M.limit+=6;if(M.i>=cp.length)return 'win';comic(M.word+' '+M.i+'/'+cp.length+(M.limit?' +6 s':''),M.m.col);S.target={x:cp[M.i][0],z:cp[M.i][1],col:M.m.col,n:M.word+' '+(M.i+1)+'/'+cp.length}}
   var lost=false;(racers||[]).forEach(function(r){var q=cp[Math.min(r.ni,cp.length-1)];if(Math.hypot(r.x-q[0],r.z-q[1])<9){r.ni++;if(r.ni>=cp.length)lost=true}});return lost?'lose':null}
 function stMisTick(S,dt){var M=S.mis;if(!M)return;var m=M.m;
   S.timer=M.limit?Math.max(0,M.limit-(t-M.t0)):null;
   if(M.limit&&t-M.t0>M.limit){if(m.id==='bomber'){stBoom(S);return}stMisEnd(S,false,'Out of time! Come back and try again.');return}
-  if(m.id==='blaze'){M.box.rotation.y+=dt;if(M.stage===1){M.box.position.y=.6+.2*Math.sin(t*4);if(Math.hypot(me.x-M.pick[0],me.z-M.pick[1])<5){M.stage=2;comic('GOT IT!',m.col);me.model.add(M.box);M.box.rotation.set(0,0,0);M.box.position.set(0,1.9,.6);S.target={x:M.drop[0],z:M.drop[1],col:m.col,n:'DELIVER IT · CRATE '+M.crate+'%'}}}
-    else{if(S.crash>0){M.crate=Math.max(0,M.crate-Math.round(S.crash*2.2));S.target.n='DELIVER IT · CRATE '+M.crate+'%';comic('CAREFUL! '+M.crate+'%','#ff6e14');
-        if(M.crate<=0){shock(me.x,1,me.z,0xffc93c,14);debris(me.x,1,me.z,[0xff3b3b,0xffd23c,0x3a9bff,0x3dff8a],30);flash('rgba(255,200,60,.5)');stMisEnd(S,false,'BOOM! The fireworks went off. Drive smoother!');return}}
-      if(Math.hypot(me.x-M.drop[0],me.z-M.drop[1])<6){stMisEnd(S,true)}}}
+  if(m.id==='blaze'){M.box.rotation.y+=dt;if(M.stage===1){M.box.position.y=.6+.2*Math.sin(t*4);if(Math.hypot(me.x-M.pick[0],me.z-M.pick[1])<5){M.stage=2;comic('GOT IT!',m.col);me.model.add(M.box);M.box.rotation.set(0,0,0);M.box.position.set(0,1.9,.6);S.target={x:M.drop[0],z:M.drop[1],ap:[S.base.cx,ARENA.c[4]],col:m.col,n:'BRING THE TAPES TO THE BASE · '+M.crate+'%'}}}
+    else{if(S.crash>0){M.crate=Math.max(0,M.crate-Math.round(S.crash*2.2));S.target.n='BRING THE TAPES TO THE BASE · '+M.crate+'%';comic('CAREFUL! '+M.crate+'%','#ff6e14');
+        if(M.crate<=0){shock(me.x,1,me.z,0xffc93c,14);debris(me.x,1,me.z,[0x222222,0xb8864a,0x555555],24);stMisEnd(S,false,'The tapes broke! Drive smoother next time.');return}}
+      if(stInB(S.base,me.x,me.z,-1)){stMisEnd(S,true)}}}
   if(m.id==='drifter'){var r=stGateTick(S,M,dt,M.rivals);if(r==='win'){stMisEnd(S,true);return}if(r==='lose'){stMisEnd(S,false,'DRIFTER wins this time. Rematch?');return}
     var place=1+M.rivals.filter(function(c){return c.ni>M.i||(c.ni===M.i&&Math.hypot(c.x-M.cp[M.i][0],c.z-M.cp[M.i][1])<Math.hypot(me.x-M.cp[M.i][0],me.z-M.cp[M.i][1]))}).length;S.target.n='GATE '+(M.i+1)+'/'+M.cp.length+' · '+['','1ST','2ND','3RD','4TH'][place]}
   if(m.id==='rewind'){var r2=stGateTick(S,M,dt,null);if(r2==='win'){stMisEnd(S,true);return}}
-  if(m.id==='hunter'){M.cd-=dt;var th=M.thief;S.target.x=th.x;S.target.z=th.z;S.target.n='RAM THE THIEF · '+M.hits+'/3';if(dist(me,th)<3.8&&M.cd<=0&&me.v>6){M.cd=1;M.hits++;shock(th.x,0,th.z,0xffc93c,8);debris(th.x,0,th.z,[0x0e0e10,0xffc93c],10);comic('HIT '+M.hits+'/3',m.col);
-      if(M.hits>=3){stMisEnd(S,true);return}}if(dist(me,th)>190){stMisEnd(S,false,'He got away… we will find him again.')}}
+  if(m.id==='hunter'){M.cd-=dt;var th=M.thief;if(!M.card){S.target.x=th.x;S.target.z=th.z;S.target.n='RAM THE COURIER · '+M.hits+'/3'}if(!M.card&&dist(me,th)<3.8&&M.cd<=0&&me.v>6){M.cd=1;M.hits++;shock(th.x,0,th.z,0xffc93c,8);debris(th.x,0,th.z,[0x0e0e10,0xffc93c],10);comic('HIT '+M.hits+'/3',m.col);
+      if(M.hits>=3){M.card=new T.Mesh(new T.BoxGeometry(1.2,.1,.8),new T.MeshBasicMaterial({color:0xffd23c,toneMapped:false}));M.card.position.set(th.x,1,th.z);scene.add(M.card);M.parts.push(M.card);comic('HE DROPPED THE KEYCARD!',m.col);th.out=true;th.model.visible=false;S.target={x:th.x,z:th.z,col:m.col,n:'GRAB THE KEYCARD'}}}
+    if(M.card){M.card.rotation.y+=dt*3;M.card.position.y=1+.3*Math.sin(t*4);if(Math.hypot(me.x-M.card.position.x,me.z-M.card.position.z)<4){stMisEnd(S,true);return}}else if(dist(me,th)>190){stMisEnd(S,false,'He got away… we will find him again.')}}
   if(m.id==='techno'){var c=M.cams[M.i];M.zone.position.set(c.x,0,c.z);var inZ=Math.hypot(me.x-c.x,me.z-c.z)<5;if(inZ&&me.v<9){c.h+=dt/2.5}else c.h=Math.max(0,c.h-dt*.3);stPie(M.zone,c.h);
     M.patrol.forEach(function(p){if(dist(p,me)<32&&S.wanted<.5){S.wanted=2;comic('SPOTTED!','#ff3b3b');stSay(S,'TECHNO','They saw you! Lose them, then come back to the cameras.',3.4);p.stNpc=null;p.stRole=null;p.stCop=true;S.cops.push(p);p.stPol=p.stPol||stPoliceModel();scene.remove(p.model);p.model=p.stPol;scene.add(p.model)}});
     M.patrol=M.patrol.filter(function(p){return p.stNpc==='patrol'});
@@ -2919,7 +2945,7 @@ function stBoom(S){shock(me.x,1,me.z,0xff5a1a,18);debris(me.x,1,me.z,[0xff5a1a,0
 function storyInit(o){var S=race.m2,A=ARENA;STY.blocks=[];S.prog=storyLoad();if(!S.prog.done)S.prog.done=[];
   S.pr=stBlock(0,2);S.base=stBlock(3,4);S.hp=100;S.wanted=0;S.evade=0;S.coins=0;S.bust=0;S.cops=[];S.talk=[];S.talkT=0;S.mis=null;S.target=null;S.placed=false;S.prevV=0;S.hitCd=0;S.spawnT=0;S.crash=0;
   S.stage=S.prog.escaped?'free':'prison';S.clock=S.prog.clock!=null?S.prog.clock:21;S.day=0;   /* saved game: you start at your base */
-  var G=trackGroup;stPrison(S,G);stBase(S,G);stMarkers(S,G);stStreets(S,G);
+  var G=trackGroup;stPrison(S,G);stBase(S,G);stBank(S,G);stMarkers(S,G);stStreets(S,G);
   S.gps=new T.InstancedMesh((function(){var s=new T.Shape();s.moveTo(-.9,-.5);s.lineTo(0,.6);s.lineTo(.9,-.5);s.lineTo(.5,-.5);s.lineTo(0,.05);s.lineTo(-.5,-.5);s.closePath();return new T.ShapeGeometry(s)})(),new T.MeshBasicMaterial({color:0xffd23c,transparent:true,opacity:.9,depthWrite:false,toneMapped:false}),ST_GN);
   S.gps.count=0;S.gps.frustumCulled=false;S.gps.renderOrder=3;scene.add(S.gps);
   var ar=new T.Group(),am=new T.MeshBasicMaterial({color:0xffd23c,toneMapped:false,depthTest:false}),ah=new T.Mesh(new T.ConeGeometry(.7,1.4,4),am);ah.rotation.x=Math.PI/2;ah.position.z=1;ar.add(ah);var as=new T.Mesh(new T.BoxGeometry(.4,.25,1.4),am);as.position.z=-.2;ar.add(as);ah.renderOrder=as.renderOrder=9;ar.scale.setScalar(.8);scene.add(ar);S.arrow=ar;S.arrowM=am;
@@ -2927,7 +2953,7 @@ function storyInit(o){var S=race.m2,A=ARENA;STY.blocks=[];S.prog=storyLoad();if(
   cars.filter(function(c){return !c.me}).forEach(function(c){c.out=true;c.model.visible=false;if(c.nameTag)c.nameTag.visible=false;c.stRole=null;c.stPol=stPoliceModel();stSwap(c,c.stPol)});
   stHud(S);
   if(S.prog.escaped){var d=S.prog.done.length;stSay(S,'TECHNO','Welcome back to the base! '+(S.prog.part1?'Part 1 is done, every job pays again.':d+' of '+ST_MIS.length+' jobs done. The next one is on your GPS.'),4)}
-  else{stSay(S,'RADIO','Brick Town Prison, cell block C. Lights out…',3.4);stSay(S,'TECHNO',"Psst! It's TECHNO. GLITCH framed you, I know it. I'm hacking the gate…",4)}}
+  else S.needIntro=true}
 function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
   if(!S.placed){S.placed=true;if(S.stage==='free'){me.x=S.base.cx;me.z=S.base.z0+8;me.a=Math.PI}else{me.x=S.pr.cx+4;me.z=S.pr.cz;me.a=Math.PI/2}me.v=0;me.y=0}
   S.lights.forEach(function(l){l.a.rotation.y=l.ph+Math.sin(t*.5+l.ph)*1.2});var fl=Math.floor(t*7)%2;
@@ -2935,14 +2961,16 @@ function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
   if(S.baseRing)S.baseRing.material.opacity=.16+.08*Math.sin(t*3);S.marks.forEach(function(k){k.ic.position.y=7.5+.4*Math.sin(t*2.4)});
   stDayNight(S,dt);stTalkTick(S,dt);stHudTick(S);stDamageFx(S,dt);
   if(race.phase!=='go'){S.gps.count=0;S.arrow.visible=false;return}
+  if(S.needIntro){S.needIntro=false;stCutPlay(S,stCutIntro(S),function(){S.prT0=t})}
+  if(S.cut){stCutTick(S,dt);stMarkOn(S);S.gps.count=0;S.arrow.visible=false;me.v=0;return}
   var e=t-race.startT;
-  if(S.stage==='prison'&&e>4.2){S.stage='escape';S.gateOpen=t;var gi=A.blocks.indexOf(S.gateBlock);if(gi>=0)A.blocks.splice(gi,1);stSay(S,'TECHNO','GATE OPEN! Follow the GPS line to the BASE. Lose the cops!',4);
+  if(S.stage==='prison'&&t-(S.prT0||race.startT)>4.2){S.stage='escape';S.gateOpen=t;var gi=A.blocks.indexOf(S.gateBlock);if(gi>=0)A.blocks.splice(gi,1);stSay(S,'TECHNO','GATE OPEN! Follow the GPS line to the BASE. Lose the cops!',4);
     S.wanted=Math.max(S.wanted,3);stBig(S,'BREAKOUT!','#ffd23c',1.8);S.target={x:S.base.cx,z:S.base.cz,ap:[S.base.cx,A.c[4]],col:'#3dff8a',n:'GET TO THE BASE'}}
   if(S.gateOpen&&S.gate.position.z<S.pr.cz+11)S.gate.position.z+=dt*5;
   if(S.stage==='busted'){if(t>S.bustT){S.placed=false;S.hp=100;S.wanted=0;S.bust=0;race.startT=t;S.cops.slice().forEach(function(c){stCopOff(c,S)});
-      if(S.prog.escaped){S.stage='free';stSay(S,'TECHNO','I bailed you out. Back at the base. Try again!',3.4)}else{S.stage='prison';S.gate.position.z=S.pr.cz;S.gateOpen=0;if(A.blocks.indexOf(S.gateBlock)<0)A.blocks.push(S.gateBlock);stSay(S,'TECHNO','They got you again?! Hang on, re-hacking the gate…',3.6)}}return}
+      if(S.prog.escaped){S.stage='free';stSay(S,'TECHNO','I bailed you out. Back at the base. Try again!',3.4)}else{S.stage='prison';S.prT0=t;S.gate.position.z=S.pr.cz;S.gateOpen=0;if(A.blocks.indexOf(S.gateBlock)<0)A.blocks.push(S.gateBlock);stSay(S,'TECHNO','They got you again?! Hang on, re-hacking the gate…',3.6)}}return}
   var inBase=stInB(S.base,me.x,me.z,-1);
-  if(inBase&&S.stage==='escape'){S.stage='free';S.target=null;S.prog.escaped=true;storySave(S.prog);stBig(S,'SAFE!','#3dff8a',2);stSay(S,'TECHNO','You made it! This is our base. Here you heal up and the cops lose you. Your game saves here.',4.2);stSay(S,'TECHNO','People need help in town. Follow the GPS to BLAZE for your first job!',4.2)}
+  if(inBase&&S.stage==='escape'){S.stage='free';S.target=null;S.prog.escaped=true;storySave(S.prog);stBig(S,'SAFE!','#3dff8a',2);S.wanted=0;setTimeout(function(){if(race.m2===S)stCutPlay(S,stCutBase(S))},900)}
   if(inBase&&!(S.mis&&S.mis.m.id==='final'&&S.mis.stage<3)){S.hp=Math.min(100,S.hp+dt*35);if(S.wanted>0&&!(S.mis&&S.mis.m.id==='ghost'&&S.mis.stage===2)){S.wanted=0;comic('COPS LOST YOU','#3dff8a')}}
   /* health: police rams and hard crashes */
   S.hitCd-=dt;var drop=S.prevV-me.v;S.crash=0;if(drop>9&&S.hitCd<=0){S.hp-=drop*1.6;S.crash=drop;S.hitCd=.5;flash('rgba(255,40,40,.3)')}S.prevV=me.v;
@@ -2955,8 +2983,8 @@ function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
   S.cops.slice().forEach(function(c){var d=dist(c,me);if(S.cops.length>want&&d>60)stCopOff(c,S)});
   var seen=S.cops.some(function(c){return dist(c,me)<65});if(stars>0&&!seen){S.evade+=dt;if(S.evade>4+stars*1.6){S.wanted=Math.max(0,stars-1);S.evade=0;comic(S.wanted>0?'−1 ⭐':'COPS LOST YOU','#3dff8a')}}else S.evade=0;
   /* missions */
-  if(!S.mis&&S.stage==='free'){S.marks.forEach(function(k){if(!k.g.visible)return;k.g.rotation.y+=dt;if(Math.hypot(me.x-k.x,me.z-k.z)<4.5)stMisStart(S,k)});
-    if(!S.mis){var nxi=S.prog.done.length,nx=ST_MIS[nxi];
+  if(!S.mis&&!S.cut&&S.stage==='free'){S.marks.forEach(function(k){if(!k.g.visible)return;k.g.rotation.y+=dt;if(Math.hypot(me.x-k.x,me.z-k.z)<4.5)stMisStart(S,k)});
+    if(!S.mis){var nxi=-1;ST_MIS.some(function(q,qi){if(S.prog.done.indexOf(q.id)<0){nxi=qi;return true}});var nx=nxi>=0?ST_MIS[nxi]:null;
       if(S.wanted>=.5)S.target={x:S.base.cx,z:S.base.cz,ap:[S.base.cx,A.c[4]],col:'#3dff8a',n:'LOSE THE COPS (OR HIDE AT BASE)',giver:true};
       else if(nx){var k2=S.marks[nxi];S.target={x:k2.x,z:k2.z,col:nx.col,n:'JOB: '+nx.who+' · '+nx.n,giver:true}}else S.target=null}}
   stMarkOn(S);stMisTick(S,dt);
@@ -2968,12 +2996,12 @@ function storyGoal(c){var S=race.m2,M=S.mis;
   if(c.stNpc==='thief')return {mode:'flee',threats:[me].concat(S.cops)};
   if(c.stNpc==='blocker'&&M&&M.thief){return {mode:'chase',x:(me.x+M.thief.x)/2,z:(me.z+M.thief.z)/2}}
   return {mode:'wander'}}
-function storySpeed(c){var S=race.m2;if(c.stCop)return Math.ceil(S.wanted-.001)>0?1.02+.05*Math.ceil(S.wanted):.7;if(c.stNpc==='racer')return c.stSpd||1;if(c.stNpc==='thief')return 1;if(c.stNpc==='blocker')return 1.05;if(c.stNpc==='patrol')return .65;return 1}
+function storySpeed(c){var S=race.m2;if(S.cut)return 0;if(c.stCop)return Math.ceil(S.wanted-.001)>0?1.02+.05*Math.ceil(S.wanted):.7;if(c.stNpc==='racer')return c.stSpd||1;if(c.stNpc==='thief')return 1;if(c.stNpc==='blocker')return 1.05;if(c.stNpc==='patrol')return .65;return 1}
 function storyHud(){var S=race.m2;if(S.stage==='busted')return [S.hp<=0?'WRECKED · back to '+(S.prog.escaped?'base…':'prison…'):'BUSTED · back to '+(S.prog.escaped?'base…':'prison…'),'trail'];
   if(S.stage==='prison')return ['🔒 BRICK TOWN PRISON · wait for TECHNO…','trail'];
   var tg=S.target,D=tg?Math.round(Math.hypot(tg.x-me.x,tg.z-me.z)):0,tm=S.timer!=null?' · ⏱ '+Math.ceil(S.timer)+' s':'';
   return [(tg?tg.n+' · '+D+' m':'FREE ROAM · '+S.prog.done.length+'/'+ST_MIS.length+' JOBS')+tm,S.wanted>=.5||(S.timer!=null&&S.timer<10)?'trail':'lead']}
-function storyClean(){var S=race.m2;if(!S)return;if(S.hud)S.hud.remove();if(S.wrap)S.wrap.classList.remove('bs-story');if(S.gps)scene.remove(S.gps);if(S.arrow)scene.remove(S.arrow);(S.fxs||[]).forEach(function(f){scene.remove(f.s)});if(S.mis){var M=S.mis;if(M.box&&M.box.parent)M.box.parent.remove(M.box);[M.gate,M.next,M.zone].forEach(function(o){if(o)scene.remove(o)});M.parts.forEach(function(o){scene.remove(o)})}
+function storyClean(){var S=race.m2;if(!S)return;if(S.cut){S.cut.actors.forEach(function(a){scene.remove(a)});S.cut=null}if(S.ctl)S.ctl.style.visibility='';if(S.wrap)S.wrap.classList.remove('bs-cut');if(S.hud)S.hud.remove();if(S.wrap)S.wrap.classList.remove('bs-story');if(S.gps)scene.remove(S.gps);if(S.arrow)scene.remove(S.arrow);(S.fxs||[]).forEach(function(f){scene.remove(f.s)});if(S.mis){var M=S.mis;if(M.box&&M.box.parent)M.box.parent.remove(M.box);[M.gate,M.next,M.zone].forEach(function(o){if(o)scene.remove(o)});M.parts.forEach(function(o){scene.remove(o)})}
   var A=ARENA;if(A&&STY.blocks)STY.blocks.forEach(function(q){var i=A.blocks.indexOf(q);if(i>=0)A.blocks.splice(i,1)});STY.blocks=[];
   cars.concat(allCars).forEach(function(c){if(c.stOrig){scene.remove(c.model);c.model=c.stOrig;scene.add(c.model);c.stOrig=null}c.stCop=false;c.stNpc=null;c.stPol=null;c.stRole=null});
   if(curMap==='city'){var id=curMap;curMap='';buildTrack(id)}}   /* rebuild Tag City so the prison and base are gone */
@@ -3022,6 +3050,61 @@ function stDamageFx(S,dt){if(!S.fxs){S.fxs=[];ST_SMOKE=ST_SMOKE||canvasTex(64,64
   S.fxT=(S.fxT||0)-dt;if(S.hp<45&&S.fxT<=0&&S.stage!=='busted'){S.fxT=S.hp<20?.06:.14;var fire=S.hp<20&&Math.random()<.55,sp=new T.Sprite(new T.SpriteMaterial({map:fire?ST_FIRE:ST_SMOKE,transparent:true,depthWrite:false,blending:fire?T.AdditiveBlending:T.NormalBlending,toneMapped:!fire}));
     var fx=me.x+Math.sin(me.a)*1.6,fz=me.z+Math.cos(me.a)*1.6;sp.position.set(fx+(Math.random()-.5)*.6,(me.y||0)+1.3,fz+(Math.random()-.5)*.6);sp.scale.setScalar(fire?1.1:1.4);scene.add(sp);S.fxs.push({s:sp,t:0,fire:fire})}
   S.fxs=S.fxs.filter(function(f){f.t+=dt;var L=f.fire?.5:1.6;if(f.t>L){scene.remove(f.s);f.s.material.dispose();return false}f.s.position.y+=dt*(f.fire?2.2:2.8);var k=f.t/L;f.s.scale.setScalar((f.fire?1.1:1.4)+k*(f.fire?.4:3.5));f.s.material.opacity=(1-k)*(f.fire?1:.75);return true})}
+/* ================= CUTSCENES: the story plays like a little film (letterbox, camera moves, cars act it out) ================= */
+function stCutUI(S,on){var h=S.hud;if(!h.querySelector('.cb')){var d=document.createElement('div');d.className='cb';d.innerHTML='<style>#stHud .cb i{position:absolute;left:0;right:0;height:13vh;background:#000;transition:transform .5s}#stHud .cb i.t{top:0;transform:translateY(-100%)}#stHud .cb i.b{bottom:0;transform:translateY(100%)}'+
+  '#stHud .cb.on i{transform:none}#stHud .cb .sub{position:absolute;left:50%;bottom:calc(13vh + 14px);transform:translateX(-50%);max-width:min(640px,88vw);text-align:center;color:#fff;font:700 clamp(14px,2.6vw,20px)/1.35 system-ui;text-shadow:0 2px 4px #000,0 0 18px rgba(0,0,0,.8);opacity:0;transition:opacity .3s}#stHud .cb .sub b{display:block;font:900 12px/1.3 system-ui;letter-spacing:.16em;margin-bottom:3px}'+
+  '#stHud .cb .ttl{position:absolute;left:50%;top:calc(13vh + 18px);transform:translateX(-50%);color:#fff;font:900 italic clamp(18px,4vw,34px)/1 system-ui;letter-spacing:.06em;text-shadow:0 3px 0 #000;opacity:0;transition:opacity .4s}'+
+  '#stHud .cb .sk{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(13vh/2 - 17px);pointer-events:auto;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:8px 16px;font:800 12px/1 system-ui;letter-spacing:.12em;display:none}#stHud .cb.on .sk{display:block}'+
+  '.bs-cut .hud,.bs-cut #raceui,.bs-cut #boost,.bs-cut #camb,.bs-cut #tiltb,.bs-cut .mmap,.bs-cut #stHud .hp,.bs-cut #stHud .wn,.bs-cut #stHud .cn,.bs-cut #stHud .ck,.bs-cut #stHud .tk{visibility:hidden!important}</style><i class="t"></i><i class="b"></i><div class="ttl"></div><div class="sub"></div><button class="sk" type="button">SKIP ▸▸</button>';
+  h.appendChild(d);d.querySelector('.sk').addEventListener('click',function(e){e.stopPropagation();if(S.cut)stCutEnd(S)})}
+  var cb=h.querySelector('.cb');cb.classList.toggle('on',on);S.wrap.classList.toggle('bs-cut',on);var dr=document.getElementById('driftb');S.ctl=S.ctl||(dr&&dr.parentNode);if(S.ctl)S.ctl.style.visibility=on?'hidden':'';if(!on){cb.querySelector('.sub').style.opacity=0;cb.querySelector('.ttl').style.opacity=0}}
+function stCutSay(S,who,txt){var sb=S.hud.querySelector('.cb .sub'),w=ST_WHO[who]||['#fff'];sb.innerHTML='<b style="color:'+w[0]+'">'+who+'</b>'+txt;sb.style.opacity=1}
+function stCutTitle(S,txt){var e=S.hud.querySelector('.cb .ttl');e.textContent=txt||'';e.style.opacity=txt?1:0}
+function stCutPlay(S,shots,done){if(S.cut||!shots||!shots.length)return;S.cut={shots:shots,i:-1,st:0,done:done,actors:[],k:shots.k||null};me.v=0;stCutUI(S,true);me.model.visible=true;stCutNext(S)}
+function stCutNext(S){var C=S.cut;C.i++;if(C.i>=C.shots.length){stCutEnd(S);return}var sh=C.shots[C.i];C.st=0;if(sh.start)sh.start(C);if(sh.say)stCutSay(S,sh.say[0],sh.say[1]);stCutTitle(S,sh.title||'')}
+function stCutEnd(S){var C=S.cut;if(!C)return;C.actors.forEach(function(a){scene.remove(a)});S.cut=null;stCutUI(S,false);me.model.visible=!me.me||view!=='cockpit';me.v=0;if(C.done)C.done()}
+function stCutTick(S,dt){var C=S.cut,sh=C.shots[C.i];C.st+=dt;var u=Math.min(1,C.st/sh.d);if(sh.tick)sh.tick(u,dt,C);var c=sh.cam(u);introCam.position.set(c[0],c[1],c[2]);introCam.lookAt(c[3],c[4],c[5]);if(C.st>=sh.d)stCutNext(S)}
+function stActor(C,look,x,z,a){var m=look==='police'?stPoliceModel():brickCar(look);m.position.set(x,0,z);m.rotation.y=(a||0)+Math.PI;scene.add(m);C.actors.push(m);return m}
+function stMoveA(m,x0,z0,x1,z1,u){var x=x0+(x1-x0)*u,z=z0+(z1-z0)*u;m.position.set(x,0,z);if(Math.hypot(x1-x0,z1-z0)>.1)m.rotation.y=Math.atan2(x1-x0,z1-z0)+Math.PI}
+function stEase(u){return u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2}
+function stFlash(m,t2){var u=m.userData.bar;if(!u)return;var f=Math.floor(t2*7)%2;u.red.color.setHex(f?0xff2030:0x400008);u.blue.color.setHex(f?0x0a1440:0x2a5cff);u.gl.material.opacity=f?1:0;u.gr.material.opacity=f?0:1}
+/* the bank from the opening (the same bank GHOST robs back later) */
+function stBank(S,G){var A=ARENA,x=A.c[3]+29,z0=A.c[0]+9,g=new T.Group(),stone=new T.MeshStandardMaterial({color:0xe8e2d0,roughness:.6});
+  var front=new T.Mesh(new T.BoxGeometry(22,11,1.2),stone);front.position.set(0,5.5,0);g.add(front);
+  for(var k=0;k<6;k++){var col=new T.Mesh(new T.CylinderGeometry(.5,.55,8,14),stone);col.position.set(-8.75+k*3.5,4.6,-1.4);g.add(col)}
+  var ped=new T.Mesh(new T.CylinderGeometry(0,13,3,3,1,false,Math.PI/2,Math.PI),stone);ped.rotation.z=Math.PI/2;ped.rotation.y=Math.PI/2;ped.scale.set(1,1,.28);ped.position.set(0,10.6,-1);g.add(ped);
+  var step=new T.Mesh(new T.BoxGeometry(20,.5,2.6),new T.MeshStandardMaterial({color:0xcfc8b4}));step.position.set(0,.25,-1.6);g.add(step);
+  var door=new T.Mesh(new T.PlaneGeometry(4,5.5),new T.MeshStandardMaterial({color:0x3a2a1a,roughness:.5,metalness:.4}));door.position.set(0,2.75,-.62);door.rotation.y=Math.PI;g.add(door);
+  signPlane(g,'BRICK BANK','#ffd23c',0,8.8,-.65,Math.PI,14);g.position.set(x,0,z0+.6);G.add(g);S.bank={x:x,z:z0,door:[x,A.c[0]+4],g:g}}
+/* scenes */
+function stCutIntro(S){var A=ARENA,b=S.bank,gl,plate,p1,p2,dz=b.door[1],dx=b.door[0];
+  return [
+   {d:5,say:['RADIO','Brick Town, 2:00 AM. The night before the big Brick Cup.'],title:'BRICK TOWN',cam:function(u){var a=-.6+u*.9;return [Math.cos(a)*170,95-u*20,Math.sin(a)*170,0,0,0]}},
+   {d:5.2,say:['GLITCH','The Brick Cup prize money… all mine. Nobody will ever know.'],start:function(C){gl=stActor(C,ST_LOOK.GLITCH,dx-1,dz+3,Math.PI)},
+    tick:function(u){stMoveA(gl,dx,dz+1,dx-50*stEase(u),dz-1.5,u)},cam:function(u){return [dx+14,4.5,dz-12,dx-20*u,1.2,dz]}},
+   {d:4.6,say:['RADIO','…but he dropped something on the way. A number plate. YOUR number plate.'],start:function(C){plate=new T.Mesh(new T.PlaneGeometry(1.6,.5),new T.MeshBasicMaterial({map:canvasTex(128,40,function(c){c.fillStyle='#f4d03a';c.fillRect(0,0,128,40);c.strokeStyle='#111';c.lineWidth=3;c.strokeRect(2,2,124,36);c.fillStyle='#111';c.font='900 26px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('BS·01',64,21)}),side:T.DoubleSide}));
+      plate.rotation.x=-Math.PI/2+.25;plate.position.set(dx-30,.08,dz-1);scene.add(plate);C.actors.push(plate)},cam:function(u){return [dx-30+3-u*1.5,1.6+u*.8,dz-1+2.2-u,dx-30,0,dz-1]}},
+   {d:5,say:['RADIO','The police found it. Now everyone thinks YOU robbed the Brick Bank.'],start:function(C){p1=stActor(C,'police',dx-80,dz-1,Math.PI/2);p2=stActor(C,'police',dx+40,dz-1,-Math.PI/2)},
+    tick:function(u){var e=stEase(Math.min(1,u*1.3));stMoveA(p1,dx-80,dz-1,dx-34,dz-1,e);stMoveA(p2,dx+40,dz-1,dx-26,dz-1,e);stFlash(p1,t);stFlash(p2,t+.07)},cam:function(u){return [dx-30,9+u*3,dz+16,dx-30,0,dz-1]}},
+   {d:4.6,say:['RADIO','The judge said: 10 years in Brick Town Prison.'],title:'BRICK TOWN PRISON',cam:function(u){var p=S.pr;return [p.x1+18-u*6,26-u*8,p.cz+22-u*8,p.cx+2,0,p.cz]}},
+   {d:4.2,say:['TECHNO',"Psst! I'm TECHNO. I saw everything: GLITCH framed you. Get ready, I'm hacking the gate!"],cam:function(u){var p=S.pr;return [me.x-Math.sin(me.a)*9,4,me.z-Math.cos(me.a)*9,p.x1,2,p.cz]}}]}
+function stCutBase(S){var b=S.base,tk;
+  return [
+   {d:4.6,say:['TECHNO','You made it! This is our base. Here you heal, the police lose you, and your game saves.'],title:'THE BASE',start:function(C){tk=stActor(C,ST_LOOK.TECHNO,b.cx-8,b.z0-14,0)},
+    tick:function(u){stMoveA(tk,b.cx-8,b.z0-14,b.cx-5,b.cz-2,stEase(u))},cam:function(u){var a=1.2+u*.8;return [b.cx+Math.cos(a)*30,14,b.cz+Math.sin(a)*30,b.cx,1,b.cz]}},
+   {d:4.6,say:['TECHNO','GLITCH stole the Brick Cup money and left your plate there. We need PROOF to clear your name.'],cam:function(u){return [b.cx-5+7,2.6,b.cz-2-6+u*2,b.cx-5,1,b.cz-2]}},
+   {d:4.4,say:['TECHNO','BLAZE drives for the bank. She hid the security tapes. Go and see her: follow the GPS!'],cam:function(u){var k=S.marks[0];return [b.cx,20+u*10,b.cz+10,b.cx+(k.x-b.cx)*.4*u,0,b.cz+(k.z-b.cz)*.4*u]}}]}
+function stCutGiver(S,k,lines,title){var shots=[];lines.forEach(function(l,i){var who=l[0],ax=k.actor.position.x,az=k.actor.position.z,a0=i*1.1+.4;
+    shots.push({d:Math.max(3.6,l[1].length*.055),say:[who,l[1]],title:i===0?title:'',cam:function(u){var a=a0+u*.35;return [ax+Math.cos(a)*8.5,2.4+i*.6,az+Math.sin(a)*8.5,ax,1,az]}})});
+  shots.k=k;return shots}
+function stCutEnding(S){var A=ARENA,b=S.base,px=A.c[2]+29,pz=A.c[2]+29,gl,pc,tk;
+  return [
+   {d:4.6,say:['TECHNO','We have ALL the files. Every coin GLITCH stole is in there!'],title:'PART 1 · FINALE',start:function(C){tk=stActor(C,ST_LOOK.TECHNO,b.cx-5,b.cz-2,0);pc=stActor(C,'police',b.cx+6,b.z0-20,0)},
+    tick:function(u){stMoveA(pc,b.cx+6,b.z0-20,b.cx+4,b.cz-3,stEase(u));stFlash(pc,t)},cam:function(u){var a=2+u*.5;return [b.cx+Math.cos(a)*22,9,b.cz+Math.sin(a)*22,b.cx,1,b.cz-2]}},
+   {d:4.6,say:['POLICE','We read the files. You were telling the truth. Your name is CLEAR. Sorry, kid.'],cam:function(u){return [b.cx+9,2.6,b.cz-8+u*2,b.cx+4,1,b.cz-3]}},
+   {d:5,say:['GLITCH','You won this round… Come and find me in the volcano. If you dare.'],start:function(C){gl=stActor(C,ST_LOOK.GLITCH,A.c[5],A.c[1],0)},tick:function(u){stMoveA(gl,A.c[5],A.c[1],A.c[5],A.c[1]-120*stEase(u),u)},
+    cam:function(u){return [A.c[5]-14,6,A.c[1]+14,A.c[5],1,A.c[1]-40*u]}},
+   {d:5,say:['TECHNO','PART 1 COMPLETE! You can replay every job for coins. Part 2: the volcano… coming soon.'],title:'PART 1 COMPLETE',cam:function(u){var a=u*1.4;return [Math.cos(a)*150,80,Math.sin(a)*150,0,0,0]}}]}
 
 function modeInit(o){
   if(race.dz&&race.dz.mesh)scene.remove(race.dz.mesh);
@@ -3198,7 +3281,7 @@ var wheel=new T.Group();
 var wheelHolder=new T.Group();wheelHolder.position.set(0,-.33,-.62);wheelHolder.rotation.x=-.32;wheelHolder.add(wheel);cam.add(wheelHolder);
 var view='cockpit';
 var VIEWS=['cockpit','chase','back'];
-function activeCam(){if(race.on&&race.phase==='intro')return introCam;return view==='chase'?chase:view==='back'?back:cam}
+function activeCam(){if(race.on&&(race.phase==='intro'||(race.m2&&race.m2.cut)))return introCam;return view==='chase'?chase:view==='back'?back:cam}
 function placeWheel(){ /* cockpit: big wheel in front of you. other views: small wheel in the bottom-left corner that turns with you */
   var c=view==='chase'?chase:view==='back'?back:cam;c.add(wheelHolder);
   if(view==='cockpit'){var p=hero.clientWidth<hero.clientHeight;wheelHolder.position.set(0,p?-.36:-.33,p?-.7:-.62);wheelHolder.rotation.x=-.32;wheelHolder.scale.setScalar(1);return}
