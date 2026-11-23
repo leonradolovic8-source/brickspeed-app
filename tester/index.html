@@ -2108,8 +2108,14 @@ function bombReach(){var B=race.bomb;return 14+46*Math.min(1,Math.max(0,(perform
 function bombAimPoint(){var d=bombReach(),x=me.x+Math.sin(me.a)*d,z=me.z+Math.cos(me.a)*d,lim=ARENA?ARENA.half-2:1e9;return [Math.max(-lim,Math.min(lim,x)),Math.max(-lim,Math.min(lim,z))]}
 function bombPress(){ /* FIRE pressed (I am the shooter): start charging */
   var B=race.bomb;if(!B||race.phase!=='go'||B.myCd>0||B.chg)return;B.chg=performance.now();
-  if(!B.aim){B.aim=groundRing(0xffcf00,.95);scene.add(B.aim)}B.aim.visible=true}
-function bombRelease(){var B=race.bomb;if(!B||!B.chg)return;var p=bombAimPoint();B.chg=0;if(B.aim)B.aim.visible=false;if(race.phase!=='go')return;
+  if(!B.aim){B.aim=groundRing(0xffcf00,.95);scene.add(B.aim)}B.aim.visible=true;
+  if(!B.arc){B.arc=new T.InstancedMesh(new T.SphereGeometry(.28,8,6),new T.MeshBasicMaterial({color:0xffcf00,toneMapped:false,transparent:true,opacity:.95,depthWrite:false}),ARC_N);B.arc.frustumCulled=false;B.arc.renderOrder=4;scene.add(B.arc)}B.arc.visible=true}
+/* the arc: dots along the path the bomb will fly (same curve as the real bomb), marching toward the landing spot */
+var ARC_N=28,arcD=new T.Object3D();
+function bombArc(ap){var B=race.bomb,sx=me.x,sy=(me.y||0)+2.6,sz=me.z,ex=ap[0],ez=ap[1],ey=bombY(ex,ez),h=5+Math.hypot(ex-sx,ez-sz)*.09,sh=(t*1.6)%1;
+  for(var i=0;i<ARC_N;i++){var q=(i+sh)/ARC_N,s=.55+.6*q;arcD.position.set(sx+(ex-sx)*q,sy+(ey-sy)*q+Math.sin(q*Math.PI)*h,sz+(ez-sz)*q);arcD.scale.setScalar(s);arcD.updateMatrix();B.arc.setMatrixAt(i,arcD.matrix)}
+  B.arc.instanceMatrix.needsUpdate=true;B.arc.material.color.set(bombWave().c||'#ffcf00')}
+function bombRelease(){var B=race.bomb;if(!B||!B.chg)return;var p=bombAimPoint();B.chg=0;if(B.aim)B.aim.visible=false;if(B.arc)B.arc.visible=false;if(race.phase!=='go')return;
   var W=bombWave();B.myCd=W.cd;race.cd=W.cd;race.cdMax=W.cd;
   if(bombAuth())bombThrowAt(me,p[0],p[1]);else send(NET.hostConn,{t:'bfire',x:+p[0].toFixed(2),z:+p[1].toFixed(2)});
   comic('THROW!',W.c)}
@@ -2170,7 +2176,7 @@ function bombTick(dt){
   /* sizes (others; my own size is set where the game sizes my car) */
   cars.forEach(function(c){if(c.me)return;var s=bombSize(c);if(s!==1||c.bScaled){var cs=c.model.scale.x;c.model.scale.setScalar(cs+(s-cs)*Math.min(1,dt*6));c.bScaled=Math.abs(c.model.scale.x-1)>.01||s!==1}});
   /* aim circle while I hold FIRE */
-  if(B.chg&&B.aim){var ap=bombAimPoint();B.aim.position.set(ap[0],bombY(ap[0],ap[1])+.2,ap[1]);B.aim.scale.setScalar(bombWave().r);B.aim.material.opacity=.6+.4*Math.abs(Math.sin(t*12))}
+  if(B.chg&&B.aim){var ap=bombAimPoint();if(B.arc)bombArc(ap);B.aim.position.set(ap[0],bombY(ap[0],ap[1])+.2,ap[1]);B.aim.scale.setScalar(bombWave().r);B.aim.material.opacity=.6+.4*Math.abs(Math.sin(t*12))}
   /* the closing ring (last wave) */
   if(ARENA&&race.phase==='go'&&w===3){var f=Math.min(1,(e-BWLEN*3)/(BWLEN*.85)),R0=ARENA.half*1.42;B.zoneR=R0+(42-R0)*f;
     if(!B.zone){B.zone=new T.Mesh(new T.TorusGeometry(1,.012,6,160),new T.MeshBasicMaterial({color:0xff2d55,transparent:true,opacity:.85}));B.zone.rotation.x=Math.PI/2;B.zone.position.y=1;scene.add(B.zone)}
@@ -2204,7 +2210,7 @@ function bombTick(dt){
   if(race.mp){B.sendT-=dt;if(B.sendT<=0){B.sendT=.5;broadcast({t:'bst',lv:B.lives})}}
 }
 function bombEnd(who){if(race.phase==='done')return;if(race.mp&&NET.host)broadcast({t:'bend',w:who,lv:race.bomb.lives});endMode({bomb:who})}
-function bombClean(){var B=race.bomb;if(!B)return;B.bombs.forEach(function(b){scene.remove(b.m);scene.remove(b.ring);scene.remove(b.disc)});B.boxes.forEach(function(q){scene.remove(q.g)});if(B.aim)scene.remove(B.aim);if(B.zone)scene.remove(B.zone);
+function bombClean(){var B=race.bomb;if(!B)return;B.bombs.forEach(function(b){scene.remove(b.m);scene.remove(b.ring);scene.remove(b.disc)});B.boxes.forEach(function(q){scene.remove(q.g)});if(B.aim)scene.remove(B.aim);if(B.arc)scene.remove(B.arc);if(B.zone)scene.remove(B.zone);
   cars.forEach(function(c){c.bBoost=c.bSmall=c.bBig=0;c.bShield=false;if(c.bShM){c.model.remove(c.bShM);c.bShM=null}if(c.bScaled||c.me)c.model.scale.setScalar(1);c.bScaled=false});var bsx=document.getElementById('bstrip');if(bsx)bsx.remove()}
 function bombNet(m,from){ /* messages; host gets bfire / bhit / bpk, everyone gets bmb / bdm / bsh / bbx / bpu / bst / bend */
   var B=race.bomb;if(!B||!race.on)return false;
