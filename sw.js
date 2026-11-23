@@ -9,7 +9,7 @@ self.addEventListener('activate', (e) => {
 // network first (so updates arrive), cache when offline
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  const req = e.request.mode === 'navigate' ? new Request(e.request, { cache: 'no-store' }) : e.request;
-  e.respondWith(fetch(req).then((r) => { const c = r.clone(); caches.open(VERSION).then((ca) => ca.put(e.request, c)); return r; })
+  const nav = e.request.mode === 'navigate';
+  e.respondWith((nav ? fetch(e.request.url, { cache: 'no-store', credentials: 'same-origin' }) : fetch(e.request)).then((r) => { const c = r.clone(); caches.open(VERSION).then((ca) => ca.put(e.request, c)); return r; })
     .catch(() => caches.match(e.request, { ignoreSearch: true })));
 });
