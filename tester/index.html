@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795510353">
+<meta name="bs-build" content="1795510753">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5656,14 +5656,48 @@ function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
   o.castShadow=o.receiveShadow=true}});
  scene.rotation.y=ROT[id]!=null?ROT[id]:Math.PI;p.add(scene);
  var b=new T.Box3().setFromObject(p),s=new T.Vector3();b.getSize(s);var k=Math.min(LEN/(s.z||1),WID/(s.x||1));p.scale.setScalar(k);
- b.setFromObject(p);var c=new T.Vector3();b.getCenter(c);p.position.set(-c.x,-b.min.y,-c.z);root.add(p);return root}
+ b.setFromObject(p);var c=new T.Vector3();b.getCenter(c);p.position.set(-c.x,-b.min.y,-c.z);root.add(p);try{glbSplit(root)}catch(e){console.warn('glbSplit',e)}return root}
+/* cut the real wheels out of a one-piece GLB car so they can spin: finds the 4 tyres from the shape, moves their triangles into their own meshes with the pivot on the axle */
+function glbSplit(root){var T=THREE;root.updateMatrixWorld(true);var inv=new T.Matrix4().copy(root.matrixWorld).invert(),parts=[],v=new T.Vector3();
+ root.traverse(function(o){if(!o.isMesh||!o.geometry||!o.geometry.attributes.position)return;var g=o.geometry.clone();g.applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld));parts.push({g:g,m:o.material})});
+ if(!parts.length)return false;var bb=new T.Box3();parts.forEach(function(p){p.g.computeBoundingBox();bb.union(p.g.boundingBox)});
+ var W=bb.max.x-bb.min.x,H=bb.max.y-bb.min.y,L=bb.max.z-bb.min.z,cx=(bb.min.x+bb.max.x)/2,cz0=(bb.min.z+bb.max.z)/2,y0=bb.min.y;
+ /* find each tyre's ground contact: lowest points in each corner */
+ var Q=[[],[],[],[]];parts.forEach(function(p){var a=p.g.attributes.position;for(var i=0;i<a.count;i++){var x=a.getX(i),y=a.getY(i),z=a.getZ(i);if(y>y0+H*.045)continue;var q=(x>cx?1:0)+(z>cz0?2:0);Q[q].push([x,z])}});
+ var r=Math.min(L*.17,H*.38),C=[];
+ for(var q=0;q<4;q++){var pts=Q[q],cz,xs;if(pts.length<3){cz=cz0+(q>=2?1:-1)*(L/2-r*1.25)}else{var mn=1e9,mx=-1e9;pts.forEach(function(p){if(p[1]<mn)mn=p[1];if(p[1]>mx)mx=p[1]});cz=(mn+mx)/2;
+    if(mx-mn>r*2.6)cz=(q>=2?mx-r:mn+r)}
+   if(Math.abs(cz-cz0)<L*.14||Math.abs(cz-cz0)>L*.49)cz=cz0+(q>=2?1:-1)*(L/2-r*1.25);
+   C.push({x:(q&1)?1:-1,z:cz,y:y0+r})}
+ var band=W*.3,hw=W/2;
+ /* real tyre radius from the curve of the tyre bottom: a point d from the contact sits h higher, r=(d²+h²)/2h */
+ var est=[];C.forEach(function(c){parts.forEach(function(p){var a=p.g.attributes.position;for(var i=0;i<a.count;i++){var x=a.getX(i);if((x-cx)*c.x<hw-band)continue;var dz=a.getZ(i)-c.z,h=a.getY(i)-y0;
+   if(Math.abs(dz)>r*.95||h>r*.6||h<H*.01)continue;var e=(dz*dz+h*h)/(2*h);if(e<r*2)est.push(e)}})});
+ if(est.length>=8){est.sort(function(p,q){return p-q});var rm=est[Math.floor(est.length*.75)];r=Math.max(r*.6,Math.min(r*1.6,rm));C.forEach(function(c){c.y=y0+r})}
+ function inWheel(x,y,z,c){if((x-cx)*c.x<hw-band)return false;var dy=y-c.y,dz=z-c.z;return dy*dy+dz*dz<r*r*1.04}
+ var wheelGeo=C.map(function(){return []}),moved=0;
+ parts.forEach(function(p){var g=p.g,a=g.attributes.position,idx=g.index?g.index.array:null,n=idx?idx.length:a.count,keep=[];var per=C.map(function(){return []});
+   for(var t3=0;t3<n;t3+=3){var I=idx?[idx[t3],idx[t3+1],idx[t3+2]]:[t3,t3+1,t3+2],w=-1;
+     for(var k=0;k<4;k++){var c=C[k];if(inWheel(a.getX(I[0]),a.getY(I[0]),a.getZ(I[0]),c)&&inWheel(a.getX(I[1]),a.getY(I[1]),a.getZ(I[1]),c)&&inWheel(a.getX(I[2]),a.getY(I[2]),a.getZ(I[2]),c)){w=k;break}}
+     if(w<0)keep.push(I[0],I[1],I[2]);else{per[w].push(I[0],I[1],I[2]);moved++}}
+   var src=g.index?g:g;function sub(list){var ng=new T.BufferGeometry();for(var nm in g.attributes)ng.setAttribute(nm,g.attributes[nm]);ng.setIndex(list);return ng}
+   p.body=sub(keep);per.forEach(function(list,k){if(list.length)wheelGeo[k].push({g:sub(list),m:p.m})})});
+ if(moved<60)return false;
+ /* rebuild: body meshes + 4 wheel groups (pivot on the axle) */
+ while(root.children.length)root.remove(root.children[0]);
+ parts.forEach(function(p){var m=new T.Mesh(p.body,p.m);m.castShadow=m.receiveShadow=true;root.add(m)});
+ C.forEach(function(c,k){var wg=new T.Group();wg.name='glbwheel';wg.position.set(cx+c.x*(hw-band/2),c.y,c.z);var hold=new T.Object3D(),spin=new T.Group();wg.add(hold);wg.add(spin);
+   var off=new T.Vector3(-wg.position.x,-wg.position.y,-wg.position.z);
+   wheelGeo[k].forEach(function(e){var m=new T.Mesh(e.g,e.m);m.position.copy(off);m.castShadow=true;spin.add(m)});root.add(wg)});
+ root.userData.split=true;return true}
+
 function load(id,cb){if(cache[id]){cb(cache[id]);return}if(wait[id]){wait[id].push(cb);return}var l=L();if(!l||!U[id])return;
  wait[id]=[cb];l.load(B+U[id]+'.glb',function(g){try{cache[id]=prep(id,g.scene)}catch(e){console.error(e)}var q=wait[id];wait[id]=null;if(cache[id])q.forEach(function(f){f(cache[id])})},
   undefined,function(e){console.warn('BSGLB',id,e);wait[id]=null})}
 // wrap a procedural car g: same API (wheels, top, fly), swaps to the GLB when it is ready
 function wrap(id,g){if(!U[id]||!L())return null;var T=THREE,w=new T.Group();w.add(g);
  w.wheels=(g.wheels||[]).slice();w.top=g.top;w.fly=g.fly;w.isGarage=g.isGarage;if(g.userData&&g.userData.garage)w.userData.garage=g.userData.garage;
- function put(tpl){if(g.parent===w)w.remove(g);var m=tpl.clone();m.name='glbcar';w.add(m);w.wheels.length=0;try{glbWheels(w,m)}catch(e){console.warn('glbWheels',e)}var nt=new T.Group();nt.anim=function(){};w.top=nt;w.fly=null;w.isGarage=false;w.userData.garage=null;w.glb=true}
+ function put(tpl){if(g.parent===w)w.remove(g);var m=tpl.clone();m.name='glbcar';w.add(m);w.wheels.length=0;var gw=[];m.traverse(function(o){if(o.name==='glbwheel')gw.push(o)});gw.sort(function(p,q){return p.position.z-q.position.z});if(gw.length===4)gw.forEach(function(x){w.wheels.push(x)});else try{glbWheels(w,m)}catch(e){console.warn('glbWheels',e)}var nt=new T.Group();nt.anim=function(){};w.top=nt;w.fly=null;w.isGarage=false;w.userData.garage=null;w.glb=true}
  if(cache[id])put(cache[id]);else load(id,put);return w}
 /* spinning wheels on the GLB cars: the models are one solid mesh, so real wheels (tyre, 5-spoke rim, brake disc) are fitted over the baked ones and turn and steer like the brick cars */
 function glbWheels(w,m){var T=THREE,bx=new T.Box3().setFromObject(m),s=new T.Vector3();bx.getSize(s);var r=Math.max(.42,Math.min(.72,s.y*.25)),hw=s.x/2,hl=s.z/2,cz=(bx.min.z+bx.max.z)/2;
