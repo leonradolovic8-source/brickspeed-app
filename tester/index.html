@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795533968">
+<meta name="bs-build" content="1795542406">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -1476,12 +1476,12 @@ function propsGeo(){if(PROPS.geo)return PROPS.geo;var G={};
   G.mat=new T.MeshStandardMaterial({roughness:.32,metalness:0,envMapIntensity:.5});G.vmat=scVMat();PROPS.geo=G;return G}
 var PROP_K={cone:{r:.38,h:0,m:.15,inst:0},barrel:{r:.45,h:.6,m:1.2},crate:{r:.7,h:.65,m:2},brick:{r:.55,h:.3,m:.45,col:1}};
 var LEGO_COL=[0xe8202e,0xffc21a,0x1f6fff,0x22b04a,0xf4f4f4,0xff7a12];
-function propAdd(kind,x,z,ry,col,y){PROPS.q.push({kind:kind,x:x,z:z,ry:ry||0,col:col,y:y})}
+function propAdd(kind,x,z,ry,col,y,tag){PROPS.q.push({kind:kind,x:x,z:z,ry:ry||0,col:col,y:y,tag:tag})}
 /* a little pile: bricks stacked 2-3 high in random colours */
 function propPile(x,z,ry,n){for(var i=0;i<n;i++){var row=Math.floor(i/3),k=i%3,o=-1.65+k*1.65+(row%2?.8:0);propAdd('brick',x+Math.cos(ry)*o,z-Math.sin(ry)*o,ry,LEGO_COL[(i*7+row)%LEGO_COL.length],.3+row*.62)}}
 function propsFlush(G){var Q=PROPS.q;PROPS.q=[];if(!Q.length)return;var g=propsGeo(),by={};Q.forEach(function(p){(by[p.kind]=by[p.kind]||[]).push(p)});
   Object.keys(by).forEach(function(k){var L=by[k],K=PROP_K[k],im=new T.InstancedMesh(g[k],K.col?g.mat:g.vmat,L.length);im.castShadow=true;im.receiveShadow=true;im.instanceMatrix.setUsage(T.DynamicDrawUsage);G.add(im);PROPS.ims.push(im);
-    var cc=new T.Color();L.forEach(function(p,i){var b={kind:k,x:p.x,y:p.y!=null?p.y:K.h,z:p.z,vx:0,vy:0,vz:0,rx:0,ry:p.ry,rz:0,wx:0,wy:0,wz:0,r:K.r,h:K.h,mass:K.m,live:false,inst:im,idx:i};PROPS.list.push(b);propPose(b);
+    var cc=new T.Color();L.forEach(function(p,i){var b={tag:p.tag,x0:p.x,z0:p.z,y0:p.y!=null?p.y:K.h,kind:k,x:p.x,y:p.y!=null?p.y:K.h,z:p.z,vx:0,vy:0,vz:0,rx:0,ry:p.ry,rz:0,wx:0,wy:0,wz:0,r:K.r,h:K.h,mass:K.m,live:false,inst:im,idx:i};PROPS.list.push(b);propPose(b);
       if(K.col){cc.setHex(p.col||0xffffff).convertSRGBToLinear();im.setColorAt(i,cc)}});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true})}
 function propPose(b){var d=propPose.d||(propPose.d=new T.Object3D());d.position.set(b.x,b.y,b.z);d.rotation.set(b.rx,b.ry,b.rz);d.updateMatrix();b.inst.setMatrixAt(b.idx,d.matrix)}
 /* static LEGO building blocks: one instanced mesh per call */
@@ -1489,14 +1489,14 @@ function legoStatic(G,kind,list){if(!list.length)return;var g=propsGeo(),im=new 
   list.forEach(function(p,i){d.position.set(p[0],p[1],p[2]);d.rotation.set(0,p[3]||0,0);d.updateMatrix();im.setMatrixAt(i,d.matrix);cc.setHex(p[4]).convertSRGBToLinear();im.setColorAt(i,cc)});G.add(im);return im}
 function propsTick(dt){if(!PROPS.list.length)return;if(PROPS.list[0].inst.parent==null||PROPS.ims.some(function(m){return !m.parent})){PROPS.list=PROPS.list.filter(function(b){return b.inst.parent});PROPS.ims=PROPS.ims.filter(function(m){return m.parent});if(!PROPS.list.length)return}
   var live=cars.filter(function(c){return !c.out&&c.model&&c.model.visible!==false}),S=race.m2,civ=(S&&S.civ)||[],dirty={};
-  PROPS.list.forEach(function(b){var near=false;for(var q=0;q<live.length+civ.length;q++){var c=q<live.length?live[q]:civ[q-live.length],dx=b.x-c.x,dz=b.z-c.z,rr=b.r+1.25;if(dx*dx+dz*dz>rr*rr||b.y-b.h>1.6)continue;near=true;
+  PROPS.list.forEach(function(b){var near=false;for(var q=0;q<live.length+civ.length;q++){var c=q<live.length?live[q]:civ[q-live.length],dx=b.x-c.x,dz=b.z-c.z,rr=b.r+1.25;var dy=b.y-b.h-(c.y||0);if(dx*dx+dz*dz>rr*rr||dy>1.6||dy<-1.6)continue;near=true;
       var sp=Math.hypot(Math.sin(c.va!=null?c.va:c.a)*c.v+(c.kx||0),Math.cos(c.va!=null?c.va:c.a)*c.v+(c.kz||0));
       if(sp<1.5){if(b.kind!=='brick'){var dl=Math.hypot(dx,dz)||1;b.x+=dx/dl*(rr-dl)*.6;b.z+=dz/dl*(rr-dl)*.6;dirty[b.inst.uuid]=b.inst;propPose(b)}continue}
       if(b.live&&Math.hypot(b.vx,b.vz)>sp*.8)continue;propHit(b,c,sp);
       if(b.kind==='brick')PROPS.list.forEach(function(o){if(o.kind!=='brick'||o.live)return;var hd=Math.hypot(o.x-b.x,o.z-b.z);if(hd<2.2&&o.y<b.y+2.5){o.live=true;o.vy=1;o.vx=(o.x-c.x)*.5;o.vz=(o.z-c.z)*.5}else if(hd<1.3&&o.y>b.y){o.live=true;o.vy=0;o.vx=(Math.random()-.5)*3+(o.x-c.x)*.15;o.vz=(Math.random()-.5)*3+(o.z-c.z)*.15;o.wx=(Math.random()-.5)*3;o.wz=(Math.random()-.5)*3}});
       if(sp>8&&c.me&&b.kind!=='cone'&&typeof shock==='function')shock(b.x,.6,b.z,0xffd27a,3)}});
   PROPS.list.forEach(function(b){if(!b.live)return;b.vy-=22*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;b.rx+=b.wx*dt;b.ry+=b.wy*dt;b.rz+=b.wz*dt;
-    var fl=b.kind==='cone'?.02:b.h;if(b.y<fl){b.y=fl;b.vy=Math.abs(b.vy)>2?-b.vy*.32:0;b.vx*=.72;b.vz*=.72;b.wx*=.6;b.wz*=.6;b.wy*=.6;
+    var fl=b.kind==='cone'?.02:b.h;if(b.roof){var sc=b.roof.sec,uu=sc.V?b.z:b.x,la=Math.abs((sc.V?b.x:b.z)-sc.c0);if(la<sc.W/2&&(uu-sc.s1)*(uu-sc.a1)<=0)fl+=b.roof.top}if(b.y<fl){b.y=fl;b.vy=Math.abs(b.vy)>2?-b.vy*.32:0;b.vx*=.72;b.vz*=.72;b.wx*=.6;b.wz*=.6;b.wy*=.6;
       if(b.kind!=='barrel'&&Math.abs(b.vy)<.5){var sn=function(a){var q2=Math.round(a/(Math.PI/2))*(Math.PI/2);return a+(q2-a)*.25};b.rx=sn(b.rx);b.rz=sn(b.rz)}
       if(Math.abs(b.vx)+Math.abs(b.vz)+Math.abs(b.vy)<.25){b.live=false;b.vx=b.vz=b.vy=0}}
     var lim=(ARENA.half||200)-.6;if(Math.abs(b.x)>lim){b.x=Math.sign(b.x)*lim;b.vx*=-.4}if(Math.abs(b.z)>lim){b.z=Math.sign(b.z)*lim;b.vz*=-.4}
@@ -1507,28 +1507,33 @@ function propHit(b,c,sp){var hx=Math.sin(c.va!=null?c.va:c.a),hz=Math.cos(c.va!=
   b.wx=(Math.random()-.5)*12*k;b.wz=(Math.random()-.5)*12*k;b.wy=(Math.random()-.5)*6;if(c.civ)return;c.v*=1-Math.min(.35,b.mass*.06);if(c.me)me.hit=Math.max(me.hit||0,Math.min(.6,b.mass*.25))}
 
 function arenaTunnel(A,G,q,roofCol,lampCol){var hr=A.R/2,c0=A.c[q[1]],a0=A.c[q[2]]-hr,a1=A.c[q[3]]+hr,len=a1-a0,mid=(a0+a1)/2,V=(q[0]==='v');A.tun.push(V?[c0-hr,c0+hr,a0,a1]:[a0,a1,c0-hr,c0+hr]);
-  /* a LEGO tunnel: brick pillars and portals, a studded blue plate roof, grass plate on top, loose bricks and crates you can smash at the entrances */
-  function P(x,u){return V?[c0+x,u]:[u,c0+x]}var Rr=A.R,H=6.4,BH=.64,ry=V?0:Math.PI/2;
-  var studs=canvasTex(128,128,function(c){c.fillStyle='#1f6fff';c.fillRect(0,0,128,128);for(var i=0;i<2;i++)for(var j=0;j<2;j++){var x=32+i*64,y=32+j*64;c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.arc(x+4,y+5,20,0,7);c.fill();c.fillStyle='#2f7dff';c.beginPath();c.arc(x,y,20,0,7);c.fill();var g=c.createRadialGradient(x-7,y-7,2,x,y,20);g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,19,0,7);c.fill()}});
-  var gstuds=canvasTex(128,128,function(c){c.fillStyle='#2fb347';c.fillRect(0,0,128,128);for(var i=0;i<2;i++)for(var j=0;j<2;j++){var x=32+i*64,y=32+j*64;c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.arc(x+4,y+5,20,0,7);c.fill();c.fillStyle='#3cc95a';c.beginPath();c.arc(x,y,20,0,7);c.fill();var g=c.createRadialGradient(x-7,y-7,2,x,y,20);g.addColorStop(0,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,19,0,7);c.fill()}});
-  [studs,gstuds].forEach(function(t){t.wrapS=t.wrapT=T.RepeatWrapping});
-  var W=Rr+4,sl=new T.Mesh(new T.BoxGeometry(V?W:len,1.2,V?len:W),new T.MeshStandardMaterial({color:0x1f6fff,roughness:.35})),p=P(0,mid);sl.position.set(p[0],H+.6,p[1]);sl.castShadow=sl.receiveShadow=true;G.add(sl);
-  var top=new T.Mesh(new T.PlaneGeometry(V?W-1.6:len-1.6,V?len-1.6:W-1.6),new T.MeshStandardMaterial({map:gstuds,roughness:.4}));gstuds.repeat.set((V?W:len)/1.6,(V?len:W)/1.6);top.rotation.x=-Math.PI/2;top.position.set(p[0],H+1.22,p[1]);top.receiveShadow=true;G.add(top);
-  var rim=new T.Mesh(new T.PlaneGeometry(V?W:len,V?len:W),new T.MeshStandardMaterial({map:studs,roughness:.35}));studs.repeat.set((V?W:len)/1.6,(V?len:W)/1.6);rim.rotation.x=-Math.PI/2;rim.position.set(p[0],H+1.215,p[1]);G.add(rim);
-  var und=new T.Mesh(new T.PlaneGeometry(V?Rr+2:len,V?len:Rr+2),new T.MeshStandardMaterial({color:0x2b3140,roughness:.8}));und.rotation.x=Math.PI/2;und.position.set(p[0],H-.01,p[1]);G.add(und);
-  var pil=[],wal=[];
-  /* pillars: 1x1 bricks stacked, each pillar one colour family */
+  /* a LEGO tunnel: brick pillars that fall apart, brick portals, a studded blue plate roof with a green plate on top */
+  function P(x,u){return V?[c0+x,u]:[u,c0+x]}var Rr=A.R,H=6.4,BH=.64,ry=V?0:Math.PI/2,W=Rr+4,TOP=H+1.22;
+  function studT(base,hi){var t=canvasTex(128,128,function(c){c.fillStyle=base;c.fillRect(0,0,128,128);for(var i=0;i<2;i++)for(var j=0;j<2;j++){var x=32+i*64,y=32+j*64;c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.arc(x+4,y+5,20,0,7);c.fill();c.fillStyle=hi;c.beginPath();c.arc(x,y,20,0,7);c.fill();var g=c.createRadialGradient(x-7,y-7,2,x,y,20);g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,19,0,7);c.fill()}});t.wrapS=t.wrapT=T.RepeatWrapping;return t}
+  var studs=studT('#1f6fff','#2f7dff'),gstuds=studT('#2fb347','#3cc95a'),slM=new T.MeshStandardMaterial({color:0x1f6fff,roughness:.35}),undM=new T.MeshStandardMaterial({color:0x2b3140,roughness:.8}),ls=new T.MeshBasicMaterial({color:0xfff1c8,toneMapped:false}),bg=new T.BoxGeometry(1,1,1);
+  /* the longest stretch between two crossings can come down (story secret) */
+  var cr=A.c.filter(function(c){return c+hr>a0&&c-hr<a1}).map(function(c){return [c-hr,c+hr]}),runs=[],u0=a0;cr.forEach(function(r){if(r[0]>u0)runs.push([u0,r[0]]);u0=Math.max(u0,r[1])});if(u0<a1)runs.push([u0,a1]);
+  var sec=null;runs.forEach(function(r){if(r[1]-r[0]>28&&(!sec||r[1]-r[0]>=sec[1]-sec[0]))sec=[r[0]+.6,r[1]-.6]});
+  function roofPiece(u0,u1,parent,ox,oy){var L=u1-u0,um=(u0+u1)/2,p=P(0,um);function at(m,y){m.position.set(p[0]-ox[0],y-oy,p[1]-ox[1]);parent.add(m)}
+    var sl=new T.Mesh(new T.BoxGeometry(V?W:L,1.2,V?L:W),slM);sl.castShadow=sl.receiveShadow=true;at(sl,H+.6);
+    var gs=gstuds.clone();gs.needsUpdate=true;gs.repeat.set((V?W:L)/1.6,(V?L:W)/1.6);var top=new T.Mesh(new T.PlaneGeometry(V?W-1.6:L-1.6,V?L-1.6:W-1.6),new T.MeshStandardMaterial({map:gs,roughness:.4}));top.rotation.x=-Math.PI/2;top.receiveShadow=true;at(top,H+1.22);
+    var bs=studs.clone();bs.needsUpdate=true;bs.repeat.set((V?W:L)/1.6,(V?L:W)/1.6);var rim=new T.Mesh(new T.PlaneGeometry(V?W:L,V?L:W),new T.MeshStandardMaterial({map:bs,roughness:.35}));rim.rotation.x=-Math.PI/2;at(rim,H+1.215);
+    var und=new T.Mesh(new T.PlaneGeometry(V?Rr+2:L,V?L:Rr+2),undM);und.rotation.x=Math.PI/2;at(und,H-.01);
+    for(var u=u0+3;u<u1-1;u+=6){[-2.6,2.6].forEach(function(x){var lp=new T.Mesh(bg,ls),p2=P(x,u);lp.scale.set(V?.3:2.6,.08,V?2.6:.3);lp.position.set(p2[0]-ox[0],H-.05-oy,p2[1]-ox[1]);parent.add(lp)})}}
+  if(sec){roofPiece(a0,sec[0],G,[0,0],0);roofPiece(sec[1],a1,G,[0,0],0);
+    var pv=new T.Group(),pp=P(0,sec[1]);pv.position.set(pp[0],TOP,pp[1]);G.add(pv);roofPiece(sec[0],sec[1],pv,pp,TOP);
+    A.tunSec=A.tunSec||[];A.tunSec.push({V:V,c0:c0,s0:sec[0],s1:sec[1],a0:a0,a1:a1,top:TOP,W:W,hr:hr,pv:pv,tags:[]})}
+  else roofPiece(a0,a1,G,[0,0],0);
+  var wal=[],tagN=0,SC=sec&&A.tunSec[A.tunSec.length-1];
+  /* pillars: real stacks of 2x4 LEGO bricks, two per layer, turned every layer. Hit one and it falls apart */
   [-1,1].forEach(function(sd){var n=0;for(var u=a0+3;u<a1-2;u+=8){if(A.c.some(function(cv){return Math.abs(u-cv)<hr+1.8}))continue;var cA=LEGO_COL[(n++)%LEGO_COL.length];
-      var cB=LEGO_COL[(n+2)%LEGO_COL.length],pp=P(sd*(hr+1.1),u);
-      /* a real LEGO column: 2x4 bricks, two per layer, each layer turned 90 degrees. Hit it and it falls apart */
-      for(var r=0;r<11;r++){var y=.3+r*.6,col=r%2?cB:cA;if(r%2===0){propAdd('brick',pp[0],pp[1]-.41,0,col,y);propAdd('brick',pp[0],pp[1]+.41,0,col,y)}else{propAdd('brick',pp[0]-.41,pp[1],Math.PI/2,col,y);propAdd('brick',pp[0]+.41,pp[1],Math.PI/2,col,y)}}}});
+      var cB=LEGO_COL[(n+2)%LEGO_COL.length],pp=P(sd*(hr+1.1),u),tag=null;if(SC&&u>SC.s0&&u<SC.s1){tag='tp'+(tagN++);SC.tags.push({tag:tag,x:pp[0],z:pp[1]})}
+      for(var r=0;r<11;r++){var y=.3+r*.6,col=r%2?cB:cA;if(r%2===0){propAdd('brick',pp[0],pp[1]-.41,0,col,y,tag);propAdd('brick',pp[0],pp[1]+.41,0,col,y,tag)}else{propAdd('brick',pp[0]-.41,pp[1],Math.PI/2,col,y,tag);propAdd('brick',pp[0]+.41,pp[1],Math.PI/2,col,y,tag)}}}});
   /* portals: running-bond wall of 2x1 bricks above the opening and two side towers, hazard stripe row */
   [a0,a1].forEach(function(e,ei){var o=ei?1:-1,ez=e+o*1.3;
     for(var r=0;r<12;r++){var y=BH/2+r*BH,off=(r%2)?1:0;for(var x=-hr-3.6+off;x<=hr+3.6;x+=2){var inOpen=Math.abs(x)<hr+.2&&y<H;if(inOpen)continue;var pp=P(x,ez),col=(y>H-.1&&y<H+BH)?((Math.round(x/2)%2)?0x111111:0xffc21a):LEGO_COL[(r+Math.round(x/2)+ei*3+12)%LEGO_COL.length];wal.push([pp[0],y,pp[1],ry,col])}}
-    /* loose bricks and crates beside each portal */
     [-1,1].forEach(function(sd){var pp=P(sd*(hr+5.5),ez+o*3.5);propPile(pp[0],pp[1],ry+Math.PI/2,7);var pc=P(sd*(hr+5.2),ez+o*7);propAdd('crate',pc[0],pc[1],.3*sd);var pb=P(sd*(hr+6.6),ez+o*8.2);propAdd('barrel',pb[0],pb[1],0)})});
-  legoStatic(G,'p11',pil);legoStatic(G,'w21',wal);
-  var ls=new T.MeshBasicMaterial({color:0xfff1c8,toneMapped:false}),bg=new T.BoxGeometry(1,1,1);for(var u=a0+4;u<a1-2;u+=6){[-2.6,2.6].forEach(function(x){var lp=new T.Mesh(bg,ls),p2=P(x,u);lp.scale.set(V?.3:2.6,.08,V?2.6:.3);lp.position.set(p2[0],H-.05,p2[1]);G.add(lp)})}
+  legoStatic(G,'w21',wal);
   [a0,a1].forEach(function(e,ei){var p3=P(0,e+(ei?1:-1)*1.9);var s=new T.Mesh(new T.PlaneGeometry(6,1.5),new T.MeshBasicMaterial({map:signTex('TUNNEL','#ffc21a'),toneMapped:false}));s.position.set(p3[0],H+.9,p3[1]);s.rotation.y=V?(ei?0:Math.PI):(ei?Math.PI/2:-Math.PI/2);G.add(s)});
   propsFlush(G)}
 /* detailed city vehicles: bus, taxi, tram car (used by cityExtras) */
@@ -1998,7 +2003,7 @@ function danger(){if(!dng)return;var T2=race.on&&race.tag;if(!T2){dng.style.opac
 function inTunA(x,z){if(!ARENA)return 0;for(var i=0;i<ARENA.tun.length;i++){var r=ARENA.tun[i];if(x>r[0]&&x<r[1]&&z>r[2]&&z<r[3])return 1}return 0}
 var CB_P=[[2.15,0],[2.05,.95],[2.05,-.95],[-2.05,.95],[-2.05,-.95],[1,1],[1,-1],[-1,1],[-1,-1],[-2.15,0]];
 function carBox(c,dt,A){ /* push the car's corners, nose and tail out of walls */
-  var any=false;for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x<b[0]-2.6||c.x>b[1]+2.6||c.z<b[2]-2.6||c.z>b[3]+2.6)continue;
+  var any=false;for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4]||b[5]!=null&&(c.y||0)<b[5])continue;if(c.x<b[0]-2.6||c.x>b[1]+2.6||c.z<b[2]-2.6||c.z>b[3]+2.6)continue;
     for(var it=0;it<2;it++){var sa=Math.sin(c.a),ca=Math.cos(c.a),best=0,bx=0,bz=0,ax=false;
       for(var p=0;p<CB_P.length;p++){var f=CB_P[p][0],s2=CB_P[p][1],px=c.x+sa*f+ca*s2,pz=c.z+ca*f-sa*s2;
         if(px>b[0]&&px<b[1]&&pz>b[2]&&pz<b[3]){var dl=px-b[0],dr=b[1]-px,dn=pz-b[2],df=b[3]-pz,mn=Math.min(dl,dr,dn,df);
@@ -2009,14 +2014,14 @@ function unstick(c,dt,r){var A=ARENA;
   if(c.backT>0){c.backT-=dt;c.x-=Math.sin(c.a)*8*dt;c.z-=Math.cos(c.a)*8*dt;c.a+=c.backDir*2.1*dt;c.va=c.a;c.v=0;return}
   c.stkT=(c.stkT||0)+dt;if(c.stkT<.4)return;var mv=Math.hypot(c.x-(c.stkX==null?c.x+9:c.stkX),c.z-(c.stkZ==null?c.z:c.stkZ));c.stkX=c.x;c.stkZ=c.z;c.stkT=0;
   var trying=(c.vTgt||0)>4,wall=false,R2=r+.9;
-  if(trying&&mv<1.2){var lim=A.half-R2;if(Math.abs(c.x)>lim||Math.abs(c.z)>lim)wall=true;for(var i=0;i<A.blocks.length&&!wall;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x>b[0]-R2&&c.x<b[1]+R2&&c.z>b[2]-R2&&c.z<b[3]+R2)wall=true}}
+  if(trying&&mv<1.2){var lim=A.half-R2;if(Math.abs(c.x)>lim||Math.abs(c.z)>lim)wall=true;for(var i=0;i<A.blocks.length&&!wall;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4]||b[5]!=null&&(c.y||0)<b[5])continue;if(c.x>b[0]-R2&&c.x<b[1]+R2&&c.z>b[2]-R2&&c.z<b[3]+R2)wall=true}}
   if(trying&&mv<1.2&&(wall||mv<.4)){c.stuckN=(c.stuckN||0)+1}else c.stuckN=0;
   if(c.stuckN>=2&&c.lastBack&&t-c.lastBack<4.5&&A.c&&A.c.length){var n=arenaNode(c.x,c.z),nx=A.c[n[0]],nz=A.c[n[1]];c.x=nx+(Math.abs(c.x-nx)<Math.abs(c.z-nz)?0:Math.sign(c.x-nx)*4);c.z=nz+(Math.abs(c.x-nx)<Math.abs(c.z-nz)?Math.sign(c.z-nz)*4:0);c.a=Math.atan2(nx-c.x,nz-c.z)+Math.PI;c.va=c.a;c.stuckN=0;c.lastBack=0;if(c.me&&typeof comic==='function')comic('RESCUED!','#3dff8a');return}
   if(c.stuckN>=2){c.stuckN=0;c.backT=1.1;c.lastBack=t;c.backDir=(c.steer||0)>.1?-1:(c.steer||0)<-.1?1:(Math.random()<.5?1:-1);if(c.me&&typeof comic==='function')comic('BACKING UP','#ffffff')}}
 function arenaDrive(c,dt){
   var A=ARENA,r=1.35,hit=false;
   var rb=.95;carBox(c,dt,A)&&(hit=true);
-  for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4])continue;if(c.x>b[0]-rb&&c.x<b[1]+rb&&c.z>b[2]-rb&&c.z<b[3]+rb){
+  for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(b[4]!=null&&(c.y||0)>b[4]||b[5]!=null&&(c.y||0)<b[5])continue;if(c.x>b[0]-rb&&c.x<b[1]+rb&&c.z>b[2]-rb&&c.z<b[3]+rb){
     var dl=c.x-(b[0]-rb),dr=(b[1]+rb)-c.x,dn=c.z-(b[2]-rb),df=(b[3]+rb)-c.z,mn=Math.min(dl,dr,dn,df);hit=true;
     if(mn===dl)c.x=b[0]-rb;else if(mn===dr)c.x=b[1]+rb;else if(mn===dn)c.z=b[2]-rb;else c.z=b[3]+rb;
     var ax=mn===dl||mn===dr;   /* slide along the face: turn toward the street direction */
@@ -3512,10 +3517,10 @@ function stBoom(S){shock(me.x,1,me.z,0xff5a1a,18);debris(me.x,1,me.z,[0xff5a1a,0
 function storyInit(o){var S=race.m2,A=ARENA;STY.blocks=[];S.prog=storyLoad();if(!S.prog.done)S.prog.done=[];
   S.pr=stBlock(0,2);S.base=stBlock(3,4);S.hpMax=250+40*(typeof stUp==='function'?stUp('armor'):0);S.hp=S.hpMax;S.wanted=0;S.evade=0;S.coins=0;S.bust=0;S.cops=[];S.talk=[];S.talkT=0;S.mis=null;S.target=null;S.placed=false;S.prevV=0;S.hitCd=0;S.spawnT=0;S.crash=0;
   S.stage=S.prog.escaped?'free':'prison';S.clock=S.prog.clock!=null?S.prog.clock:21;S.day=0;   /* saved game: you start at your base */
-  var G=trackGroup;stPrison(S,G);stBase(S,G);stBank(S,G);stLots(S,G);stMarkers(S,G);propsFlush(G);try{stParks(S,G)}catch(e){console.warn(e)}stStreets(S,G);stLights(S,G);stSky(S);
+  var G=trackGroup;stPrison(S,G);stBase(S,G);stBank(S,G);stLots(S,G);stMarkers(S,G);propsFlush(G);try{stParks(S,G)}catch(e){console.warn(e)}try{skyInit(S,G)}catch(e){console.warn('sky',e)}stStreets(S,G);stLights(S,G);stSky(S);
   S.gps=new T.InstancedMesh((function(){var s=new T.Shape();s.moveTo(-.9,-.5);s.lineTo(0,.6);s.lineTo(.9,-.5);s.lineTo(.5,-.5);s.lineTo(0,.05);s.lineTo(-.5,-.5);s.closePath();return new T.ShapeGeometry(s)})(),new T.MeshBasicMaterial({color:0xffd23c,transparent:true,opacity:.9,depthWrite:false,toneMapped:false}),ST_GN);
   S.gps.count=0;S.gps.frustumCulled=false;S.gps.renderOrder=3;scene.add(S.gps);S.gpsO=new T.InstancedMesh(S.gps.geometry,new T.MeshBasicMaterial({color:0x05070d,transparent:true,opacity:.7,depthWrite:false,toneMapped:false}),ST_GN);S.gpsO.count=0;S.gpsO.frustumCulled=false;S.gpsO.renderOrder=2;scene.add(S.gpsO);
-  var ar=new T.Group(),am=new T.MeshBasicMaterial({color:0xffd23c,toneMapped:false,depthTest:false}),ah=new T.Mesh(new T.ConeGeometry(.7,1.4,4),am);ah.rotation.x=Math.PI/2;ah.position.z=1;ar.add(ah);var as=new T.Mesh(new T.BoxGeometry(.4,.25,1.4),am);as.position.z=-.2;ar.add(as);ah.renderOrder=as.renderOrder=9;var om=new T.MeshBasicMaterial({color:0x05070d,toneMapped:false,depthTest:false,transparent:true,opacity:.85}),oh=new T.Mesh(ah.geometry,om),os=new T.Mesh(as.geometry,om);oh.rotation.x=Math.PI/2;oh.position.copy(ah.position);os.position.copy(as.position);oh.scale.setScalar(1.22);os.scale.set(1.5,1.6,1.15);oh.renderOrder=os.renderOrder=8;ar.add(oh,os);ar.scale.setScalar(1.35);scene.add(ar);S.arrow=ar;S.arrowM=am;
+  var ar=new T.Group(),am=new T.MeshBasicMaterial({color:0xffd23c,toneMapped:false,depthTest:false}),ah=new T.Mesh(new T.ConeGeometry(.7,1.4,4),am);ah.rotation.x=Math.PI/2;ah.position.z=1;ar.add(ah);var as=new T.Mesh(new T.BoxGeometry(.4,.25,1.4),am);as.position.z=-.2;ar.add(as);ah.renderOrder=as.renderOrder=9;ar.scale.setScalar(1.2);scene.add(ar);S.arrow=ar;S.arrowM=am;
   /* every bot starts parked as a police car; missions borrow some of them */
   cars.filter(function(c){return !c.me}).forEach(function(c){c.out=true;c.model.visible=false;if(c.nameTag)c.nameTag.visible=false;c.stRole=null;c.stPol=stPoliceModel();stSwap(c,c.stPol)});
   stCivInit(S);stHud(S);stCaseBtn(S);S.siteG={};S.prog.done.forEach(function(id){stSite(S,id)});
@@ -3559,7 +3564,7 @@ function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
     if(!S.mis){var nxi=-1;ST_MIS.some(function(q,qi){if(S.prog.done.indexOf(q.id)<0){nxi=qi;return true}});var nx=nxi>=0?ST_MIS[nxi]:null;
       if(nx){var k2=S.marks[nxi];S.target={x:k2.x,z:k2.z,ap:k2.ap,col:nx.col,n:(S.wanted>=.5?'COPS ON YOU! · ':'')+'JOB: '+nx.who+' · '+nx.n,giver:true}}
       else if(S.wanted>=.5)S.target={x:S.base.cx,z:S.base.cz,ap:[S.base.cx,A.c[4]],col:'#3dff8a',n:'LOSE THE COPS (OR HIDE AT BASE)',giver:true};else S.target=null}}
-  stMarkOn(S);stMisTick(S,dt);
+  stMarkOn(S);stMisTick(S,dt);try{skyTick(S,dt)}catch(e){console.warn(e)}
   S.gpsT=(S.gpsT||0)-dt;if(S.gpsT<=0){S.gpsT=.12;stGpsDraw(S)}
   if(S.target){var dx=S.target.x-me.x,dz=S.target.z-me.z,D=Math.hypot(dx,dz);S.arrow.visible=D>8;S.arrowM.color.set(S.target.col||'#ffd23c');S.arrow.position.set(me.x,(me.y||0)+3.4+.2*Math.sin(t*5),me.z);S.arrow.rotation.set(-.55,Math.atan2(dx,dz),0,'YXZ')}else S.arrow.visible=false}
 function storyGoal(c){var S=race.m2,M=S.mis;
@@ -3586,7 +3591,7 @@ function storyHud(){var S=race.m2;if(S.stage==='busted')return [S.hp<=0?'WRECKED
   var p2=!!S.prog.part1,ds=S.prog.done.filter(function(id){return ST_MIS.some(function(q){return q.id===id&&(q.p===2)===p2})}).length,tot=ST_MIS.filter(function(q){return (q.p===2)===p2}).length;
   if(S.mis&&S.mis.m.id==='drift')return [(S.dhud||'DRIFT')+tm,'lead'];
   return [(tg?tg.n+' · '+D+' m':'FREE ROAM · PART '+(p2?2:1)+' · '+ds+'/'+tot+' JOBS')+tm,S.wanted>=.5||(S.timer!=null&&S.timer<10)?'trail':'lead']}
-function storyClean(){var S=race.m2;if(!S)return;if(S.caseEl){S.caseEl.remove();S.caseEl=null;S.caseOpen=false}(S.copBars||[]).forEach(function(b){scene.remove(b.bg);scene.remove(b.fg)});S.copBars=[];(S.civ||[]).forEach(function(c){scene.remove(c.m)});S.civ=[];if(S.rb){S.rb.g.forEach(function(o){scene.remove(o)});S.rb=null}window.BSAuto=false;window.BSAutoDrift=false;if(S.chEl&&S.chEl.parentNode)S.chEl.parentNode.removeChild(S.chEl);(S.bombs||[]).forEach(function(b){scene.remove(b.m);scene.remove(b.ring)});S.bombs=[];if(S.rb){S.rb.g.forEach(function(o){scene.remove(o)});S.rb=null}if(S.sky)scene.remove(S.sky.g);cars.concat(allCars).forEach(function(c){var hl=c.model&&c.model.userData.hl;if(hl){c.model.remove(hl);c.model.userData.hl=null}if(c.stOrig&&c.stOrig.userData.hl){c.stOrig.remove(c.stOrig.userData.hl);c.stOrig.userData.hl=null}});if(S.cut){S.cut.actors.forEach(function(a){scene.remove(a)});S.cut=null}if(S.ctl)S.ctl.style.visibility='';if(S.wrap)S.wrap.classList.remove('bs-cut');if(S.hud)S.hud.remove();if(S.wrap)S.wrap.classList.remove('bs-story');if(S.gps)scene.remove(S.gps);if(S.gpsO)scene.remove(S.gpsO);if(S.arrow)scene.remove(S.arrow);(S.fxs||[]).forEach(function(f){scene.remove(f.s)});if(S.mis){var M=S.mis;if(M.box&&M.box.parent)M.box.parent.remove(M.box);[M.gate,M.next,M.zone].forEach(function(o){if(o)scene.remove(o)});M.parts.forEach(function(o){scene.remove(o)})}
+function storyClean(){var S=race.m2;if(!S)return;try{skyClean(S)}catch(e){}if(S.caseEl){S.caseEl.remove();S.caseEl=null;S.caseOpen=false}(S.copBars||[]).forEach(function(b){scene.remove(b.bg);scene.remove(b.fg)});S.copBars=[];(S.civ||[]).forEach(function(c){scene.remove(c.m)});S.civ=[];if(S.rb){S.rb.g.forEach(function(o){scene.remove(o)});S.rb=null}window.BSAuto=false;window.BSAutoDrift=false;if(S.chEl&&S.chEl.parentNode)S.chEl.parentNode.removeChild(S.chEl);(S.bombs||[]).forEach(function(b){scene.remove(b.m);scene.remove(b.ring)});S.bombs=[];if(S.rb){S.rb.g.forEach(function(o){scene.remove(o)});S.rb=null}if(S.sky)scene.remove(S.sky.g);cars.concat(allCars).forEach(function(c){var hl=c.model&&c.model.userData.hl;if(hl){c.model.remove(hl);c.model.userData.hl=null}if(c.stOrig&&c.stOrig.userData.hl){c.stOrig.remove(c.stOrig.userData.hl);c.stOrig.userData.hl=null}});if(S.cut){S.cut.actors.forEach(function(a){scene.remove(a)});S.cut=null}if(S.ctl)S.ctl.style.visibility='';if(S.wrap)S.wrap.classList.remove('bs-cut');if(S.hud)S.hud.remove();if(S.wrap)S.wrap.classList.remove('bs-story');if(S.gps)scene.remove(S.gps);if(S.gpsO)scene.remove(S.gpsO);if(S.arrow)scene.remove(S.arrow);(S.fxs||[]).forEach(function(f){scene.remove(f.s)});if(S.mis){var M=S.mis;if(M.box&&M.box.parent)M.box.parent.remove(M.box);[M.gate,M.next,M.zone].forEach(function(o){if(o)scene.remove(o)});M.parts.forEach(function(o){scene.remove(o)})}
   var A=ARENA;if(A&&STY.blocks)STY.blocks.forEach(function(q){var i=A.blocks.indexOf(q);if(i>=0)A.blocks.splice(i,1)});STY.blocks=[];
   cars.concat(allCars).forEach(function(c){if(c.stOrig){scene.remove(c.model);c.model=c.stOrig;scene.add(c.model);c.stOrig=null}c.stCop=false;c.stNpc=null;c.stPol=null;c.stRole=null});
   window.BS_STORYCITY=false;if(curMap==='city'){var id=curMap;curMap='';buildTrack(id)}}   /* rebuild Tag City so the prison and base are gone */
@@ -3945,7 +3950,7 @@ function stBodyMove(c,dt){if(c.kx||c.kz){c.x+=c.kx*dt;c.z+=c.kz*dt;var kd=Math.p
   var A=ARENA,r=1.3;for(var i=0;i<A.blocks.length;i++){var b=A.blocks[i];if(c.x>b[0]-r&&c.x<b[1]+r&&c.z>b[2]-r&&c.z<b[3]+r){var dl=c.x-(b[0]-r),dr=(b[1]+r)-c.x,dn=c.z-(b[2]-r),df=(b[3]+r)-c.z,mn=Math.min(dl,dr,dn,df);
     if(mn===dl){c.x=b[0]-r;c.kx=Math.min(0,c.kx)*-.3}else if(mn===dr){c.x=b[1]+r;c.kx=Math.max(0,c.kx)*-.3}else if(mn===dn){c.z=b[2]-r;c.kz=Math.min(0,c.kz)*-.3}else{c.z=b[3]+r;c.kz=Math.max(0,c.kz)*-.3}c.v*=.6}}
   var lim=A.half-1.4;c.x=Math.max(-lim,Math.min(lim,c.x));c.z=Math.max(-lim,Math.min(lim,c.z))}
-function stCivDrive(S,c,dt,all){var A=ARENA,hr=A.R/2,p=c.ax==='z'?c.z:c.x,tgt=9.5,lane=stLaneC(c.ax,c.dir,c.line);
+function stCivDrive(S,c,dt,all){if(c.pers==null)c.pers=.86+Math.random()*.28;var A=ARENA,hr=A.R/2,p=c.ax==='z'?c.z:c.x,tgt=9.5*c.pers,lane=stLaneC(c.ax,c.dir,c.line);
   c.cool-=dt;
   if(c.st==='parked'){c.tm-=dt;if(c.bay&&Math.hypot(c.x-c.bay.x,c.z-c.bay.z)>1.6){c.bay.taken=null;c.bay=null;c.st='crash';c.tm=2}
     else if(c.tm<=0){if(c.bay){c.bay.taken=null;c.bay=null}c.st='drive';c.cool=25+Math.random()*30}return}
@@ -3975,10 +3980,11 @@ function stCivDrive(S,c,dt,all){var A=ARENA,hr=A.R/2,p=c.ax==='z'?c.z:c.x,tgt=9.
   var fa=Math.sin(c.a),fc=Math.cos(c.a);all.forEach(function(o){if(o===c||o.out||creep&&o.civ)return;var dx=o.x-c.x,dz=o.z-c.z,al=dx*fa+dz*fc,lat=Math.abs(dx*fc-dz*fa);if(al>0&&al<13&&lat<2.4)tgt=Math.min(tgt,Math.max(0,(al-5.5)*1.3))});
   if(ARENA.movers&&!creep)ARENA.movers.forEach(function(mv){var q=mv.p;if(!q||q.hidden)return;var dx=q.x-c.x,dz=q.z-c.z,al=dx*fa+dz*fc,lat=Math.abs(dx*fc-dz*fa),hl=(mv.len||5)/2;if(al>0&&al<12+hl&&lat<2.4+(mv.w||2)/2)tgt=Math.min(tgt,Math.max(0,(al-hl-4)*1.2))});
   var ta=Math.atan2(tx-c.x,tz-c.z),da=wrap(ta-c.a);c.a+=Math.max(-1.9*dt,Math.min(1.9*dt,da*Math.min(1,dt*3.2)/Math.max(dt,1e-3)*dt));c.va=c.a;
-  c.brake=tgt<c.v-.4||c.v<.4;  c.v+=(tgt-c.v)*Math.min(1,dt*(tgt>c.v?1.2:3.2));c.x+=Math.sin(c.a)*c.v*dt;c.z+=Math.cos(c.a)*c.v*dt}
+  c.brake=tgt<c.v-.4||c.v<.4;  /* real drivers: gentle on the gas, firmer on the brake, never instant */var dv=tgt-c.v,acc=dv>0?Math.min(dv,(1.6+c.pers)*dt*1.4):Math.max(dv,-(tgt<.5&&c.v<3?6:4.5)*dt*1.6);c.v+=acc;c.x+=Math.sin(c.a)*c.v*dt;c.z+=Math.cos(c.a)*c.v*dt}
 function stCivTick(S,dt){if(!S.civ)return;var all=S.civ.concat(cars.filter(function(c){return !c.out&&c.model&&c.model.visible})),rb=S.rb?S.rb.bodies:[];all=all.concat(rb);
   var tt=performance.now()/1000;S.civ.forEach(function(c){var pa=c.a;stCivDrive(S,c,dt,all);stBodyMove(c,dt);c.m.position.set(c.x,0,c.z);c.m.rotation.y=c.a;
-    var yr=wrap(c.a-pa)/Math.max(dt,1e-3),sv=Math.max(2,Math.abs(c.v));c.steerV=Math.max(-.55,Math.min(.55,Math.atan(yr*2.7/sv)));civWheels(c.m,c.v,c.st==='crash'?0:c.steerV,dt);civLightsTick(c.m,c.brake||c.st==='parked'&&false,c.blink,tt)});
+    var yr=wrap(c.a-pa)/Math.max(dt,1e-3),sv=Math.max(2,Math.abs(c.v));c.steerV=Math.max(-.55,Math.min(.55,Math.atan(yr*2.7/sv)));civWheels(c.m,c.v,c.st==='crash'?0:c.steerV,dt);
+    /* body pitches when braking/accelerating and leans out in corners */var ac=(c.v-(c.pv==null?c.v:c.pv))/Math.max(dt,1e-3);c.pv=c.v;c.pit=(c.pit||0)+((Math.max(-.07,Math.min(.07,-ac*.016)))-(c.pit||0))*Math.min(1,dt*5);c.rol=(c.rol||0)+((Math.max(-.08,Math.min(.08,yr*sv*.012)))-(c.rol||0))*Math.min(1,dt*4);if(c.st!=='crash'){c.m.rotation.order='YXZ';c.m.rotation.set(c.pit,c.a,c.rol)}civLightsTick(c.m,c.brake||c.st==='parked'&&false,c.blink,tt)});
   /* crashes between NPCs / roadblocks and every other car */
   for(var i=0;i<all.length;i++)for(var j=i+1;j<all.length;j++){var A2=all[i],B2=all[j];if(!(A2.civ||A2.rbBody||B2.civ||B2.rbBody))continue;
     var dx=B2.x-A2.x,dz=B2.z-A2.z;if(dx*dx+dz*dz>27)continue;var pen=carPen(A2,B2);if(!pen)continue;var jj=carImpulse(A2,B2,pen,.32);
@@ -4067,7 +4073,7 @@ function stCase(S,newId,done){stCaseCss();if(S.caseEl)return;S.caseOpen=true;var
       var z=document.createElement('div');z.className='zoom';z.innerHTML='<div><div class="ph" style="'+stCasePh(ST_MIS.indexOf(m))+'"></div><b>#'+(ST_MIS.indexOf(m)+1)+' '+k.ev+'</b><small>'+k.place+' · FROM '+m.who+'</small><p>'+k.cap+'</p></div>';z.addEventListener('click',function(ev){ev.stopPropagation();z.remove()});d.appendChild(z);return}
     if(e.target.closest&&e.target.closest('.go')){window.removeEventListener('resize',strings);d.remove();S.caseEl=null;S.caseOpen=false;if(done)done()}});
   ['pointerdown','touchstart','keydown'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation()})})}
-function stCaseBtn(S){var b=document.createElement('button');b.type='button';b.className='csb';b.textContent='📁 CASE '+S.prog.done.length+'/'+ST_MIS.length;S.hud.appendChild(b);S.caseBtn=b;
+function stCaseBtn(S){stCaseCss();var b=document.createElement('button');b.type='button';b.className='csb';b.textContent='📁 CASE '+S.prog.done.length+'/'+ST_MIS.length;S.hud.appendChild(b);S.caseBtn=b;
   b.addEventListener('click',function(e){e.stopPropagation();if(S.mis||S.cut||S.caseOpen)return;stCase(S,null)});['pointerdown','touchstart'].forEach(function(ev){b.addEventListener(ev,function(e){e.stopPropagation()})})}
 /* the places of solved clues stay marked in the city: police tape, a numbered evidence tent, a chalk car outline */
 function stSiteXY(x,z){var A=ARENA,hr=A.R/2,f=function(v){for(var i=0;i<A.c.length;i++){var d=v-A.c[i],sg=i===0?1:i===A.c.length-1?-1:(d>=0?1:-1);if(Math.abs(d)<hr+1)return A.c[i]+sg*(hr+2.2)}return v};var ix=A.c.some(function(c){return Math.abs(x-c)<hr+1}),iz=A.c.some(function(c){return Math.abs(z-c)<hr+1});
@@ -4088,6 +4094,84 @@ function stFlyTo(S,done){var tg=S.target,M=S.mis;if(!tg||!M){if(done)done();retu
   stCutPlay(S,[{d:dur,title:'→ '+((ST_CASE[M.m.id]||{}).place||tg.n||''),cam:function(u){var e=stEase(u),cx=x0+(x1-x0)*e,cz=z0+(z1-z0)*e,y=6+Math.sin(Math.PI*Math.min(1,u*1.1))*h+(u>.8?(u-.8)*20:0),bk=12*(1-e);
       return [cx-Math.sin(a)*bk+(u>.6?(u-.6)*22:0),y,cz-Math.cos(a)*bk+(u>.6?(u-.6)*22:0),x0+(x1-x0)*Math.min(1,e*1.25),1,z0+(z1-z0)*Math.min(1,e*1.25)]}},
     {d:1.8,title:tg.n||'',cam:function(u){var r=22-u*4,an=.6+u*.5;return [x1+Math.cos(an)*r,15-u*4,z1+Math.sin(an)*r,x1,1,z1]}}],function(){if(S.mis===M){M.t0+=dur+1.8}if(done)done()})}
+
+/* ================= SECRET: THE BLUE TUNNEL / SKY DRIVE =================
+   Knock down the glowing LEGO pillars under the blue tunnel -> that part of the roof drops into a ramp ->
+   drive up onto the roof -> the brick wall of the little hangar on top blows open -> SKY DRIVE joins you. */
+var SKY_PORTRAIT='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165225_bf4b1d18-5357-4da4-86fe-64370e6b82ae.png';
+function skyCh(){return (window.BSChars||[]).filter(function(c){return c.id==='skydrive'})[0]||{id:'skydrive',name:'SKYDRIVE',col:'#3fd0ff',body:0xdfe6f0}}
+function skyCar(){var c=skyCh(),g;try{g=window.BSMakeCar?window.BSMakeCar(c):brickCar({body:c.body,num:'SD'})}catch(e){g=brickCar({body:0xdfe6f0,num:'SD'})}try{if(window.BSGLB){var w=BSGLB.wrap('skydrive',g);if(w)return w}}catch(e){}return g}
+function skyU(sec,x,z){return sec.V?z:x}function skyX(sec,x,z){return (sec.V?x:z)-sec.c0}
+function skyP(sec,lat,u){return sec.V?[sec.c0+lat,u]:[u,sec.c0+lat]}
+function skyInit(S,G){var A=ARENA,L=(A.tunSec||[]).slice().sort(function(a,b){return (a.V?1:0)-(b.V?1:0)}),sec=L[0];if(!sec||!sec.tags.length)return;
+  var K=S.sdx={sec:sec,st:S.prog.sky?'done':(S.prog.skyRamp?'ramp':'idle'),G:new T.Group(),mk:[],L:Math.max(1,sec.s1-sec.s0)};K.th=Math.asin(Math.min(.95,sec.top/K.L));G.add(K.G);
+  /* glowing rings + "?" above every pillar you must knock down */
+  var qT=canvasTex(128,128,function(c){c.fillStyle='rgba(63,208,255,.95)';c.beginPath();c.arc(64,64,56,0,7);c.fill();c.lineWidth=8;c.strokeStyle='#fff';c.stroke();c.fillStyle='#fff';c.font='900 80px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('?',64,70)});
+  sec.tags.forEach(function(p){var r=new T.Mesh(new T.RingGeometry(1.4,1.9,32),new T.MeshBasicMaterial({color:0x3fd0ff,transparent:true,opacity:.8,toneMapped:false,depthWrite:false,side:T.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(p.x,.07,p.z);K.G.add(r);
+    var q=new T.Sprite(new T.SpriteMaterial({map:qT,depthWrite:false,toneMapped:false}));q.scale.set(1.6,1.6,1);q.position.set(p.x,8.2,p.z);K.G.add(q);K.mk.push({p:p,r:r,q:q,down:false})});
+  /* the hangar on the roof past the drop: LEGO walls, plate roof, a turntable with SKY DRIVE inside */
+  var top=sec.top,dir=sec.a1>sec.s1?1:-1,u0=sec.s1+dir*3,u1=sec.s1+dir*15,uc=(u0+u1)/2,hw=7,HH=5.2,wal=[],B=function(lat,u){return skyP(sec,lat,u)};K.dir=dir;K.u0=u0;K.uc=uc;
+  var cols=[0xf4f4f4,0x1f6fff,0xf4f4f4,0x3fd0ff];
+  for(var r=0;r<8;r++){var y=top+.32+r*.64;
+    for(var uu=Math.min(u0,u1)+1+(r%2);uu<=Math.max(u0,u1)-1;uu+=2){[-hw,hw].forEach(function(lat){var p=B(lat,uu);wal.push([p[0],y,p[1],sec.V?Math.PI/2:0,cols[r%4]])})}
+    for(var la=-hw+1+(r%2);la<=hw-1;la+=2){var p=B(la,u1);wal.push([p[0],y,p[1],sec.V?0:Math.PI/2,cols[(r+1)%4]])}}
+  legoStatic(K.G,'w21',wal);
+  var rf=new T.Mesh(new T.BoxGeometry(sec.V?hw*2+1:Math.abs(u1-u0)+1,.5,sec.V?Math.abs(u1-u0)+1:hw*2+1),new T.MeshStandardMaterial({color:0x1f6fff,roughness:.35}));var rp=B(0,uc);rf.position.set(rp[0],top+HH+.3,rp[1]);rf.castShadow=true;K.G.add(rf);
+  var sg=new T.Mesh(new T.PlaneGeometry(8,2),new T.MeshBasicMaterial({map:signTex('SKY DRIVE','#3fd0ff'),toneMapped:false,transparent:true}));var sp=B(0,u0-dir*.2);sg.position.set(sp[0],top+HH+1.6,sp[1]);sg.rotation.y=sec.V?(dir>0?Math.PI:0):(dir>0?-Math.PI/2:Math.PI/2);K.G.add(sg);K.sign=sg;
+  var tt=new T.Mesh(new T.CylinderGeometry(3.2,3.2,.25,32),new T.MeshStandardMaterial({color:0xdfe6f0,roughness:.3,metalness:.4}));var tp=B(0,uc+dir*1.5);tt.position.set(tp[0],top+.12,tp[1]);K.G.add(tt);K.tt=tt;
+  var glow=new T.Mesh(new T.RingGeometry(3.25,3.6,40),new T.MeshBasicMaterial({color:0x3fd0ff,toneMapped:false,side:T.DoubleSide}));glow.rotation.x=-Math.PI/2;glow.position.set(tp[0],top+.26,tp[1]);K.G.add(glow);
+  var lamp=new T.PointLight(0x7fe0ff,1.4,16);lamp.position.set(tp[0],top+HH-.5,tp[1]);K.G.add(lamp);
+  /* walls only block you when you are up on the roof (min height) */
+  var bx=function(l0,l1,v0,v1){var a=B(l0,v0),b=B(l1,v1),r2=[Math.min(a[0],b[0]),Math.max(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[1],b[1]),top+HH+.6,top-1.2];A.blocks.push(r2);STY.blocks.push(r2);return r2};
+  bx(-hw-.5,-hw+.5,u0,u1);bx(hw-.5,hw+.5,u0,u1);bx(-hw,hw,u1-dir*.5,u1+dir*.5);K.door=bx(-hw,hw,u0-dir*.5,u0+dir*.5);
+  /* the secret front wall: loose LEGO bricks that blow out when you arrive */
+  if(K.st!=='done'){for(r=0;r<8;r++)for(var lb=-hw+1+(r%2)*.8;lb<=hw-1;lb+=1.6){var pp=B(lb,u0);propAdd('brick',pp[0],pp[1],sec.V?0:Math.PI/2,cols[(r+2)%4],top+.3+r*.6,'skywall')}propsFlush(K.G);
+    PROPS.list.forEach(function(b){if(b.tag==='skywall')b.roof={sec:sec,top:top}})}else K.door[4]=-1;
+  /* SKY DRIVE waits inside on the turntable */
+  if(K.st!=='done'){var car=skyCar();car.position.set(tp[0],top+.25,tp[1]);car.rotation.y=sec.V?(dir>0?Math.PI:0):(dir>0?-Math.PI/2:Math.PI/2)+Math.PI;K.G.add(car);K.car=car}
+  /* height: the dropped roof is a ramp, the rest of the roof is a floor once you are up there */
+  A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1]:[Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1,sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(x,z){var K2=S.sdx;if(!K2||!K2.down)return 0;var u=skyU(sec,x,z),lo=sec.s1-dir*K2.L*Math.cos(K2.th),f=(u-lo)/(sec.s1-lo);if(f<=0)return 0;var hh=Math.min(sec.top,f*sec.top);return ((me.y||0)>hh-1.8||hh<1.3)?hh:0}});
+  A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1)]:[Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1),sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(){var K2=S.sdx;return K2&&K2.down&&(me.y||0)>sec.top-2.2?sec.top:0}});
+  
+  if(K.st!=='idle')skyDrop(S,1);if(K.st==='done')skyFlyerOn(S);window.__sky=K}
+function skyDrop(S,u){var K=S.sdx,sec=K.sec,a=K.th*u*(K.dir>0?1:-1);if(sec.V)sec.pv.rotation.x=-a;else sec.pv.rotation.z=a;K.down=u>=1}
+function skyPillarDown(p){var n=0,m=0;PROPS.list.forEach(function(b){if(b.tag!==p.tag)return;n++;if(b.live||Math.hypot(b.x-b.x0,b.z-b.z0)>.6||b.y<b.y0-.4)m++});return n&&m>=Math.max(2,n*.25)}
+function skyTick(S,dt){var K=S.sdx;if(!K||!K.mk)return;if(!K.hud&&S.hud){var hud=document.createElement('div');hud.className='skyh';hud.style.cssText='position:absolute;left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 84px);padding:6px 14px;border-radius:999px;background:rgba(6,20,40,.82);border:2px solid #3fd0ff;color:#bff0ff;font:900 italic 15px "Saira Extra Condensed",system-ui;letter-spacing:.08em;display:none;pointer-events:none;white-space:nowrap';S.hud.appendChild(hud);K.hud=hud}if(!K.hud)return;var sec=K.sec,tt=performance.now()/1000,free=!S.mis&&!S.cut&&S.stage==='free';
+  K.mk.forEach(function(k){if(!k.down&&(k.forced||skyPillarDown(k.p))){k.down=true;k.r.visible=k.q.visible=false;if(K.st==='idle'||K.st==='smash')shock(k.p.x,1,k.p.z,0x3fd0ff,8)}var on=!k.down&&K.st!=='done'&&K.st!=='ramp';k.r.visible=k.q.visible=on;if(on){k.q.position.y=8.2+Math.sin(tt*2+k.p.x)*.4;k.r.material.opacity=.5+.4*Math.sin(tt*5)}});
+  var down=K.mk.filter(function(k){return k.down}).length,N=K.mk.length;
+  if(K.st==='idle'&&down>0&&free){K.st='smash';stBig(S,'SECRET FOUND!','#3fd0ff',2.2);stSay(S,'SKY DRIVE','Hey, down there! Knock out ALL the glowing LEGO pillars. The roof will drop and you can reach me!',5)}
+  if(K.st==='smash'&&down>=N&&free){K.st='falling';skyCutDrop(S)}
+  if(K.st==='ramp'&&free&&(me.y||0)>sec.top-1.5&&Math.abs(skyU(sec,me.x,me.z)-K.u0)<9&&Math.abs(skyX(sec,me.x,me.z))<sec.W/2){K.st='open';skyCutOpen(S)}
+  /* GPS + banner for the secret */
+  if(free&&(K.st==='smash'||K.st==='ramp')){var tg;if(K.st==='smash'){var nx=K.mk.filter(function(k){return !k.down}).sort(function(a,b){return Math.hypot(a.p.x-me.x,a.p.z-me.z)-Math.hypot(b.p.x-me.x,b.p.z-me.z)})[0];tg=nx?{x:nx.p.x,z:nx.p.z,col:'#3fd0ff',n:'SECRET · KNOCK DOWN THE PILLARS '+down+'/'+N}:null}
+      else{var lo=skyP(sec,0,sec.s1-K.dir*K.L*Math.cos(K.th)-K.dir*4),hi=skyP(sec,0,K.u0);tg=(me.y||0)>2?{x:hi[0],z:hi[1],col:'#3fd0ff',n:'SECRET · FIND THE HIDDEN HANGAR'}:{x:lo[0],z:lo[1],col:'#3fd0ff',n:'SECRET · DRIVE UP THE FALLEN ROOF'}}
+    if(tg&&Math.hypot(tg.x-me.x,tg.z-me.z)<260){S.target=tg;K.hud.style.display='';K.hud.textContent=tg.n}else K.hud.style.display='none'}else K.hud.style.display='none';
+  /* NPC cars must not drive into the fallen roof: they get moved to another street */
+  if(K.down&&S.civ)S.civ.forEach(function(c){var u=skyU(sec,c.x,c.z),la=Math.abs(skyX(sec,c.x,c.z));if(la<sec.hr+1&&(u-sec.s0)*(u-sec.s1)<0){var o=S.civ[(Math.random()*S.civ.length)|0];if(o===c||Math.abs(skyX(sec,o.x,o.z))<sec.hr+2)return;c.x=o.x-Math.sin(o.a)*14;c.z=o.z-Math.cos(o.a)*14;c.a=o.a;c.va=o.a;['ax','dir','line','lane','u'].forEach(function(f){if(o[f]!==undefined)c[f]=o[f]});c.dec={};c.v=o.v}});
+  if(K.car&&K.st!=='done'){K.tt.rotation.y+=dt*.5;K.car.rotation.y+=dt*.5}
+  skyFlyerTick(S,dt)}
+function skyCutDrop(S){var K=S.sdx,sec=K.sec,mid=skyP(sec,sec.W*1.6,(sec.s0+sec.s1)/2),look=skyP(sec,0,(sec.s0+sec.s1)/2);
+  stCutPlay(S,[{d:3.2,title:'THE ROOF IS COMING DOWN!',cam:function(u){var e=stEase(Math.min(1,u*1.15));skyDrop(S,e);if(u>.92&&!K.dust){K.dust=1;var lp=skyP(sec,0,sec.s0);shock(lp[0],.5,lp[1],0xbfd8ff,26);try{kick(.5,2)}catch(er){}}return [mid[0],9+u*4,mid[1],look[0],2,look[1]]}},
+    {d:3,say:['SKY DRIVE','YES! Now drive up the fallen roof. My hangar is on top of the tunnel!'],cam:function(u){var lp=skyP(sec,sec.W*.4,sec.s0-K.dir*12),hp=skyP(sec,0,K.u0);return [lp[0],4+u*6,lp[1],hp[0],sec.top,hp[1]]}}],function(){skyDrop(S,1);K.st='ramp';S.prog.skyRamp=1;storySave(S.prog)})}
+function skyCutOpen(S){var K=S.sdx,sec=K.sec,hp=skyP(sec,0,K.u0),cp=skyP(sec,sec.W*.55,K.u0-K.dir*10),ip=skyP(sec,0,K.uc);
+  stCutPlay(S,[{d:2.2,title:'A SECRET WALL…',start:function(){K.door[4]=-1;PROPS.list.forEach(function(b){if(b.tag!=='skywall')return;b.live=true;var dv=skyP(sec,(Math.random()-.5)*6,-K.dir*(7+Math.random()*7));b.vx=dv[0]-(sec.V?sec.c0:0);b.vz=dv[1]-(sec.V?0:sec.c0);b.vy=3+Math.random()*4;b.wx=(Math.random()-.5)*8;b.wz=(Math.random()-.5)*8});shock(hp[0],sec.top+2,hp[1],0x3fd0ff,18);try{kick(.4,2)}catch(e){}},cam:function(u){return [cp[0],sec.top+4,cp[1],hp[0],sec.top+2,hp[1]]}},
+    {d:4,title:'SKY DRIVE',say:['SKY DRIVE','You found me! GLITCH locked my hangar up here so nobody could ever fly after him.'],cam:function(u){var a=u*1.2;return [ip[0]+Math.cos(a)*7,sec.top+2.6,ip[1]+Math.sin(a)*7,ip[0],sec.top+1,ip[1]]}},
+    {d:4,say:['SKY DRIVE','I am on your team now. Pick me in the garage and press TAKE OFF to fly over anything!'],cam:function(u){return [hp[0]+(cp[0]-hp[0])*.5,sec.top+3+u*2,hp[1]+(cp[1]-hp[1])*.5,ip[0],sec.top+1,ip[1]]}},
+    {d:3.4,title:'TAKE OFF!',start:function(){K.launch=0},tick:function(u,dt){if(!K.car)return;K.launch+=dt;var c=K.car,f=skyP(sec,0,-K.dir);c.position.y+=dt*(2+K.launch*6);c.position.x+=(f[0]-(sec.V?0:-sec.c0*0))*0;try{if(Math.random()<.5)shock(c.position.x,c.position.y-.5,c.position.z,0x3fd0ff,3)}catch(e){}},cam:function(u){return [cp[0],sec.top+3+u*10,cp[1],ip[0],sec.top+2+u*16,ip[1]]}}],
+    function(){K.st='done';S.prog.sky=1;storySave(S.prog);if(K.car){K.G.remove(K.car);K.car=null}skyUnlock(S);skyFlyerOn(S)})}
+function skyUnlock(S){try{var d=JSON.parse(localStorage.getItem('bs-store')||'{}');d.chars=d.chars||{};d.chars.skydrive=1;localStorage.setItem('bs-store',JSON.stringify(d))}catch(e){}
+  var c=document.createElement('div');c.style.cssText='position:absolute;inset:0;z-index:95;display:grid;place-items:center;background:rgba(2,10,24,.72);pointer-events:auto;font-family:system-ui,sans-serif;animation:stcIn .35s ease-out';
+  c.innerHTML='<div style="width:min(380px,86vw,70vh);background:linear-gradient(160deg,#0d2a4a,#061426);border:3px solid #3fd0ff;border-radius:18px;padding:12px;box-shadow:0 0 40px rgba(63,208,255,.55);text-align:center;color:#e8f9ff">'+
+    '<div style="font:900 12px system-ui;letter-spacing:.24em;color:#3fd0ff">NEW DRIVER UNLOCKED</div><div style="aspect-ratio:1;margin:8px 0;border-radius:12px;background:#0a1a30 url('+SKY_PORTRAIT+') center/cover"></div>'+
+    '<div style="font:900 italic 34px/1 \'Saira Extra Condensed\',system-ui">SKY DRIVE</div><div style="font:700 13px/1.4 system-ui;margin:6px 0 10px;color:#bfe9ff">TAKE OFF: the wheels fold flat and you fly for 2 seconds, over traps, cars and walls.</div>'+
+    '<button type="button" style="min-height:46px;padding:0 26px;border:0;border-radius:12px;background:#3fd0ff;color:#04223a;font:900 15px system-ui;letter-spacing:.08em">AWESOME!</button></div>';
+  ['pointerdown','touchstart'].forEach(function(ev){c.addEventListener(ev,function(e){e.stopPropagation()})});c.querySelector('button').onclick=function(e){e.stopPropagation();c.remove();S.caseOpen=false};S.caseOpen=true;S.hud.appendChild(c)}
+/* after you free him, SKY DRIVE flies over the city with a jet trail */
+function skyFlyerOn(S){var K=S.sdx;if(!K||K.fly)return;var c=skyCar();c.scale.setScalar(1.1);scene.add(c);var tr=new T.InstancedMesh(new T.SphereGeometry(.45,6,4),new T.MeshBasicMaterial({color:0xbff0ff,transparent:true,opacity:.55,depthWrite:false,toneMapped:false}),40);tr.frustumCulled=false;scene.add(tr);K.fly={c:c,tr:tr,pts:[],t:0};S.skyFly=K.fly}
+function skyFlyerTick(S,dt){var K=S.sdx,F=K&&K.fly;if(!F)return;F.t+=dt;var R=Math.min(150,(ARENA.half||160)*.72),a=F.t*.16,x=Math.cos(a)*R,z=Math.sin(a*1.0)*R*.75,y=26+Math.sin(F.t*.7)*3,nx=Math.cos(a+.02)*R,nz=Math.sin((a+.02))*R*.75;
+  F.c.position.set(x,y,z);F.c.rotation.set(0,Math.atan2(nx-x,nz-z)+Math.PI,Math.sin(F.t*.9)*.25);F.pts.unshift([x,y,z]);if(F.pts.length>40)F.pts.pop();
+  var d=new T.Object3D();F.pts.forEach(function(p,i){var b=skyP?0:0;d.position.set(p[0],p[1]-.2,p[2]);d.scale.setScalar(Math.max(.05,1-i/40)*1.4);d.updateMatrix();F.tr.setMatrixAt(i,d.matrix)});F.tr.count=F.pts.length;F.tr.instanceMatrix.needsUpdate=true}
+function skyClean(S){var K=S&&S.sdx;if(!K)return;if(K.fly){scene.remove(K.fly.c);scene.remove(K.fly.tr)}if(K.hud)K.hud.remove()}
 
 /* ================= TEST LAB: a small arena with everything turned up to the max:
    polished reflective floor (environment map), sharp soft shadows, neon, a grandstand, a pit garage, an LED screen,
@@ -5987,14 +6071,14 @@ lock3d=function(){lockT=0;burst()};
    The base car (no skin) loads its GLB; until it arrives the old brick car shows, then it swaps in place. */
 (function(){
 var B='https://d2ol7oe51mr4n9.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/';
-var U={bomber:'d3e2bbc1-b45f-476b-90e1-cea358813cdc',blaze:'4ca32db0-839f-45ff-9a57-96b531eb02b1',shifter:'a3b869f3-5a44-404b-97a2-268cb0c617e7',
+var U={skydrive:'https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165424_6e7a13f0-27fc-4556-9829-32a1362fe2ff.glb',bomber:'d3e2bbc1-b45f-476b-90e1-cea358813cdc',blaze:'4ca32db0-839f-45ff-9a57-96b531eb02b1',shifter:'a3b869f3-5a44-404b-97a2-268cb0c617e7',
 glider:'89069587-0f6a-4e80-b5bf-22d8d7c30e66',rally:'40e2ab3f-0a5c-469a-96d2-842a0bd50684',elf:'c2ac83e0-ee5f-4cc2-943b-5d5cc82cdcf2',
 reindeer:'fe425d2d-7432-492b-a09e-a548f15dca83',hunter:'e988f94e-2330-49c8-9ad1-ea251eb7aa65',police:'bd99b4e8-72e6-4e9b-99a7-14642efbf988',
 starter:'c5f2bae9-cba2-4804-b422-97fd9e19f105',chase:'87ff27f1-9e56-4df9-9332-06db46f57549',santa:'9968a821-fea6-43ba-9e1e-ad759970d360',
 snowman:'960552b1-976f-4be8-9a2f-e906b73312e5',techno:'ba9d24ec-2c4e-4988-b8a7-6e64f823fc79',rewind:'c6847258-9ebe-4a99-9391-8cc870f54fb0',
 swap:'767a578c-8380-4cc0-8ef4-4b410359edff'};
 // which way each model faces: the SAM models face +z, Blaze (Meshy) faces -x. The game wants front = -z.
-var ROT={blaze:-Math.PI/2};
+var ROT={blaze:-Math.PI/2,skydrive:Math.PI/2};
 var LEN=4.9,WID=3.2,cache={},wait={},loader=null;
 function L(){if(!loader&&window.THREE&&THREE.GLTFLoader)loader=new THREE.GLTFLoader();return loader}
 function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
@@ -6039,7 +6123,7 @@ function glbSplit(root){var T=THREE;root.updateMatrixWorld(true);var inv=new T.M
  root.userData.split=true;return true}
 
 function load(id,cb){if(cache[id]){cb(cache[id]);return}if(wait[id]){wait[id].push(cb);return}var l=L();if(!l||!U[id])return;
- wait[id]=[cb];l.load(B+U[id]+'.glb',function(g){try{if(window.glbShrink)window.glbShrink(g.scene,512,true);cache[id]=prep(id,g.scene)}catch(e){console.error(e)}var q=wait[id];wait[id]=null;if(cache[id])q.forEach(function(f){f(cache[id])})},
+ wait[id]=[cb];l.load(U[id].indexOf('http')===0?U[id]:B+U[id]+'.glb',function(g){try{if(window.glbShrink)window.glbShrink(g.scene,512,true);cache[id]=prep(id,g.scene)}catch(e){console.error(e)}var q=wait[id];wait[id]=null;if(cache[id])q.forEach(function(f){f(cache[id])})},
   undefined,function(e){console.warn('BSGLB',id,e);wait[id]=null})}
 // wrap a procedural car g: same API (wheels, top, fly), swaps to the GLB when it is ready
 function wrap(id,g){if(!U[id]||!L())return null;var T=THREE,w=new T.Group();w.add(g);
@@ -8039,7 +8123,7 @@ var PROF=jget('bs-prof');
  try{history.replaceState(null,'',location.pathname+location.search+'#lobby')}catch(e){}
 })();
 function padIdx(id){return PADIDS.indexOf(id)}
-function owned(id){var i=padIdx(id);if(i<0)return false;var sd=jget('bs-store');if(sd&&sd.chars&&sd.chars[id])return true;if(!PROF)return id==='blaze';return !!((PROF.m>>>i)&1)}
+function owned(id){var sd=jget('bs-store');if(sd&&sd.chars&&sd.chars[id])return true;var i=padIdx(id);if(i<0)return false;if(!PROF)return id==='blaze';return !!((PROF.m>>>i)&1)}
 function level(id){var i=padIdx(id);return PROF&&PROF.lv[i]?PROF.lv[i]:1}
 function skinIdx(id){var i=padIdx(id);if(!PROF||i<0)return -1;var k=+String(PROF.ks||'').charAt(i)||0;if(!k)return -1;var s=i*2+k-1;return ((PROF.kn>>>s)&1)?s:-1}
 function skinOwned(s){return !!(PROF&&((PROF.kn>>>s)&1))}
@@ -8104,7 +8188,7 @@ window.BSStore=function(){return storeData()};
 function wallet(){var E=earn(),w=E.cur.t+(storeData().test||0);(E.gq||[]).forEach(function(b){w+=b.t});return w}
 function spend(n){var E=earn();if(wallet()<n)return false;var sd0=storeData();if(sd0.test){var tk0=Math.min(sd0.test,n);sd0.test-=tk0;n-=tk0;jset('bs-store',sd0)}if(!n){draw();return true}var take=Math.min(E.cur.t,n);E.cur.t-=take;n-=take;var q=E.gq||[];for(var i=q.length-1;i>=0&&n>0;i--){var tk=Math.min(q[i].t,n);q[i].t-=tk;n-=tk}E.gq=q.filter(function(b){return b.t>0||b.x>0});saveEarn(E);draw();return true}
 var ST_CHP={Base:500};function chPrice(c){return c.only?1200:(c.set==='Base'?500:800)}
-function storeChars(d,w){var L=chars(),h='';L.forEach(function(c){var pad=PROF&&(function(){var i=padIdx(c.id);return i>=0&&((PROF.m>>>i)&1)})(),onl=d.chars&&d.chars[c.id],free=!PROF&&c.id==='blaze',p=chPrice(c);
+function storeChars(d,w){var L=chars(),h='';L.forEach(function(c){if(c.id==='skydrive'&&!owned('skydrive')){h+='<div class="bsl-si" style="opacity:.75"><b>SKY DRIVE</b><small>SECRET · FIND HIM IN STORY: SMASH THE BLUE TUNNEL PILLARS</small></div>';return}var pad=PROF&&(function(){var i=padIdx(c.id);return i>=0&&((PROF.m>>>i)&1)})(),onl=d.chars&&d.chars[c.id],free=!PROF&&c.id==='blaze',p=chPrice(c);
     h+='<button class="bsl-si'+(!pad&&!onl&&!free&&w<p?' no':'')+(pad||onl||free?' eq':'')+'" data-ch="'+c.id+'"><span class="sw" style="background:'+c.col+'"></span><b>'+c.name+'</b><small>'+(c.ab||'')+'</small><span class="pr">'+(pad?'ON YOUR PAD':onl?'OWNED ONLINE':free?'FREE':'🪙 '+p)+'</span></button>'});
   $('bslChS').innerHTML=h;[].forEach.call(document.querySelectorAll('#bslChS .bsl-si'),function(b){b.onclick=function(){var id=b.dataset.ch,c=L.filter(function(q){return q.id===id})[0];if(owned(id)){toast(c.name+' is already yours');return}
     if(!spend(chPrice(c))){toast('Not enough online coins');return}var d2=storeData();d2.chars=d2.chars||{};d2.chars[id]=1;jset('bs-store',d2);vib(30);toast(c.name+' unlocked for online play!');storeDraw();draw()}})}
@@ -8160,7 +8244,7 @@ function esc(s){return String(s).replace(/[<>&"]/g,function(c){return {'<':'&lt;
 // ---------- choosing things (the game's own buttons, so everything stays in sync) ----------
 function soloSet(seg,attr,val){var b=document.querySelector('#'+seg+' button['+attr+'="'+val+'"]');if(b)b.click()}
 function setOpt(k,v){if(inRoom()){if(isHost())window.BSMP.setOpt(k,v);else toast('Only the host can change the game')}else{var M={map:['soloMap','data-map'],laps:['soloLaps','data-laps'],mode:['soloMode','data-mode'],teams:['soloTeams','data-teams'],arena:['soloArena','data-arena']}[k];soloSet(M[0],M[1],v)}draw()}
-function pickChar(i,quiet){var L=chars();i=(i+L.length)%L.length;var c=L[i];if(!owned(c.id)){if(!quiet){toast(c.name+' is locked: get it on your pad');vib(30)}return false}
+function pickChar(i,quiet){var L=chars();i=(i+L.length)%L.length;var c=L[i];if(!owned(c.id)){if(!quiet){toast(c.id==='skydrive'?'SKY DRIVE is a secret: find him in Story mode':c.name+' is locked: get it on your pad');vib(30)}return false}
  if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(i);else if(window.BSSetPicked)window.BSSetPicked(i);vib(8);draw();carSet();return true}
 function step(d){var L=chars(),i=L.indexOf(cur());for(var k=1;k<=L.length;k++){var j=(i+d*k+L.length*4)%L.length;if(owned(L[j].id)){pickChar(j);return}}}
 // make sure the driver you start with is one you own
@@ -8218,7 +8302,7 @@ function drvDraw(){var L=chars(),c0=cur(),c=(dvView&&L.filter(function(x){return
   inf.querySelector('.dvAct').onclick=function(){if(sv>=0&&!own){toast('Get '+SKN[sv][0]+' in the pad shop (BUNDLES)');return}if(!PROF){toast('Skins come from your pad shop');return}
    var k=sv<0?0:(sv%2)+1,ks=String(PROF.ks||'0000000000000000');while(ks.length<16)ks+='0';ks=ks.slice(0,pi)+k+ks.slice(pi+1);PROF.ks=ks;jset('bs-prof',PROF);vib(10);drvDraw();draw();carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()))};
   inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):'';inf.querySelector('.dvTx b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
-  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('.dvGo').onclick=function(){if(!owned(c.id)){toast(c.name+' is locked: get it on your pad');vib(30);return}if(c!==c0&&!pickChar(L.indexOf(c)))return;drvPop(false);panel(null);draw()}}
+  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('.dvGo').onclick=function(){if(!owned(c.id)){toast(c.id==='skydrive'?'SKY DRIVE is a secret: find him in Story mode':c.name+' is locked: get it on your pad');vib(30);return}if(c!==c0&&!pickChar(L.indexOf(c)))return;drvPop(false);panel(null);draw()}}
  var key=L.map(function(x){return x.id+owned(x.id)+level(x.id)}).join()+c0.id;if(box.__k===key)return;box.__k=key;box.innerHTML='';
  L.map(function(ch,i){return i}).sort(function(a,b){return rarOf(L[a].id)-rarOf(L[b].id)||a-b}).forEach(function(i){var ch=L[i],pi2=padIdx(ch.id),b=document.createElement('button');b.type='button';b.className='bsl-dc'+(owned(ch.id)?'':' lock');b.style.setProperty('--dc',ch.col);b.style.setProperty('--fr',FRC[rarOf(ch.id)]);
   b.setAttribute('aria-pressed',ch===c0?'true':'false');b.innerHTML='<span class="bslart"></span><b></b><small></small>'+(owned(ch.id)?'<span class="lv">LV '+level(ch.id)+'</span>':'');
