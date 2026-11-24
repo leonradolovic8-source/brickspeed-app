@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795509553">
+<meta name="bs-build" content="1795510353">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4448,7 +4448,61 @@ function useAbility(){
   case 'skydrive':me.flyStart=t;me.flyUntil=t+2;me.flyH=2.8;race.selfMul=1.12;race.selfUntil=t+2;tag(me,'TAKE OFF',col,2);toast3('TAKE OFF','Flying for 2 s');break;
   }
   try{abilityFX(id,c,list,col)}catch(e){}
+  try{abilityFX2(id,c,list,col)}catch(e){console.warn(e)}
 }
+/* ================= ABILITY ANIMATIONS 2.0: every ability gets a charge-up, a 3D burst, a car move and an aura while it lasts ================= */
+var AFX2={sp:null,aura:[]};
+function afxTex(){if(AFX2.sp)return AFX2.sp;return AFX2.sp=canvasTex(64,64,function(c){var g=c.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.3,'rgba(255,255,255,.6)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,0,64,64)})}
+function afxSpr(colr,sz){var s=new T.Sprite(new T.SpriteMaterial({map:afxTex(),color:colr,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}));s.scale.setScalar(sz||1);scene.add(s);return s}
+/* spark fountain bursting out of a car */
+function afxBurst(o,colr,n,spd){for(var i=0;i<(n||26);i++){var s=afxSpr(colr,.5+Math.random()*.5),a=Math.random()*Math.PI*2,v=(spd||9)*(.5+Math.random()),vy=4+Math.random()*7;s.position.set(o.x,(o.y||0)+1,o.z);
+  (function(s,vx,vy,vz){FXW.push({m:s,t:t,life:.7+Math.random()*.5,upd:function(u,dt){vy-=18*dt;s.position.x+=vx*dt;s.position.y=Math.max(.1,s.position.y+vy*dt);s.position.z+=vz*dt;s.material.opacity=1-u;s.scale.setScalar((1-u)*.9+.1)}})})(s,Math.cos(a)*v,vy,Math.sin(a)*v)}}
+/* light pillar */
+function afxPillar(o,colr,h){var m=new T.Mesh(new T.CylinderGeometry(1.6,2.2,h||14,24,1,true),new T.MeshBasicMaterial({color:colr,transparent:true,opacity:.45,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}));scene.add(m);
+  FXW.push({m:m,t:t,life:.7,upd:function(u){m.position.set(o.x,(o.y||0)+(h||14)/2,o.z);m.scale.set(1-u*.7,1,1-u*.7);m.material.opacity=.45*(1-u)}})}
+/* glowing orb flying from me to a target, leaving a trail, then exploding */
+function afxShot(from,to,colr,arc){var s=afxSpr(colr,1.6),x0=from.x,z0=from.z,y0=(from.y||0)+1.2,dur=.35;
+  FXW.push({m:s,t:t,life:dur,upd:function(u){var x=x0+(to.x-x0)*u,z=z0+(to.z-z0)*u,y=y0+((to.y||0)+1.2-y0)*u+Math.sin(u*Math.PI)*(arc||3);s.position.set(x,y,z);
+    if(Math.random()<.9){var tr=afxSpr(colr,.7);tr.position.set(x,y,z);FXW.push({m:tr,t:t,life:.35,upd:function(v){tr.material.opacity=1-v;tr.scale.setScalar(.7*(1-v))}})}
+    if(u>.97&&!s.done){s.done=1;afxBurst(to,colr,18,7);shock(to.x,to.y||0,to.z,colr,9)}}})}
+/* the car itself moves: hop, barrel roll, spin, squash */
+function afxMove(o,kind,dur){o.afxM={k:kind,t0:t,d:dur||.6}}
+function afxAura(o,colr,dur,kind){AFX2.aura.push({o:o,c:colr,until:t+dur,k:kind||'ring',acc:0})}
+/* billboard icon that rises over the car */
+function afxIcon(o,txt,colr){var tx=canvasTex(256,128,function(c){c.font='900 italic 64px Arial';c.textAlign='center';c.textBaseline='middle';c.lineWidth=10;c.strokeStyle='#000';c.strokeText(txt,128,64);c.fillStyle=colr;c.fillText(txt,128,64)});
+  var s=new T.Sprite(new T.SpriteMaterial({map:tx,transparent:true,depthTest:false,toneMapped:false}));s.renderOrder=9;scene.add(s);
+  FXW.push({m:s,t:t,life:1.3,upd:function(u){s.position.set(o.x,(o.y||0)+3+u*2.5,o.z);var k=u<.15?u/.15:1;s.scale.set(5*k,2.5*k,1);s.material.opacity=u>.7?(1-u)/.3:1}})}
+var AFX_MOVE={blaze:'squat',hunter:'hop',police:'hop',techno:'spin',bomber:'hop',rewind:'spinBack',ghost:'float',vampire:'hop',witch:'spin',pumpkin:'hop',santa:'hop',elf:'hop',reindeer:'hop',snowman:'hop',
+  glitch:'shake',neon:'roll',samurai:'roll',ninja:'spin',magnet:'squat',sumo:'slam',dj:'bounce',latchline:'roll',afterburn:'squat',brickquake:'slam',stormstud:'hop',rebound:'bounce',noclip:'shake',blastoff:'squat',skydrive:'roll',drifter:'spin',glider:'float'};
+var AFX_AURA={blaze:'flame',hunter:'ring',ghost:'ghost',vampire:'ring',sumo:'ring',rebound:'bubble',noclip:'ghost',blastoff:'flame',afterburn:'flame',neon:'ring',magnet:'ring',dj:'notes',brickquake:'ring',samurai:'flame',drifter:'flame',skydrive:'ring',latchline:'ring'};
+function abilityFX2(id,c,list,col){var h=hexOf(col),L=(list||[]).slice();if(c&&L.indexOf(c)<0)L.push(c);
+  afxPillar(me,h,12);afxBurst(me,h,30,8);afxIcon(me,(race.ch&&race.ch.ab||id).toUpperCase(),col);afxMove(me,AFX_MOVE[id]||'hop',.7);
+  var dur=Math.max(1.5,(race.selfUntil>t?race.selfUntil-t:0),(race.immuneUntil>t?race.immuneUntil-t:0),(race.shieldUntil>t?race.shieldUntil-t:0),(race.heavyUntil>t?race.heavyUntil-t:0));
+  afxAura(me,h,dur,AFX_AURA[id]||'ring');
+  L.forEach(function(o,i){if(!o||o===me)return;setTimeout(function(){afxShot(me,o,h,2+i);setTimeout(function(){afxMove(o,id==='snowman'?'freeze':id==='techno'||id==='glitch'||id==='elf'?'spin':'hop',.8);afxAura(o,h,1.6,'ring')},350)},i*120)})}
+function afxTick(dt){
+  /* car moves (applied on top of the pose every frame) */
+  cars.forEach(function(o){var M=o.afxM;if(!M||!o.model)return;var u=(t-M.t0)/M.d;if(u>=1){o.afxM=null;o.model.scale.set(1,1,1);return}var m=o.model,s=Math.sin(u*Math.PI);
+    if(M.k==='hop'){m.position.y+=s*1.4}else if(M.k==='bounce'){m.position.y+=Math.abs(Math.sin(u*Math.PI*3))*(1-u)*1.1}
+    else if(M.k==='spin'){m.rotation.y+=u*Math.PI*2;m.position.y+=s*.8}else if(M.k==='spinBack'){m.rotation.y-=u*Math.PI*2}
+    else if(M.k==='roll'){m.rotation.z+=u*Math.PI*2;m.position.y+=s*1.6}else if(M.k==='float'){m.position.y+=s*.9;m.rotation.z+=Math.sin(u*12)*.08*s}
+    else if(M.k==='shake'){m.position.x+=(Math.random()-.5)*.5*s;m.position.z+=(Math.random()-.5)*.5*s}
+    else if(M.k==='squat'){var k=u<.3?u/.3:1-(u-.3)/.7;m.scale.set(1+.12*k,1-.22*k,1+.08*k);m.rotation.x-=.15*k}
+    else if(M.k==='slam'){m.position.y+=u<.5?s*2.4:Math.max(0,(1-u)*2*2.4);if(u>.5&&!M.hit){M.hit=1;afxBurst(o,0xffd27a,20,10)}}
+    else if(M.k==='freeze'){m.scale.set(1+.06*s,1+.06*s,1+.06*s)}});
+  /* auras */
+  AFX2.aura=AFX2.aura.filter(function(A){if(t>A.until||!A.o.model)return false;A.acc+=dt;var o=A.o,y=(o.y||0);
+    while(A.acc>.05){A.acc-=.05;
+      if(A.k==='flame'){var hx=Math.sin(o.a),hz=Math.cos(o.a),f=afxSpr(Math.random()<.5?A.c:0xffd27a,.9);f.position.set(o.x-hx*2.3+(Math.random()-.5),y+.6,o.z-hz*2.3+(Math.random()-.5));
+        FXW.push({m:f,t:t,life:.45,upd:function(u){f.position.y+=.03;f.material.opacity=1-u;f.scale.setScalar(.9*(1-u)+.2)}})}
+      else if(A.k==='ghost'){var g=afxSpr(A.c,1.4);g.position.set(o.x+(Math.random()-.5)*3,y+.5+Math.random()*1.5,o.z+(Math.random()-.5)*3);FXW.push({m:g,t:t,life:.8,upd:function(u){g.position.y+=.02;g.material.opacity=.6*(1-u)}})}
+      else if(A.k==='notes'){var nt=afxIcon2(o,['♪','♫','♬'][(Math.random()*3)|0],A.c)}
+      else{var a=t*6+Math.random()*6.3,r=2.6,p=afxSpr(A.c,.45);p.position.set(o.x+Math.cos(a)*r,y+.3+Math.random()*1.4,o.z+Math.sin(a)*r);FXW.push({m:p,t:t,life:.5,upd:function(u){p.position.y+=.025;p.material.opacity=1-u}})}}
+    if(A.k==='bubble'){if(!A.b){A.b=new T.Mesh(new T.SphereGeometry(3.1,24,16),new T.MeshBasicMaterial({color:A.c,transparent:true,opacity:.18,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}));scene.add(A.b)}A.b.position.set(o.x,y+1,o.z);A.b.scale.setScalar(1+Math.sin(t*8)*.04);if(t>A.until-.05){scene.remove(A.b)}}
+    return true})}
+function afxIcon2(o,txt,colr){var tx=canvasTex(64,64,function(c){c.font='900 48px Arial';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#'+new T.Color(colr).getHexString();c.fillText(txt,32,34)});var s=new T.Sprite(new T.SpriteMaterial({map:tx,transparent:true,depthWrite:false,toneMapped:false}));scene.add(s);
+  var x=o.x+(Math.random()-.5)*3,z=o.z+(Math.random()-.5)*3;FXW.push({m:s,t:t,life:1,upd:function(u){s.position.set(x,(o.y||0)+1+u*3,z);s.material.opacity=1-u}})}
+
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
 function beam(a,b,colr,dur){var g=new T.BufferGeometry().setFromPoints([new T.Vector3(a.x,(a.y||0)+1.2,a.z),new T.Vector3(b.x,(b.y||0)+1.2,b.z)]),ln=new T.Line(g,new T.LineBasicMaterial({color:colr,transparent:true}));ln.frustumCulled=false;scene.add(ln);
@@ -5155,7 +5209,7 @@ function frame(now){
   var dt=Math.min(.05,(now-last)/1000);last=now;
   var reps=race.on&&race.dz&&race.phase==='go'&&!cars.some(function(c){return alive(c)&&(c.me||c.human)})?4:1;   /* every human is out: fast forward to the end */
   requestAnimationFrame(frame);   /* first, so one bad frame can never stop the game */
-  try{for(var rp=0;rp<reps;rp++)step(dt)}catch(e){if(!window.__bsErr){window.__bsErr=1;console.error(e)}}renderer.render(scene,activeCam());
+  try{for(var rp=0;rp<reps;rp++)step(dt)}catch(e){if(!window.__bsErr){window.__bsErr=1;console.error(e)}}try{afxTick(dt*reps)}catch(e){}renderer.render(scene,activeCam());
 }
 function setRunning(v){if(v===running)return;running=v;if(v){last=performance.now();requestAnimationFrame(frame)}}
 if('IntersectionObserver' in window){
@@ -5609,8 +5663,19 @@ function load(id,cb){if(cache[id]){cb(cache[id]);return}if(wait[id]){wait[id].pu
 // wrap a procedural car g: same API (wheels, top, fly), swaps to the GLB when it is ready
 function wrap(id,g){if(!U[id]||!L())return null;var T=THREE,w=new T.Group();w.add(g);
  w.wheels=(g.wheels||[]).slice();w.top=g.top;w.fly=g.fly;w.isGarage=g.isGarage;if(g.userData&&g.userData.garage)w.userData.garage=g.userData.garage;
- function put(tpl){if(g.parent===w)w.remove(g);var m=tpl.clone();m.name='glbcar';w.add(m);w.wheels.length=0;var nt=new T.Group();nt.anim=function(){};w.top=nt;w.fly=null;w.isGarage=false;w.userData.garage=null;w.glb=true}
+ function put(tpl){if(g.parent===w)w.remove(g);var m=tpl.clone();m.name='glbcar';w.add(m);w.wheels.length=0;try{glbWheels(w,m)}catch(e){console.warn('glbWheels',e)}var nt=new T.Group();nt.anim=function(){};w.top=nt;w.fly=null;w.isGarage=false;w.userData.garage=null;w.glb=true}
  if(cache[id])put(cache[id]);else load(id,put);return w}
+/* spinning wheels on the GLB cars: the models are one solid mesh, so real wheels (tyre, 5-spoke rim, brake disc) are fitted over the baked ones and turn and steer like the brick cars */
+function glbWheels(w,m){var T=THREE,bx=new T.Box3().setFromObject(m),s=new T.Vector3();bx.getSize(s);var r=Math.max(.42,Math.min(.72,s.y*.25)),hw=s.x/2,hl=s.z/2,cz=(bx.min.z+bx.max.z)/2;
+ var tyre=glbWheels.t||(glbWheels.t=new T.CylinderGeometry(1,1,1,24)),tm=glbWheels.tm||(glbWheels.tm=new T.MeshStandardMaterial({color:0x111214,roughness:.85})),rm=glbWheels.rm||(glbWheels.rm=new T.MeshStandardMaterial({color:0xd6dbe3,metalness:.9,roughness:.25})),
+   dm=glbWheels.dm||(glbWheels.dm=new T.MeshStandardMaterial({color:0x7a7f88,metalness:.7,roughness:.4})),cm=glbWheels.cm||(glbWheels.cm=new T.MeshStandardMaterial({color:0xd7261e,roughness:.4}));
+ [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){var wg=new T.Group();wg.position.set(q[0]*(hw-r*.42),r,cz+q[1]*(hl-r*1.5));
+   var ty=new T.Mesh(tyre,tm);ty.scale.set(r,r*.62,r);ty.rotation.z=Math.PI/2;ty.castShadow=true;wg.add(ty);
+   var rim=new T.Group();wg.add(rim);var rd=new T.Mesh(tyre,rm);rd.scale.set(r*.62,r*.64,r*.62);rd.rotation.z=Math.PI/2;rim.add(rd);
+   if(typeof cdkSpokes==='function'){var sp=new T.Mesh(cdkSpokes(),rm);sp.scale.setScalar(r/.36);sp.rotation.z=Math.PI/2;rim.add(sp)}
+   var hub=new T.Mesh(tyre,dm);hub.scale.set(r*.18,r*.7,r*.18);hub.rotation.z=Math.PI/2;rim.add(hub);
+   var cal=new T.Mesh(new T.BoxGeometry(.12,r*.5,r*.35),cm);cal.position.set(-q[0]*r*.05,r*.35,-r*.25);wg.add(cal);
+   w.add(wg);w.wheels.push(wg)})}
 window.BSGLB={ids:Object.keys(U),wrap:wrap,load:function(id){load(id,function(){})}};
 })();
 window.BSMakeCar=function(c){var g=null;if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.skin==null&&window.BSGLB){try{g=window.BSGLB.wrap(c.id,g)||g}catch(e){console.error(e)}}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
