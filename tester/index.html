@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795558363">
+<meta name="bs-build" content="1795561038">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -2488,7 +2488,7 @@ function drive(c,dt,steerIn,vTarget){c.vTgt=vTarget;
   return lat;
 }
 function land(c,gy){
-  var imp=-c.vy;c.air=false;c.y=gy;c.vy=0;
+  var imp=-c.vy;c.air=false;c.y=gy;c.vy=0;try{if(!c.softLand)airLand(c,imp,t-(c.airT||t),false)}catch(e){}
   var trk=c.sc?SC.ANG[c.sk]:ANG[c.k],err=Math.max(Math.abs(wrap(c.va-trk)),Math.abs(wrap(c.a-c.va)));if(c.softLand||ARENA){c.softLand=false;err=0}
   if(err>.28){c.v*=Math.max(.35,1-(err-.28)*1.5);c.hit=.8;if(c.me&&race.on)toast3('ROUGH LANDING','Land straight to keep your speed')}
   else if(imp>6)c.hit=Math.min(.5,imp*.04);
@@ -3530,8 +3530,8 @@ function storyInit(o){var S=race.m2,A=ARENA;STY.blocks=[];S.prog=storyLoad();if(
   stCivInit(S);stHud(S);stCaseBtn(S);S.siteG={};S.prog.done.forEach(function(id){stSite(S,id)});
   if(S.prog.escaped){var d=S.prog.done.length;stSay(S,'TECHNO','Welcome back to the base! '+(S.prog.part2?'You beat the whole story! Every job pays again.':S.prog.part1?'PART 2: GLITCH\'S REVENGE. Your next job is on the GPS.':d+' of 8 jobs done. The next one is on your GPS.'),4)}
   else S.needIntro=true;
-  stChooser(S)}
-function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
+  S.ldN=0}
+function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;if(S.ldN!=null&&++S.ldN>8){S.ldN=null;stLoadDone()}
   if(!S.placed){S.placed=true;if(S.stage==='free'){me.x=S.base.cx;me.z=S.base.z0+8;me.a=Math.PI}else{me.x=S.pr.cx+4;me.z=S.pr.cz;me.a=Math.PI/2}me.v=0;me.y=0}
   S.lights.forEach(function(l){l.a.rotation.y=l.ph+Math.sin(t*.5+l.ph)*1.2;if(l.c){l.c.visible=S.day<.8;l.c.material.opacity=.13*(1-S.day)}});var fl=Math.floor(t*7)%2;
   cars.forEach(function(c){var u=c.model&&c.model.userData.bar;if(u&&!c.out){var on=c.stCop&&S.wanted>=.5;u.red.color.setHex(on&&fl?0xff2030:0x400008);u.blue.color.setHex(on&&!fl?0x2a5cff:0x0a1440);u.gl.material.opacity=on&&fl?1:0;u.gr.material.opacity=on&&!fl?1:0}});
@@ -3553,8 +3553,8 @@ function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;
   if(inBase&&S.stage==='escape'){S.stage='free';S.target=null;S.prog.escaped=true;storySave(S.prog);stBig(S,'SAFE!','#3dff8a',2);S.wanted=0;setTimeout(function(){if(race.m2===S)stCutPlay(S,stCutBase(S))},900)}
   if(inBase&&!(S.mis&&S.mis.m.id==='final'&&S.mis.stage<3)){S.hp=Math.min(S.hpMax,S.hp+dt*70);if(S.wanted>0&&!(S.mis&&S.mis.m.id==='ghost'&&S.mis.stage===2)){S.wanted=0;comic('COPS LOST YOU','#3dff8a')}}
   /* health: police rams and hard crashes */
-  S.hitCd-=dt;var drop=S.prevV-me.v;S.crash=0;if(drop>9&&S.hitCd<=0){S.hp-=drop*1.6;S.crash=drop;S.hitCd=.5;flash('rgba(255,40,40,.3)')}S.prevV=me.v;
-  S.cops.forEach(function(c){var d=dist(c,me);if(d<6&&(typeof carPen!=='function'||carPen(c,me,.35))&&S.hitCd<=0){S.hitCd=.7;S.hp-=7+Math.abs(c.v-me.v)*.35;S.crash=Math.max(S.crash,8);shock((c.x+me.x)/2,.5,(c.z+me.z)/2,0x2a5cff,6);flash('rgba(255,40,40,.35)');if(me.v>14||S.wanted<.5)S.wanted=Math.min(5,Math.max(1,S.wanted+.25))}});
+  S.hitCd-=dt;var drop=S.prevV-me.v;S.crash=0;var inAir=me.air||me.glide||me.flyUntil>t||t-(me.landT||-9)<.35;if(drop>9&&S.hitCd<=0&&!inAir){S.hp-=drop*1.6;S.crash=drop;S.hitCd=.5;flash('rgba(255,40,40,.3)')}S.prevV=me.v;
+  S.cops.forEach(function(c){var d=dist(c,me);if(d<6&&!inAir&&(typeof carPen!=='function'||carPen(c,me,.35))&&S.hitCd<=0){S.hitCd=.7;S.hp-=7+Math.abs(c.v-me.v)*.35;S.crash=Math.max(S.crash,8);shock((c.x+me.x)/2,.5,(c.z+me.z)/2,0x2a5cff,6);flash('rgba(255,40,40,.35)');if(me.v>14||S.wanted<.5)S.wanted=Math.min(5,Math.max(1,S.wanted+.25))}});
   var near=S.wanted>=.5&&S.cops.some(function(c){return dist(c,me)<6});if(near&&me.v<3&&!inBase)S.bust+=dt;else S.bust=Math.max(0,S.bust-dt*2);
   if(S.hp<=0||S.bust>2.5){S.stage='busted';S.bustT=t+3.2;stBig(S,S.hp<=0?'WRECKED':'BUSTED','#ff3b3b',3);me.v=0;if(S.mis)stMisEnd(S,false);S.target=null;S.gps.count=0;if(S.gpsO)S.gpsO.count=0;S.arrow.visible=false;return}
   /* police: stars bring chasing cars; with no stars two patrol cars cruise the town (ram one and you get a star) */
@@ -4008,6 +4008,19 @@ function stCopDamage(S,dt){if(!S.copBars)S.copBars=[];
   S.copBars.forEach(function(b,i){var c=S.cops[i],on=c&&c.copHp<100&&(c.barT||0)>t;b.bg.visible=b.fg.visible=!!on;if(!on)return;var f=Math.max(0,c.copHp/100);
     b.bg.position.set(c.x,3.3,c.z);b.bg.scale.set(2.2,.28,1);b.fg.scale.set(2.1*f,.2,1);b.fg.position.set(c.x,3.3,c.z);b.fg.center.set(.5,.5);b.fg.material.color.setHex(f>.5?0x3dff8a:f>.25?0xffd23c:0xff3b3b)})}
 
+/* story loading screen: shown by the lobby the moment you press PLAY, removed once the town is built and drawn */
+function stLoadShow(){if(document.getElementById('stLoad'))return;var d=document.createElement('div');d.id='stLoad';
+  var tips=['Tap the CASE button to see the evidence you found','Cops on your tail? You can still start a job','Smash into LEGO walls: they really break','Land jumps smoothly for a little boost','The GPS arrows always show the way','Some secrets hide in plain sight…'];
+  d.innerHTML='<style>#stLoad{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 20%,#2a5cff 0%,#0d1a52 45%,#05081a 100%);color:#fff;font-family:system-ui,Arial,sans-serif;transition:opacity .45s}#stLoad.out{opacity:0;pointer-events:none}'+
+  '#stLoad .bx{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(460px,86vw);text-align:center}#stLoad .k{font:900 12px/1 system-ui;letter-spacing:.32em;color:#9fc0ff}#stLoad h2{margin:0;font:900 italic clamp(38px,9vw,64px)/.95 "Saira Extra Condensed",system-ui;letter-spacing:.02em;text-shadow:0 4px 0 #05081a,0 0 40px rgba(63,208,255,.45)}'+
+  '#stLoad .br{position:relative;width:100%;height:12px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;border:2px solid rgba(255,255,255,.35)}#stLoad .br i{position:absolute;inset:0 auto 0 0;width:8%;border-radius:inherit;background:linear-gradient(90deg,#ffd23c,#ff8a1f);transition:width .4s}'+
+  '#stLoad .tp{min-height:2.6em;font:700 14px/1.3 system-ui;color:#dfe8ff;opacity:.9}#stLoad .st{display:flex;gap:6px}#stLoad .st b{width:14px;height:10px;border-radius:3px;background:#ffd23c;animation:stLb 1s infinite ease-in-out}#stLoad .st b:nth-child(2){background:#ff2fb4;animation-delay:.15s}#stLoad .st b:nth-child(3){background:#3dff8a;animation-delay:.3s}#stLoad .st b:nth-child(4){background:#3fd0ff;animation-delay:.45s}@keyframes stLb{50%{transform:translateY(-8px)}}</style>'+
+  '<div class="bx"><span class="k">STORY MODE</span><h2>BRICK TOWN</h2><div class="st"><b></b><b></b><b></b><b></b></div><div class="br"><i></i></div><div class="tp"></div></div>';
+  document.body.appendChild(d);var bar=d.querySelector('.br i'),tp=d.querySelector('.tp'),n=0,ti=Math.floor(Math.random()*tips.length);tp.textContent='TIP: '+tips[ti];
+  d._iv=setInterval(function(){n++;bar.style.width=Math.min(92,8+n*7*(1-n/40))+'%';if(n%6===0){ti=(ti+1)%tips.length;tp.textContent='TIP: '+tips[ti]}},250);d._to=setTimeout(stLoadDone,30000)}
+function stLoadDone(){var d=document.getElementById('stLoad');if(!d||d._gone)return;d._gone=1;clearInterval(d._iv);clearTimeout(d._to);var b=d.querySelector('.br i');if(b)b.style.width='100%';setTimeout(function(){d.classList.add('out');setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},500)},250)}
+window.stLoadShow=stLoadShow;window.stLoadDone=stLoadDone;
+
 /* ================= THE CASE FILE: every job adds a piece of evidence; red string links them, so you can see how it all connects ================= */
 var ST_CASE={
  blaze:{ev:'THE WIPED TAPES',cap:'BLAZE hid the bank tapes at the docks. Someone wiped them before you got there.',place:'THE DOCKS',img:''},
@@ -4108,7 +4121,7 @@ function skyCar(){var c=skyCh(),g;try{g=window.BSMakeCar?window.BSMakeCar(c):bri
 function skyU(sec,x,z){return sec.V?z:x}function skyX(sec,x,z){return (sec.V?x:z)-sec.c0}
 function skyP(sec,lat,u){return sec.V?[sec.c0+lat,u]:[u,sec.c0+lat]}
 function skyInit(S,G,secIn){var A=ARENA,L=(A.tunSec||[]).slice().sort(function(a,b){return (a.V?1:0)-(b.V?1:0)}),sec=secIn||L[0];if(!sec||!sec.tags.length)return;
-  var K=S.sdx={sec:sec,st:S.prog.sky?'done':(S.prog.skyRamp?'ramp':'idle'),G:new T.Group(),mk:[],L:Math.max(1,sec.s1-sec.s0)};K.th=Math.asin(Math.min(.95,sec.top/K.L));G.add(K.G);
+  var K=S.sdx={sec:sec,st:(S.prog.sky||skyOwned())?'done':(S.prog.skyRamp?'ramp':'idle'),G:new T.Group(),mk:[],L:Math.max(1,sec.s1-sec.s0)};K.th=Math.asin(Math.min(.95,sec.top/K.L));G.add(K.G);
   /* glowing rings + "?" above every pillar you must knock down */
   var qT=canvasTex(128,128,function(c){c.fillStyle='rgba(63,208,255,.95)';c.beginPath();c.arc(64,64,56,0,7);c.fill();c.lineWidth=8;c.strokeStyle='#fff';c.stroke();c.fillStyle='#fff';c.font='900 80px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('?',64,70)});
   sec.tags.forEach(function(p){var r=new T.Mesh(new T.RingGeometry(1.4,1.9,32),new T.MeshBasicMaterial({color:0x3fd0ff,transparent:true,opacity:.8,toneMapped:false,depthWrite:false,side:T.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(p.x,.07,p.z);K.G.add(r);
@@ -4137,11 +4150,11 @@ function skyInit(S,G,secIn){var A=ARENA,L=(A.tunSec||[]).slice().sort(function(a
   A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1]:[Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1,sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(x,z){var K2=S.sdx;if(!K2||!K2.down)return 0;var u=skyU(sec,x,z),lo=sec.s1-dir*K2.L*Math.cos(K2.th),f=(u-lo)/(sec.s1-lo);if(f<=0)return 0;var hh=Math.min(sec.top,f*sec.top);return ((me.y||0)>hh-1.8||hh<1.3)?hh:0}});
   A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1)]:[Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1),sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(){var K2=S.sdx;return K2&&K2.down&&(me.y||0)>sec.top-2.2?sec.top:0}});
   
-  if(K.st==='ramp')skyDrop(S,1);if(K.st==='done'){skyRestore(S,true);skyFlyerOn(S)}window.__sky=K}
+  if(K.st==='ramp')skyDrop(S,1);if(K.st==='done'){skyRestore(S,true)}window.__sky=K}
 function skyDrop(S,u){var K=S.sdx,sec=K.sec,a=K.th*u*(K.dir>0?1:-1);if(sec.V)sec.pv.rotation.x=-a;else sec.pv.rotation.z=a;K.down=u>=1}
 function skyPillarDown(p){var n=0,m=0;PROPS.list.forEach(function(b){if(b.tag!==p.tag)return;n++;if(b.live||Math.hypot(b.x-b.x0,b.z-b.z0)>.6||b.y<b.y0-.4)m++});return n&&m>=Math.max(2,n*.25)}
 function skyTick(S,dt){var K=S.sdx;if(!K||!K.mk)return;if(!K.hud&&S.hud){var hud=document.createElement('div');hud.className='skyh';hud.style.cssText='position:absolute;left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 84px);padding:6px 14px;border-radius:999px;background:rgba(6,20,40,.82);border:2px solid #3fd0ff;color:#bff0ff;font:900 italic 15px "Saira Extra Condensed",system-ui;letter-spacing:.08em;display:none;pointer-events:none;white-space:nowrap';S.hud.appendChild(hud);K.hud=hud}if(!K.hud)return;var sec=K.sec,tt=performance.now()/1000,free=!S.mis&&!S.cut&&S.stage==='free';
-  K.mk.forEach(function(k){if(!k.down&&(k.forced||skyPillarDown(k.p))){k.down=true;k.r.visible=k.q.visible=false;if(K.st==='idle'||K.st==='smash')shock(k.p.x,1,k.p.z,0x3fd0ff,8)}var on=!k.down&&K.st!=='done'&&K.st!=='ramp';k.r.visible=k.q.visible=on;if(on){k.q.position.y=8.2+Math.sin(tt*2+k.p.x)*.4;k.r.material.opacity=.5+.4*Math.sin(tt*5)}});
+  K.mk.forEach(function(k){if(!k.down&&(k.forced||skyPillarDown(k.p))){k.down=true;k.r.visible=k.q.visible=false;if(K.st==='idle'||K.st==='smash')shock(k.p.x,1,k.p.z,0x3fd0ff,8)}var on=!k.down&&K.st!=='done'&&K.st!=='ramp'&&(K.st==='smash'||Math.hypot(k.p.x-me.x,k.p.z-me.z)<16);k.r.visible=on;k.q.visible=on&&K.st==='smash';if(on){k.q.position.y=8.2+Math.sin(tt*2+k.p.x)*.4;k.r.material.opacity=.5+.4*Math.sin(tt*5)}});
   var down=K.mk.filter(function(k){return k.down}).length,N=K.mk.length;
   if(K.st==='idle'&&down>0&&free){K.st='smash';stBig(S,'SECRET FOUND!','#3fd0ff',2.2);stSay(S,'SKY DRIVE','Hey, down there! Knock out ALL the glowing LEGO pillars in the car wash. The roof will drop and you can reach me!',5)}
   if(K.st==='smash'&&down>=N&&free){K.st='falling';skyCutDrop(S)}
@@ -4206,6 +4219,8 @@ function skyRestore(S,quiet){var K=S.sdx;if(!K)return;var sec=K.sec;skyDrop(S,0)
   (ARENA.blocks||[]).forEach(function(b){if(b[5]!=null&&Math.abs(b[5]-(sec.top-1.2))<.01)b[4]=-1});
   propsReset(function(b){return b.tag&&b.tag!=='skywall'&&(b.tag==='cwA'||b.tag==='cwB'||b.tag.indexOf('cw')===0)});propsHide(function(b){return b.tag==='skywall'});
   if(!quiet){var p=skyP(sec,-sec.hr*.45,sec.s0-K.dir*10);me.x=p[0];me.z=p[1];me.y=0;me.v=0;me.a=K.dir>0?Math.PI/2:-Math.PI/2;try{shock(me.x,1,me.z,0x3fd0ff,14)}catch(e){}stSay(S,'SKY DRIVE','The car wash is fixed and back to normal. See you in the sky!',4)}}
+
+function skyOwned(){try{var d=JSON.parse(localStorage.getItem('bs-store')||'{}');return !!(d.chars&&d.chars.skydrive)}catch(e){return false}}
 
 /* ================= TEST LAB: a small arena with everything turned up to the max:
    polished reflective floor (environment map), sharp soft shadows, neon, a grandstand, a pit garage, an LED screen,
@@ -4627,7 +4642,7 @@ var STK={t:0,s:0,tOn:false,used:false};
     function wup(e){if(e.pointerId!==wp)return;wp=null;W.classList.remove('drag');wset(0);STK.s=0}
     W.addEventListener('pointerup',wup);W.addEventListener('pointercancel',wup);W.addEventListener('lostpointercapture',wup)}
   /* gyro: the wheel on screen shows the tilt, and it centres itself on how you hold the phone when you switch it on */
-  var gyCen=0;function gyF(v){v=Math.round(v);return (v>0?'+':'')+v}(function gyLoop(){if(mode==='gyro'){if(tiltOn&&gyT&&performance.now()-gyT>350&&tiltRaw!==0){tiltZero=tiltRaw;gyT=0}wset(tilt*150);if(Wl){var gx=performance.now()-gyCen<1200?'✓ CENTERED':!tiltOn?'TAP TO TURN ON':'↔ '+gyF(tiltRaw-tiltZero)+'°  ↕ '+(pitchRaw==null?'--':gyF(pitchZero-pitchRaw))+'° · TAP = CENTRE';if(Wl.textContent!==gx)Wl.textContent=gx}}requestAnimationFrame(gyLoop)})();
+  var gyCen=0;function gyF(v){v=Math.round(v);return (v>0?'+':'')+v}(function gyLoop(){if(mode==='gyro'){if(tiltOn&&gyT&&performance.now()-gyT>350&&tiltRaw!==0){tiltZero=tiltRaw;gyT=0}wset(tilt*150);if(Wl){var gx=performance.now()-gyCen<1200?'✓ CENTERED':!tiltOn?'TAP TO TURN ON':'↔ '+gyF(tiltRaw-tiltZero)+'°  ↕ '+(pitchRaw==null?'--':gyF(pitchZero-pitchRaw))+'°';if(Wl.textContent!==gx)Wl.textContent=gx}}requestAnimationFrame(gyLoop)})();
   setMode(mode==='gyro'?'gyro':mode,false)})();
 canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
 var boostBtn=document.getElementById('boost'),driftBtnHeld=false,driftB=document.getElementById('driftb'),dhud=document.getElementById('dhud'),bhud=document.getElementById('bhud'),bnd=document.getElementById('bnd'),gapb=document.getElementById('gapb');
@@ -4985,7 +5000,7 @@ function glideStart(c){try{var DM=window.DeviceMotionEvent;if(DM&&typeof DM.requ
   tag(c,'SKY LAUNCH','#3fd0ff',2);toast3('SKY LAUNCH!','At the top the wings open: ▲ pull up · ▼ dive (or tilt)');try{comic('WHOOOSH!','#3fd0ff')}catch(e){}
   if(!GL.trail){var tr=new T.InstancedMesh(new T.SphereGeometry(.22,6,4),new T.MeshBasicMaterial({color:0xe8fbff,transparent:true,opacity:.6,depthWrite:false,toneMapped:false}),120);tr.frustumCulled=false;scene.add(tr);GL.trail=tr}}
 function glideEnd(land){var c=GL.c;c.glide=false;var hs=Math.hypot(GL.vx,GL.vz);c.v=Math.min(60,hs);c.a=c.va=Math.atan2(GL.vx,GL.vz);c.air=false;c.vy=0;c.y=arenaH(c.x,c.z);
-  if(land){var hard=-GL.vy;if(hard>22){c.v*=.5;c.hit=.9;toast3('HARD LANDING','Pull up before the ground!')}else{toast3('SMOOTH LANDING','+'+Math.round(hs*3.6)+' km/h kept')}try{shock(c.x,c.y+.2,c.z,0x3fd0ff,12)}catch(e){}}
+  if(land){var hard=-GL.vy;airLand(c,hard,9,true);try{shock(c.x,c.y+.2,c.z,0x3fd0ff,12)}catch(e){}}
   var w=c.model.userData.wings;if(w)w.userData.closing=1;if(GL.trail){scene.remove(GL.trail)}GL=null;var fp=document.getElementById('glhud');if(fp)fp.style.display='none'}
 function glideTick(dt){if(!GL)return;var c=GL.c;if(!race.on||race.phase!=='go'||!c.model){glideEnd(false);return}dt=Math.min(dt,.05);
   var w=c.model.userData.wings,G=30;
@@ -5021,6 +5036,16 @@ function glideTick(dt){if(!GL)return;var c=GL.c;if(!race.on||race.phase!=='go'||
 /* wings fold away after landing */
 function glidePost(dt){if(!me||!me.model)return;var w=me.model.userData&&me.model.userData.wings;if(w&&!GL&&w.userData.closing){var s=Math.max(.001,w.scale.x-dt*2.5);w.scale.setScalar(s);if(s<=.001)w.userData.closing=0}}
 window.glideStart=glideStart;
+
+/* landings (every jump and the Sky Drive glide): no damage while in the air; a soft landing gives a little boost, a hard one hurts */
+function airLand(c,imp,air,gl){if(!c||!c.me||!race.on||!(air>.45))return;c.landT=t;var st=race.mode==='story'&&race.m2&&race.m2.hp!=null?race.m2:null;
+  if(imp<(gl?12:9)){var b=gl?6:4.5;c.v=Math.min(Math.max(c.v||0,0)+b,gl?64:46);c.pad=Math.max(c.pad||0,t+.5);try{comic('SMOOTH LANDING +BOOST','#3dff8a');kick(.12,.6)}catch(e){}try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}}
+  else if(imp>(gl?20:16)){var dm=Math.round(Math.min(60,(imp-(gl?20:16))*2.6+6));c.v*=.6;c.hit=.9;if(st){st.hp-=dm;st.crash=Math.max(st.crash||0,6)}try{comic('HARD LANDING'+(st?' -'+dm:''),'#ff5a1a');flash('rgba(255,40,40,.35)');kick(.5,1)}catch(e){}try{navigator.vibrate&&navigator.vibrate([40,30,60])}catch(e){}}}
+/* livelier colours everywhere: every material colour gets a saturation lift once (cheap, runs every few seconds for new objects) */
+var VBH={};function vibMat(m){if(!m||m.userData&&m.userData.vb||!m.color)return;m.userData=m.userData||{};m.userData.vb=1;m.color.getHSL(VBH);if(VBH.s>.08&&VBH.l>.05&&VBH.l<.94)m.color.setHSL(VBH.h,Math.min(1,VBH.s*1.22+.03),Math.min(.9,VBH.l*1.02))}
+function vibAll(){if(typeof scene==='undefined'||!scene)return;scene.traverse(function(o){var m=o.material;if(!m)return;if(Array.isArray(m))m.forEach(vibMat);else vibMat(m)})}
+setInterval(function(){try{if(race.on)vibAll()}catch(e){}},2500);
+window.airLand=airLand;
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
@@ -5195,10 +5220,11 @@ function readTilt(e){
 }
 /* flight height: tilt the phone's top toward you to climb, away to dive (angle of the screen from upright, so it ignores steering) */
 var pitchRaw=null,pitchZero=0,flyBtn=0,motionSeen=false;
-window.addEventListener('devicemotion',function(e){var g=e.accelerationIncludingGravity;if(!g||g.z==null)return;motionSeen=true;var p=Math.atan2(Math.abs(g.z),Math.hypot(g.x||0,g.y||0))*57.3;pitchRaw=pitchRaw==null?p:pitchRaw+(p-pitchRaw)*.35});
+var gyP=(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')||/iPhone|iPad|iPod/.test(navigator.userAgent)?-1:1,gyOk=false,gyG=0,gyPO=null,gyPG=0,gyAcc=0,gyMT=0;
+window.addEventListener('devicemotion',function(e){var g=e.accelerationIncludingGravity;if(!g||g.z==null)return;motionSeen=true;var ax=(g.x||0)*gyP,ay=(g.y||0)*gyP,az=(g.z||0)*gyP,h=Math.hypot(ax,ay);var p=Math.atan2(az,h)*57.3;pitchRaw=pitchRaw==null?p:pitchRaw+(p-pitchRaw)*.35;var ang=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0),o=ang===90?1:(ang===270||ang===-90)?-1:0;if(!o||h<2.5){gyOk=false;return}var st=Math.atan2(o*ay,o*ax)*57.3;gyG=st;gyOk=true;gyMT=performance.now();tiltRaw=tiltRaw+(st-tiltRaw)*.5;if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
 function flyInput(){var v=0;if(tiltOn&&pitchRaw!=null){var d=(pitchZero-pitchRaw)/14;if(Math.abs(d)<.12)d=0;v=Math.max(-1,Math.min(1,d))}
   v+=flyBtn+(keys['r']?1:0)-(keys['f']?1:0);return Math.max(-1,Math.min(1,v))}
-window.addEventListener('deviceorientation',function(e){if(e.beta==null)return;tiltRaw=readTilt(e);if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
+window.addEventListener('deviceorientation',function(e){if(e.beta==null)return;var oV=readTilt(e);if(gyOk&&Math.abs(e.gamma||0)<50&&gyPO!=null){var d1=oV-gyPO,d2=gyG-gyPG;if(Math.abs(d1)>.6&&Math.abs(d2)>.6&&Math.abs(d1)<20&&Math.abs(d2)<20){gyAcc+=d1*d2>0?1:-1;if(gyAcc<-14){gyP=-gyP;gyAcc=0;tiltZero=-tiltZero;pitchZero=-pitchZero}if(gyAcc>14)gyAcc=14}}gyPO=oV;gyPG=gyG;if(gyOk&&performance.now()-gyMT<400)return;tiltRaw=oV;if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
 function setTilt(v){tiltOn=v;if(!v)tilt=0;else tiltZero=tiltRaw;RUI.tiltb.setAttribute('aria-pressed',v?'true':'false');RUI.tiltb.textContent=v?'Tilt: on':'Tilt: off'}
 RUI.tiltb.addEventListener('click',function(){
   if(tiltOn){tiltZero=tiltRaw;toast3('CENTERED','Hold the phone like a wheel');return}
@@ -5449,7 +5475,7 @@ function genCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;
    the room it is in right now (any room: its own, a random one or a FIND RACE room), so JOIN always finds it. */
 var FB={peer:null,ok:false,tries:0,pp:null,ppOk:false,q:[],busy:false,started:false};
 function fbId(code){return 'brickspeed-tfriend-'+String(code).toLowerCase()}
-function fbStatus(){return {t:'fs',room:NET.on&&NET.code?NET.code:'',race:!!NET.racing,full:!!(NET.on&&NET.players&&NET.players.length>=6),qm:!!NET.qm,n:NET.name||''}}
+function fbStatus(){return {t:'fs',room:NET.on&&NET.code?NET.code:'',race:!!NET.racing,full:!!(NET.on&&NET.players&&NET.players.length>=6),qm:!!NET.qm,n:NET.name||'',act:(function(){try{return race.on?String(race.mode||'race'):'lobby'}catch(e){return ''}})()}}
 function fbStart(){
   FB.started=true;var PC=peerCtor(),code=window.BSMyCode&&window.BSMyCode();if(!PC||!code){setTimeout(fbStart,3000);return}
   if(FB.peer&&!FB.peer.destroyed)return;
@@ -5475,8 +5501,8 @@ function fbPump(){if(FB.busy||!FB.q.length)return;FB.busy=true;var job=FB.q.shif
   var done=function(s){if(fin)return;fin=true;FB.cur=null;try{job.cb(s)}catch(e){}FB.busy=false;setTimeout(fbPump,50)};
   FB.cur={code:job.code,done:done};
   fbProber(function(p){if(!p){done(null);return}var c;try{c=p.connect(fbId(job.code),{reliable:true})}catch(e){done(null);return}
-    var tm=setTimeout(function(){try{c.close()}catch(e){}done(null)},6000);
-    c.on('data',function(d){clearTimeout(tm);try{c.close()}catch(e){}done(d&&d.t==='fs'?{room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm}:null)});
+    var tm=setTimeout(function(){try{c.close()}catch(e){}done(null)},4000);
+    c.on('data',function(d){clearTimeout(tm);try{c.close()}catch(e){}done(d&&d.t==='fs'?{room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm,act:String(d.act||'').replace(/[^a-z]/g,'').slice(0,10)}:null)});
     c.on('error',function(){clearTimeout(tm);done(null)})})}
 window.BSFriend={start:function(){if(!FB.started)fbStart()},probe:fbProbe,online:function(){return FB.ok}};
 
@@ -7489,6 +7515,7 @@ body.bsl-on.racing .hero .hud,body.bsl-on.racing .hero .pads{visibility:visible}
 .bsl-arrow{position:absolute;top:44%;width:38px;height:54px;border-radius:12px;background:rgba(10,22,48,.85);border:2px solid rgba(255,255,255,.18);font:900 26px var(--body);z-index:2;box-shadow:0 3px 0 #000}
 .bsl-arrow.l{left:0}.bsl-arrow.r{right:0}
 .bsl-play{position:relative;flex:1.5;min-height:0;border-radius:20px;overflow:hidden;transform:skewX(-6deg);background:linear-gradient(180deg,#ffe866,#ffcf00 45%,#ffaa00);border:4px solid #1a1200;
+.bsl-tile.bsl-sm{flex:.7}
  box-shadow:0 0 0 3px #ffcf00,0 6px 0 #7a4b00,0 0 30px rgba(255,190,0,.55);display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:clamp(12px,2.4vw,24px);color:#140c00!important;animation:bslplay 2s ease-in-out infinite}
 @keyframes bslplay{50%{box-shadow:0 0 0 3px #ffcf00,0 6px 0 #7a4b00,0 0 46px rgba(255,190,0,.9)}}
 .bsl-play::before{content:"";position:absolute;left:-3%;top:0;bottom:0;width:24%;background:conic-gradient(#111 25%,#ffcf00 0 50%,#111 0 75%,#ffcf00 0) 0 0/clamp(14px,3.6vh,22px) clamp(14px,3.6vh,22px);transform:skewX(-14deg)}
@@ -7751,8 +7778,6 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
     <button class="bsl-tile" id="bslTMode" type="button" style="--tc:#ff8a1f;flex:1.3"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="4" width="4" height="42" rx="2" fill="#ddd"/><path d="M12 6h30v22H12z" fill="#fff"/><path d="M12 6h7.5v5.5H12zM27 6h7.5v5.5H27zM19.5 11.5H27V17h-7.5zM34.5 11.5H42V17h-7.5zM12 17h7.5v5.5H12zM27 17h7.5v5.5H27zM19.5 22.5H27V28h-7.5zM34.5 22.5H42V28h-7.5z" fill="#111"/></svg></span><span><b>MODE</b><span class="v" id="bslVMode">RACE · BRICK RING · 1 LAP</span></span><i class="chev">›</i></button>
     <button class="bsl-tile" id="bslTPaint" type="button" style="--tc:#c45bff"><span class="bsl-ic"><span class="sw2" id="bslPaintSw" style="--pc:#8ea5cc"></span></span><span><b>GLOW</b><span class="v" id="bslVPaint">NO GLOW</span></span><i class="chev">›</i></button>
     <button class="bsl-tile" id="bslTStore" type="button" style="--tc:#3dff8a"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 10h6l4 20h22l4-14H15" fill="none" stroke="#3dff8a" stroke-width="3.5" stroke-linejoin="round"/><circle cx="19" cy="37" r="3.5" fill="#3dff8a"/><circle cx="34" cy="37" r="3.5" fill="#3dff8a"/></svg></span><span><b>STORE</b><span class="v" id="bslVStore">UPGRADES</span></span><i class="chev">›</i></button>
-    <button class="bsl-tile" id="bslTTop" type="button" style="--tc:#ffcf00"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/><path d="M14 11H7v3a7 7 0 0 0 7 7M34 11h7v3a7 7 0 0 1-7 7" fill="none" stroke="#ffcf00" stroke-width="3"/><rect x="21" y="26" width="6" height="8" fill="#e8a400"/><rect x="14" y="34" width="20" height="6" rx="2" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/></svg></span><span><b>TOP 10</b><span class="v">WORLD RANKING</span></span><i class="chev">›</i></button>
-    <button class="bsl-tile" id="bslTSync" type="button" style="--tc:#2a7bff"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="14" width="36" height="22" rx="10" fill="#2a7bff" stroke="#fff" stroke-width="2.5"/><circle cx="16" cy="25" r="5" fill="#fff"/><circle cx="32" cy="22" r="2.5" fill="#ffcf00"/><circle cx="36" cy="27" r="2.5" fill="#3dff8a"/></svg></span><span><b>MY PAD</b><span class="v" id="bslVSync">CONNECT YOUR PAD</span></span><i class="chev">›</i></button>
    </div>
    <div class="bsl-stage" id="bslStage">
     <div class="bsl-pod" aria-hidden="true"></div>
@@ -7763,7 +7788,9 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
     <div class="bsl-plate"><span class="lv" id="bslPlateLv">LV 1</span><b id="bslPlateN">BLAZE</b><span id="bslPlateA">TURBO · +25% POWER</span></div>
    </div>
    <div class="bsl-col">
-    <button class="bsl-tile" id="bslTFr" type="button" style="--tc:#3dff8a;flex:1.25"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="16" r="7" fill="#3dff8a"/><path d="M4 40c0-8 6-13 13-13s13 5 13 13z" fill="#3dff8a"/><circle cx="33" cy="18" r="6" fill="#2a7bff"/><path d="M24 40c1-7 5-11 10-11s10 4 10 11z" fill="#2a7bff"/></svg></span><span><b>FRIENDS</b><span class="v" id="bslVFr">CREATE OR JOIN A ROOM</span></span><i class="chev">›</i></button>
+    <button class="bsl-tile" id="bslTFr" type="button" style="--tc:#3dff8a;flex:1.1"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="16" r="7" fill="#3dff8a"/><path d="M4 40c0-8 6-13 13-13s13 5 13 13z" fill="#3dff8a"/><circle cx="33" cy="18" r="6" fill="#2a7bff"/><path d="M24 40c1-7 5-11 10-11s10 4 10 11z" fill="#2a7bff"/></svg></span><span><b>FRIENDS</b><span class="v" id="bslVFr">CREATE OR JOIN A ROOM</span></span><i class="chev">›</i></button>
+    <button class="bsl-tile bsl-sm" id="bslTTop" type="button" style="--tc:#ffcf00"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/><path d="M14 11H7v3a7 7 0 0 0 7 7M34 11h7v3a7 7 0 0 1-7 7" fill="none" stroke="#ffcf00" stroke-width="3"/><rect x="21" y="26" width="6" height="8" fill="#e8a400"/><rect x="14" y="34" width="20" height="6" rx="2" fill="#ffcf00" stroke="#8a5b00" stroke-width="2"/></svg></span><span><b>TOP 10</b><span class="v">WORLD RANKING</span></span><i class="chev">›</i></button>
+    <button class="bsl-tile bsl-sm" id="bslTSync" type="button" style="--tc:#2a7bff"><span class="bsl-ic"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="14" width="36" height="22" rx="10" fill="#2a7bff" stroke="#fff" stroke-width="2.5"/><circle cx="16" cy="25" r="5" fill="#fff"/><circle cx="32" cy="22" r="2.5" fill="#ffcf00"/><circle cx="36" cy="27" r="2.5" fill="#3dff8a"/></svg></span><span><b>MY PAD</b><span class="v" id="bslVSync">CONNECT YOUR PAD</span></span><i class="chev">›</i></button>
     <button class="bsl-play" id="bslPlay" type="button"><b id="bslPlayB">PLAY</b><small id="bslPlayS">RACE NOW</small></button>
    </div>
   </div>
@@ -7789,17 +7816,17 @@ body.bsl-can:not(.bsl-on):not(.racing) #bslOpen{display:block}
     <div class="bsl-box"><h3>Won online</h3><div class="bsl-big" id="bslPend">0 coins</div><p class="bsl-note" id="bslPendX" style="margin:0"></p><p class="bsl-note" style="margin:0">Coins and XP you win here go back to your pad. Up to 300 coins a day.</p></div>
     <div class="bsl-box"><h3>Send them to your pad</h3><ol class="bsl-steps"><li>Join your pad's Wi-Fi (BrickSpeed-Pad-…)</li><li>Tap <b>OPEN PAD</b>. The pad adds the coins.</li></ol><p class="bsl-note" style="margin:0">In the BrickSpeed app (Bluetooth) they go to your pad by themselves next time you open it.</p><button class="bsl-btn blue" id="bslOpenPad" type="button">OPEN PAD</button></div>
    </div><p class="bsl-msg" id="bslSyncMsg"></p></div></div>
-  <div class="bslp" id="bslPFr"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>Race <i>online</i></h2><span class="sub">UP TO 6 PLAYERS · FREE SPOTS ARE BOTS</span></div>
+  <div class="bslp" id="bslPFr"><div class="bslp-h"><button class="bsl-ib" data-back type="button" aria-label="Back">‹</button><h2>Friends <i>&amp; online</i></h2><span class="sub">YOUR FRIENDS FIRST · THEN RACES AND ROOMS</span></div>
    <div class="bslp-b">
+    <div class="bsl-box bsl-friends" id="bslFriends"><div class="bsl-fh"><h3>👥 My friends</h3><span class="bsl-mycode">YOUR CODE<b id="bslMyCode">----</b></span><button class="bsl-btn dark" id="bslMyShare" type="button">SHARE</button></div>
+     <ul class="bsl-fl" id="bslFl"></ul>
+     <div class="bsl-fadd"><input class="bsl-in" id="bslFAddN" maxlength="12" placeholder="FRIEND'S NAME" autocomplete="off" aria-label="Friend's name"><input class="bsl-in" id="bslFAddC" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" aria-label="Friend's code"><button class="bsl-btn" id="bslFAdd" type="button">ADD</button></div>
+     <p class="bsl-note" style="margin:0">When a friend creates a room, press JOIN next to their name. You can also add someone from a room with + FRIEND.</p></div>
     <div class="bsl-box bsl-find" id="bslFindBox"><div><h3>🔍 Find a race</h3><p class="bsl-note" style="margin:0">Race real players from anywhere in the world. If nobody is around, bots fill the free spots after 30 s.</p></div><button class="bsl-btn bsl-findb" id="bslFind" type="button">FIND RACE</button></div>
     <div class="bsl-two" id="bslFrOut">
      <div class="bsl-box"><h3>Create a room</h3><p class="bsl-note" style="margin:0">You are the host. Your room uses your own code, so your friends can join with one tap.</p><button class="bsl-btn" id="bslCreate" type="button">CREATE ROOM</button></div>
      <div class="bsl-box"><h3>Join a friend</h3><p class="bsl-note" style="margin:0">Type the 4-letter room code your friend sent you.</p><div class="bsl-join"><input class="bsl-in" id="bslCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" aria-label="Room code"><button class="bsl-btn blue" id="bslJoin" type="button">JOIN</button></div></div>
     </div>
-    <div class="bsl-box bsl-friends" id="bslFriends"><div class="bsl-fh"><h3>👥 My friends</h3><span class="bsl-mycode">YOUR CODE<b id="bslMyCode">----</b></span><button class="bsl-btn dark" id="bslMyShare" type="button">SHARE</button></div>
-     <ul class="bsl-fl" id="bslFl"></ul>
-     <div class="bsl-fadd"><input class="bsl-in" id="bslFAddN" maxlength="12" placeholder="FRIEND'S NAME" autocomplete="off" aria-label="Friend's name"><input class="bsl-in" id="bslFAddC" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" aria-label="Friend's code"><button class="bsl-btn" id="bslFAdd" type="button">ADD</button></div>
-     <p class="bsl-note" style="margin:0">When a friend creates a room, press JOIN next to their name. You can also add someone from a room with + FRIEND.</p></div>
     <div class="bsl-two" id="bslFrIn" hidden>
      <div class="bsl-box"><span class="bsl-grp" id="bslCodeL" style="margin:0">ROOM CODE</span><div class="bsl-code"><b id="bslCodeB">----</b></div>
       <button class="bsl-btn bsl-rdyb n" id="bslRdy" type="button">READY?</button>
@@ -8212,7 +8239,7 @@ var PROF=jget('bs-prof');
  try{history.replaceState(null,'',location.pathname+location.search+'#lobby')}catch(e){}
 })();
 function padIdx(id){return PADIDS.indexOf(id)}
-function owned(id){if(id==='skydrive'&&/\/tester\//.test(location.pathname))return true;var sd=jget('bs-store');if(sd&&sd.chars&&sd.chars[id])return true;var i=padIdx(id);if(i<0)return false;if(!PROF)return id==='blaze';return !!((PROF.m>>>i)&1)}
+function owned(id){var sd=jget('bs-store');if(sd&&sd.chars&&sd.chars[id])return true;var i=padIdx(id);if(i<0)return false;if(!PROF)return id==='blaze';return !!((PROF.m>>>i)&1)}
 function level(id){var i=padIdx(id);return PROF&&PROF.lv[i]?PROF.lv[i]:1}
 function skinIdx(id){var i=padIdx(id);if(!PROF||i<0)return -1;var k=+String(PROF.ks||'').charAt(i)||0;if(!k)return -1;var s=i*2+k-1;return ((PROF.kn>>>s)&1)?s:-1}
 function skinOwned(s){return !!(PROF&&((PROF.kn>>>s)&1))}
@@ -8277,7 +8304,7 @@ window.BSStore=function(){return storeData()};
 function wallet(){var E=earn(),w=E.cur.t+(storeData().test||0);(E.gq||[]).forEach(function(b){w+=b.t});return w}
 function spend(n){var E=earn();if(wallet()<n)return false;var sd0=storeData();if(sd0.test){var tk0=Math.min(sd0.test,n);sd0.test-=tk0;n-=tk0;jset('bs-store',sd0)}if(!n){draw();return true}var take=Math.min(E.cur.t,n);E.cur.t-=take;n-=take;var q=E.gq||[];for(var i=q.length-1;i>=0&&n>0;i--){var tk=Math.min(q[i].t,n);q[i].t-=tk;n-=tk}E.gq=q.filter(function(b){return b.t>0||b.x>0});saveEarn(E);draw();return true}
 var ST_CHP={Base:500};function chPrice(c){return c.only?1200:(c.set==='Base'?500:800)}
-function storeChars(d,w){var L=chars(),h='';L.forEach(function(c){if(c.id==='skydrive'&&!owned('skydrive')){h+='<div class="bsl-si" style="opacity:.75"><b>SKY DRIVE</b><small>SECRET · FIND HIM IN STORY: SMASH THE BLUE TUNNEL PILLARS</small></div>';return}var pad=PROF&&(function(){var i=padIdx(c.id);return i>=0&&((PROF.m>>>i)&1)})(),onl=d.chars&&d.chars[c.id],free=!PROF&&c.id==='blaze',p=chPrice(c);
+function storeChars(d,w){var L=chars(),h='';L.forEach(function(c){if(c.id==='skydrive'&&!owned('skydrive')){h+='<div class="bsl-si" style="opacity:.75"><b>??? SECRET DRIVER</b><small>Hidden somewhere in Story mode. Look closely around town…</small></div>';return}var pad=PROF&&(function(){var i=padIdx(c.id);return i>=0&&((PROF.m>>>i)&1)})(),onl=d.chars&&d.chars[c.id],free=!PROF&&c.id==='blaze',p=chPrice(c);
     h+='<button class="bsl-si'+(!pad&&!onl&&!free&&w<p?' no':'')+(pad||onl||free?' eq':'')+'" data-ch="'+c.id+'"><span class="sw" style="background:'+c.col+'"></span><b>'+c.name+'</b><small>'+(c.ab||'')+'</small><span class="pr">'+(pad?'ON YOUR PAD':onl?'OWNED ONLINE':free?'FREE':'🪙 '+p)+'</span></button>'});
   $('bslChS').innerHTML=h;[].forEach.call(document.querySelectorAll('#bslChS .bsl-si'),function(b){b.onclick=function(){var id=b.dataset.ch,c=L.filter(function(q){return q.id===id})[0];if(owned(id)){toast(c.name+' is already yours');return}
     if(!spend(chPrice(c))){toast('Not enough online coins');return}var d2=storeData();d2.chars=d2.chars||{};d2.chars[id]=1;jset('bs-store',d2);vib(30);toast(c.name+' unlocked for online play!');storeDraw();draw()}})}
@@ -8333,7 +8360,7 @@ function esc(s){return String(s).replace(/[<>&"]/g,function(c){return {'<':'&lt;
 // ---------- choosing things (the game's own buttons, so everything stays in sync) ----------
 function soloSet(seg,attr,val){var b=document.querySelector('#'+seg+' button['+attr+'="'+val+'"]');if(b)b.click()}
 function setOpt(k,v){if(inRoom()){if(isHost())window.BSMP.setOpt(k,v);else toast('Only the host can change the game')}else{var M={map:['soloMap','data-map'],laps:['soloLaps','data-laps'],mode:['soloMode','data-mode'],teams:['soloTeams','data-teams'],arena:['soloArena','data-arena']}[k];soloSet(M[0],M[1],v)}draw()}
-function pickChar(i,quiet){var L=chars();i=(i+L.length)%L.length;var c=L[i];if(!owned(c.id)){if(!quiet){toast(c.id==='skydrive'?'SKY DRIVE is a secret: find him in Story mode':c.name+' is locked: get it on your pad');vib(30)}return false}
+function pickChar(i,quiet){var L=chars();i=(i+L.length)%L.length;var c=L[i];if(!owned(c.id)){if(!quiet){toast(c.id==='skydrive'?'A secret driver: find him in Story mode':c.name+' is locked: get it on your pad');vib(30)}return false}
  if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(i);else if(window.BSSetPicked)window.BSSetPicked(i);vib(8);draw();carSet();return true}
 function step(d){var L=chars(),i=L.indexOf(cur());for(var k=1;k<=L.length;k++){var j=(i+d*k+L.length*4)%L.length;if(owned(L[j].id)){pickChar(j);return}}}
 // make sure the driver you start with is one you own
@@ -8390,12 +8417,12 @@ function drvDraw(){var L=chars(),c0=cur(),c=(dvView&&L.filter(function(x){return
   inf.querySelector('.kArr.r').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i+1)%L3.length];vib(6);drvDraw()};
   inf.querySelector('.dvAct').onclick=function(){if(sv>=0&&!own){toast('Get '+SKN[sv][0]+' in the pad shop (BUNDLES)');return}if(!PROF){toast('Skins come from your pad shop');return}
    var k=sv<0?0:(sv%2)+1,ks=String(PROF.ks||'0000000000000000');while(ks.length<16)ks+='0';ks=ks.slice(0,pi)+k+ks.slice(pi+1);PROF.ks=ks;jset('bs-prof',PROF);vib(10);drvDraw();draw();carSet();if(inRoom()&&window.BSMP.pickChar)window.BSMP.pickChar(chars().indexOf(cur()))};
-  inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):(c.id==='skydrive'?'<img alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165225_bf4b1d18-5357-4da4-86fe-64370e6b82ae.png" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block">':'');inf.querySelector('.dvTx b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
-  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');inf.querySelector('.dvGo').onclick=function(){if(!owned(c.id)){toast(c.id==='skydrive'?'SKY DRIVE is a secret: find him in Story mode':c.name+' is locked: get it on your pad');vib(30);return}if(c!==c0&&!pickChar(L.indexOf(c)))return;drvPop(false);panel(null);draw()}}
+  inf.querySelector('.bslart').innerHTML=pi>=0?PADART.art(pi):(c.id==='skydrive'?'<img alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165225_bf4b1d18-5357-4da4-86fe-64370e6b82ae.png" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block'+(owned('skydrive')?'':';filter:brightness(0) drop-shadow(0 0 6px #3fd0ff)')+'">':'');inf.querySelector('.dvTx b').textContent=c.name+'  LV '+level(c.id);inf.querySelector('.ab').textContent=RNAME[rarOf(c.id)]+' · '+c.ab+' · '+cdText(c);
+  inf.querySelector('.dvTx p').textContent=c.desc+(level(c.id)>1?' Level '+level(c.id)+': '+Math.round((1-window.BSLvK(c.id))*100)+'% shorter cooldown.':'');if(c.id==='skydrive'&&!owned(c.id)){inf.querySelector('.dvTx b').textContent='???';inf.querySelector('.ab').textContent='SECRET DRIVER';inf.querySelector('.dvTx p').textContent='Someone is hiding somewhere in Story mode. Keep your eyes open around town…';var g0=inf.querySelector('.dvGo');if(g0)g0.textContent='🔒 SECRET';var dcv=inf.querySelector('.dvCar');if(dcv)dcv.style.filter='brightness(0)'}inf.querySelector('.dvGo').onclick=function(){if(!owned(c.id)){toast(c.id==='skydrive'?'A secret driver: find him in Story mode':c.name+' is locked: get it on your pad');vib(30);return}if(c!==c0&&!pickChar(L.indexOf(c)))return;drvPop(false);panel(null);draw()}}
  var key=L.map(function(x){return x.id+owned(x.id)+level(x.id)}).join()+c0.id;if(box.__k===key)return;box.__k=key;box.innerHTML='';
  L.map(function(ch,i){return i}).sort(function(a,b){return rarOf(L[a].id)-rarOf(L[b].id)||a-b}).forEach(function(i){var ch=L[i],pi2=padIdx(ch.id),b=document.createElement('button');b.type='button';b.className='bsl-dc'+(owned(ch.id)?'':' lock');b.style.setProperty('--dc',ch.col);b.style.setProperty('--fr',FRC[rarOf(ch.id)]);
   b.setAttribute('aria-pressed',ch===c0?'true':'false');b.innerHTML='<span class="bslart"></span><b></b><small></small>'+(owned(ch.id)?'<span class="lv">LV '+level(ch.id)+'</span>':'');
-  b.querySelector('.bslart').innerHTML=pi2>=0?PADART.art(pi2):(ch.id==='skydrive'?'<img alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165225_bf4b1d18-5357-4da4-86fe-64370e6b82ae.png" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block">':'');b.querySelector('b').textContent=ch.name;b.querySelector('small').textContent=owned(ch.id)?RNAME[rarOf(ch.id)]:(ch.id==='skydrive'?'SECRET':'LOCKED');
+  b.querySelector('.bslart').innerHTML=pi2>=0?PADART.art(pi2):(ch.id==='skydrive'?'<img alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261124_165225_bf4b1d18-5357-4da4-86fe-64370e6b82ae.png" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block'+(owned('skydrive')?'':';filter:brightness(0) drop-shadow(0 0 6px #3fd0ff)')+'">':'');b.querySelector('b').textContent=ch.id==='skydrive'&&!owned(ch.id)?'???':ch.name;b.querySelector('small').textContent=owned(ch.id)?RNAME[rarOf(ch.id)]:(ch.id==='skydrive'?'SECRET':'LOCKED');
   b.onclick=function(){dvView=ch.id;drvPop(true);vib(6);drvDraw()};box.appendChild(b)})}
 // mode + track in one place
 function modeDraw(){var o=gameOpts(),md=o.mode||'race',lock=inRoom()&&!isHost(),tag=md==='tag',h='';
@@ -8481,18 +8508,19 @@ function saveFriends(a){store('bs-friends',JSON.stringify(a.slice(0,30)))}
 function isFriend(code){return friends().some(function(f){return f.c===code})}
 function addFriend(name,code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4||code===myCode())return false;var a=friends().filter(function(f){return f.c!==code});a.unshift({n:cleanName(name)||'FRIEND',c:code,t:Date.now()});saveFriends(a);return true}
 var FST={},fstT=0;   /* friends' status: code -> {s:'room'|'race'|'on'|'off', room} */
-function fstRun(){var a=friends();if(!a.length||!window.BSFriend)return;fstT=Date.now();a.forEach(function(f){if(!FST[f.c])FST[f.c]={s:'?'};window.BSFriend.probe(f.c,function(st){FST[f.c]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full}:{s:'on'};flDraw(1)})})}
-setInterval(function(){if($('bslPFr').classList.contains('on')&&!inRoom()&&Date.now()-fstT>20000)fstRun()},2000);
-function fstTxt(f){var q=FST[f.c]||{s:'?'};return q.s==='room'?'<em class="fs on">● IN A ROOM'+(q.full?' (FULL)':'')+'</em>':q.s==='race'?'<em class="fs on">● RACING NOW</em>':q.s==='on'?'<em class="fs on">● ONLINE · NOT IN A ROOM</em>':q.s==='off'?'<em class="fs">○ OFFLINE</em>':'<em class="fs">CHECKING…</em>'}
+var fstP=0;function fstRun(){var a=friends();if(!a.length||!window.BSFriend||fstP>0)return;fstT=Date.now();fstP=a.length;a.forEach(function(f){if(!FST[f.c])FST[f.c]={s:'?'};window.BSFriend.probe(f.c,function(st){fstP=Math.max(0,fstP-1);FST[f.c]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full,act:st.act}:{s:'on',act:st.act};flDraw(1)})})}
+setInterval(function(){if($('bslPFr').classList.contains('on')&&!inRoom()&&Date.now()-fstT>5000)fstRun()},1000);
+function fstAct(a){var M={lobby:'ONLINE · IN THE LOBBY',story:'PLAYING STORY MODE',race:'RACING (SOLO)',battle:'IN A 1V1 BATTLE',tag:'PLAYING TAG',dozer:'PLAYING DOZER',bomb:'PLAYING BOMB',potato:'PLAYING HOT POTATO',koth:'PLAYING KING OF THE HILL',lava:'PLAYING LAVA FLOOR'};return M[a]||(a?'PLAYING '+a.toUpperCase():'ONLINE · NOT IN A ROOM')}
+function fstTxt(f){var q=FST[f.c]||{s:'?'};return q.s==='room'?'<em class="fs on">● IN A ROOM'+(q.full?' (FULL)':'')+'</em>':q.s==='race'?'<em class="fs on">● RACING NOW</em>':q.s==='on'?'<em class="fs on">● '+fstAct(q.act)+'</em>':q.s==='off'?'<em class="fs">○ OFFLINE</em>':'<em class="fs">CHECKING…</em>'}
 function flDraw(noProbe){$('bslMyCode').textContent=myCode();var a=friends(),h='';
- if(!noProbe&&Date.now()-fstT>20000)setTimeout(fstRun,0);
+ if(!noProbe&&Date.now()-fstT>5000)setTimeout(fstRun,0);
  a.forEach(function(f){var q=FST[f.c]||{};h+='<li><span><b>'+esc(f.n)+'</b><small>CODE '+esc(f.c)+'</small>'+fstTxt(f)+'</span><button class="bsl-btn '+(q.s==='room'?'blue':'dark')+'" type="button" data-j="'+esc(f.c)+'">JOIN</button><button class="x" type="button" data-x="'+esc(f.c)+'" aria-label="Remove '+esc(f.n)+'">✕</button></li>'});
  if(!a.length)h='<li class="none">No friends yet. Add one with their code, or press + FRIEND next to a player in a room.</li>';
  var fl=$('bslFl');if(fl.__h!==h){fl.__h=h;fl.innerHTML=h}}
 $('bslFl').onclick=function(e){var j=e.target.closest('[data-j]'),x=e.target.closest('[data-x]');
  if(j){var f=friends().filter(function(q){return q.c===j.dataset.j})[0],fn=f?f.n:'your friend',fc=j.dataset.j;
    if(!window.BSFriend){doJoin(fc);return}frMsg('Looking for '+fn+'…');
-   window.BSFriend.probe(fc,function(st){FST[fc]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full}:{s:'on'};flDraw(1);
+   window.BSFriend.probe(fc,function(st){FST[fc]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full,act:st.act}:{s:'on',act:st.act};flDraw(1);
      if(st&&st.room){if(st.race)frMsg(fn+' is racing right now. Press JOIN again when the race ends.');else if(st.full)frMsg(fn+"'s room is full (6 players).");else{doJoin(st.room);frMsg('Joining '+fn+' in room '+st.room+'…')}}
      else if(st)frMsg(fn+' is online but not in a room. Ask them to create one, then press JOIN.');
      else{doJoin(fc);frMsg(fn+' did not answer. Trying their own room code '+fc+'… (they need the game open)')}})}
@@ -8519,7 +8547,7 @@ $('bslAuto').onclick=function(){auto=!auto;store('bsl-auto',auto?'1':'0');this.s
 $('bslPlay').onclick=function(){vib(20);
  if(inRoom()){panel('bslPFr');return}
  if(!window.BSRace){toast('The game is still loading');return}
- var c=cur();if(!owned(c.id)){ensureOwned();c=cur()}window.BSRace.start(window.BSPaint(c),window.BSMakeCar,null,opts())};
+ var c=cur();if(!owned(c.id)){ensureOwned();c=cur()}var oo=opts();if(oo.mode==='story'&&window.stLoadShow){window.stLoadShow();setTimeout(function(){try{window.BSRace.start(window.BSPaint(c),window.BSMakeCar,null,oo)}catch(e){window.stLoadDone&&window.stLoadDone();throw e}},80);return}window.BSRace.start(window.BSPaint(c),window.BSMakeCar,null,oo)};
 // after a race: "Pick a character" opens the driver panel here instead of scrolling the page
 var pcB=$('pickc');if(pcB)pcB.addEventListener('click',function(e){if(!B.classList.contains('bsl-on'))return;var n=NETo();if(n&&n.on)return;e.stopImmediatePropagation();e.preventDefault();if(window.BSRace)window.BSRace.end();setTimeout(function(){panel('bslPDrv')},50)},true);
 
