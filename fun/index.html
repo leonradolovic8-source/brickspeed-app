@@ -719,6 +719,7 @@ body.racing{overflow:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (function(){
@@ -5385,7 +5386,38 @@ function setCar(i){table.children.filter(function(o){return o.userData.isCar}).f
 setCar(0);colNow.set(CH[0].col);applyColor(colNow);
 go3d=function(i){nextCar=i;trans=0;colFrom.copy(colNow);colTo.set(CH[i].col);if(reduce){setCar(i);trans=1;colNow.copy(colTo);applyColor(colNow)}};
 lock3d=function(){lockT=0;burst()};
-window.BSMakeCar=function(c){var g=null;if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
+/* BSGLB: the 3D driver cars made with Higgsfield (GLB files on the Higgsfield CDN).
+   The base car (no skin) loads its GLB; until it arrives the old brick car shows, then it swaps in place. */
+(function(){
+var B='https://d2ol7oe51mr4n9.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/';
+var U={bomber:'d3e2bbc1-b45f-476b-90e1-cea358813cdc',blaze:'4ca32db0-839f-45ff-9a57-96b531eb02b1',shifter:'a3b869f3-5a44-404b-97a2-268cb0c617e7',
+glider:'89069587-0f6a-4e80-b5bf-22d8d7c30e66',rally:'40e2ab3f-0a5c-469a-96d2-842a0bd50684',elf:'c2ac83e0-ee5f-4cc2-943b-5d5cc82cdcf2',
+reindeer:'fe425d2d-7432-492b-a09e-a548f15dca83',hunter:'e988f94e-2330-49c8-9ad1-ea251eb7aa65',police:'bd99b4e8-72e6-4e9b-99a7-14642efbf988',
+starter:'c5f2bae9-cba2-4804-b422-97fd9e19f105',chase:'87ff27f1-9e56-4df9-9332-06db46f57549',santa:'9968a821-fea6-43ba-9e1e-ad759970d360',
+snowman:'960552b1-976f-4be8-9a2f-e906b73312e5',techno:'ba9d24ec-2c4e-4988-b8a7-6e64f823fc79',rewind:'c6847258-9ebe-4a99-9391-8cc870f54fb0',
+swap:'767a578c-8380-4cc0-8ef4-4b410359edff'};
+// which way each model faces: the SAM models face +z, Blaze (Meshy) faces -x. The game wants front = -z.
+var ROT={blaze:-Math.PI/2};
+var LEN=4.9,WID=3.2,cache={},wait={},loader=null;
+function L(){if(!loader&&window.THREE&&THREE.GLTFLoader)loader=new THREE.GLTFLoader();return loader}
+function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
+ scene.traverse(function(o){if(o.isMesh){if(o.geometry&&!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
+  var ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(function(m){if(m&&'metalness' in m){m.metalness=0;m.roughness=Math.max(.45,m.roughness==null?.6:m.roughness)}});
+  o.castShadow=o.receiveShadow=true}});
+ scene.rotation.y=ROT[id]!=null?ROT[id]:Math.PI;p.add(scene);
+ var b=new T.Box3().setFromObject(p),s=new T.Vector3();b.getSize(s);var k=Math.min(LEN/(s.z||1),WID/(s.x||1));p.scale.setScalar(k);
+ b.setFromObject(p);var c=new T.Vector3();b.getCenter(c);p.position.set(-c.x,-b.min.y,-c.z);root.add(p);return root}
+function load(id,cb){if(cache[id]){cb(cache[id]);return}if(wait[id]){wait[id].push(cb);return}var l=L();if(!l||!U[id])return;
+ wait[id]=[cb];l.load(B+U[id]+'.glb',function(g){try{cache[id]=prep(id,g.scene)}catch(e){console.error(e)}var q=wait[id];wait[id]=null;if(cache[id])q.forEach(function(f){f(cache[id])})},
+  undefined,function(e){console.warn('BSGLB',id,e);wait[id]=null})}
+// wrap a procedural car g: same API (wheels, top, fly), swaps to the GLB when it is ready
+function wrap(id,g){if(!U[id]||!L())return null;var T=THREE,w=new T.Group();w.add(g);
+ w.wheels=(g.wheels||[]).slice();w.top=g.top;w.fly=g.fly;w.isGarage=g.isGarage;if(g.userData&&g.userData.garage)w.userData.garage=g.userData.garage;
+ function put(tpl){if(g.parent===w)w.remove(g);var m=tpl.clone();m.name='glbcar';w.add(m);w.wheels.length=0;var nt=new T.Group();nt.anim=function(){};w.top=nt;w.fly=null;w.isGarage=false;w.userData.garage=null;w.glb=true}
+ if(cache[id])put(cache[id]);else load(id,put);return w}
+window.BSGLB={ids:Object.keys(U),wrap:wrap,load:function(id){load(id,function(){})}};
+})();
+window.BSMakeCar=function(c){var g=null;if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.skin==null&&window.BSGLB){try{g=window.BSGLB.wrap(c.id,g)||g}catch(e){console.error(e)}}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
 /* after a race: one clean car for the character shown on the card, no half-finished animations */
 window.BSSelectReset=function(){
   clearTimeout(lockIn.tm);lockT=-1;nextCar=null;trans=1;fxT=9;pMat.opacity=0;wave.material.opacity=0;
