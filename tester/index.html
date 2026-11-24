@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795544123">
+<meta name="bs-build" content="1795548696">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -1481,7 +1481,7 @@ function propAdd(kind,x,z,ry,col,y,tag){PROPS.q.push({kind:kind,x:x,z:z,ry:ry||0
 function propPile(x,z,ry,n){for(var i=0;i<n;i++){var row=Math.floor(i/3),k=i%3,o=-1.65+k*1.65+(row%2?.8:0);propAdd('brick',x+Math.cos(ry)*o,z-Math.sin(ry)*o,ry,LEGO_COL[(i*7+row)%LEGO_COL.length],.3+row*.62)}}
 function propsFlush(G){var Q=PROPS.q;PROPS.q=[];if(!Q.length)return;var g=propsGeo(),by={};Q.forEach(function(p){(by[p.kind]=by[p.kind]||[]).push(p)});
   Object.keys(by).forEach(function(k){var L=by[k],K=PROP_K[k],im=new T.InstancedMesh(g[k],K.col?g.mat:g.vmat,L.length);im.castShadow=true;im.receiveShadow=true;im.instanceMatrix.setUsage(T.DynamicDrawUsage);G.add(im);PROPS.ims.push(im);
-    var cc=new T.Color();L.forEach(function(p,i){var b={tag:p.tag,x0:p.x,z0:p.z,y0:p.y!=null?p.y:K.h,kind:k,x:p.x,y:p.y!=null?p.y:K.h,z:p.z,vx:0,vy:0,vz:0,rx:0,ry:p.ry,rz:0,wx:0,wy:0,wz:0,r:K.r,h:K.h,mass:K.m,live:false,inst:im,idx:i};PROPS.list.push(b);propPose(b);
+    var cc=new T.Color();L.forEach(function(p,i){var b={tag:p.tag,ry0:p.ry||0,x0:p.x,z0:p.z,y0:p.y!=null?p.y:K.h,kind:k,x:p.x,y:p.y!=null?p.y:K.h,z:p.z,vx:0,vy:0,vz:0,rx:0,ry:p.ry,rz:0,wx:0,wy:0,wz:0,r:K.r,h:K.h,mass:K.m,live:false,inst:im,idx:i};PROPS.list.push(b);propPose(b);
       if(K.col){cc.setHex(p.col||0xffffff).convertSRGBToLinear();im.setColorAt(i,cc)}});im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true})}
 function propPose(b){var d=propPose.d||(propPose.d=new T.Object3D());d.position.set(b.x,b.y,b.z);d.rotation.set(b.rx,b.ry,b.rz);d.updateMatrix();b.inst.setMatrixAt(b.idx,d.matrix)}
 /* static LEGO building blocks: one instanced mesh per call */
@@ -1489,7 +1489,7 @@ function legoStatic(G,kind,list){if(!list.length)return;var g=propsGeo(),im=new 
   list.forEach(function(p,i){d.position.set(p[0],p[1],p[2]);d.rotation.set(0,p[3]||0,0);d.updateMatrix();im.setMatrixAt(i,d.matrix);cc.setHex(p[4]).convertSRGBToLinear();im.setColorAt(i,cc)});G.add(im);return im}
 function propsTick(dt){if(!PROPS.list.length)return;if(PROPS.list[0].inst.parent==null||PROPS.ims.some(function(m){return !m.parent})){PROPS.list=PROPS.list.filter(function(b){return b.inst.parent});PROPS.ims=PROPS.ims.filter(function(m){return m.parent});if(!PROPS.list.length)return}
   var live=cars.filter(function(c){return !c.out&&c.model&&c.model.visible!==false}),S=race.m2,civ=(S&&S.civ)||[],dirty={};
-  PROPS.list.forEach(function(b){var near=false;for(var q=0;q<live.length+civ.length;q++){var c=q<live.length?live[q]:civ[q-live.length],dx=b.x-c.x,dz=b.z-c.z,rr=b.r+1.25;var dy=b.y-b.h-(c.y||0);if(dx*dx+dz*dz>rr*rr||dy>1.6||dy<-1.6)continue;near=true;
+  PROPS.list.forEach(function(b){if(b.hidden)return;var near=false;for(var q=0;q<live.length+civ.length;q++){var c=q<live.length?live[q]:civ[q-live.length],dx=b.x-c.x,dz=b.z-c.z,rr=b.r+1.25;var dy=b.y-b.h-(c.y||0);if(dx*dx+dz*dz>rr*rr||dy>1.6||dy<-1.6)continue;near=true;
       var sp=Math.hypot(Math.sin(c.va!=null?c.va:c.a)*c.v+(c.kx||0),Math.cos(c.va!=null?c.va:c.a)*c.v+(c.kz||0));
       if(sp<1.5){if(b.kind!=='brick'){var dl=Math.hypot(dx,dz)||1;b.x+=dx/dl*(rr-dl)*.6;b.z+=dz/dl*(rr-dl)*.6;dirty[b.inst.uuid]=b.inst;propPose(b)}continue}
       if(b.live&&Math.hypot(b.vx,b.vz)>sp*.8)continue;propHit(b,c,sp);
@@ -1505,6 +1505,10 @@ function propsTick(dt){if(!PROPS.list.length)return;if(PROPS.list[0].inst.parent
 function propHit(b,c,sp){var hx=Math.sin(c.va!=null?c.va:c.a),hz=Math.cos(c.va!=null?c.va:c.a),cvx=hx*c.v+(c.kx||0),cvz=hz*c.v+(c.kz||0),dx=b.x-c.x,dz=b.z-c.z,dl=Math.hypot(dx,dz)||1,k=1/Math.max(.4,b.mass);
   b.live=true;b.vx=cvx*(.9+.4*k)*Math.min(1.4,k)+dx/dl*sp*.25;b.vz=cvz*(.9+.4*k)*Math.min(1.4,k)+dz/dl*sp*.25;b.vy=(b.kind==='crate'?1.5:3)+sp*.18*Math.min(1.4,k);
   b.wx=(Math.random()-.5)*12*k;b.wz=(Math.random()-.5)*12*k;b.wy=(Math.random()-.5)*6;if(c.civ)return;c.v*=1-Math.min(.35,b.mass*.06);if(c.me)me.hit=Math.max(me.hit||0,Math.min(.6,b.mass*.25))}
+
+/* put bricks back where they were built (e.g. the car wash after the Sky Drive secret) */
+function propsReset(fn){var d={};PROPS.list.forEach(function(b){if(!fn(b))return;b.live=false;b.vx=b.vy=b.vz=b.wx=b.wy=b.wz=0;b.x=b.x0;b.y=b.y0;b.z=b.z0;b.rx=b.rz=0;b.ry=b.ry0;b.hidden=false;propPose(b);d[b.inst.uuid]=b.inst});for(var k in d)d[k].instanceMatrix.needsUpdate=true}
+function propsHide(fn){var d={},o=new T.Object3D();o.scale.setScalar(0);o.updateMatrix();PROPS.list.forEach(function(b){if(!fn(b))return;b.live=false;b.hidden=true;b.y=-50;b.inst.setMatrixAt(b.idx,o.matrix);d[b.inst.uuid]=b.inst});for(var k in d)d[k].instanceMatrix.needsUpdate=true}
 
 function arenaTunnel(A,G,q,roofCol,lampCol){var hr=A.R/2,c0=A.c[q[1]],a0=A.c[q[2]]-hr,a1=A.c[q[3]]+hr,len=a1-a0,mid=(a0+a1)/2,V=(q[0]==='v');A.tun.push(V?[c0-hr,c0+hr,a0,a1]:[a0,a1,c0-hr,c0+hr]);
   /* a LEGO tunnel: brick pillars that fall apart, brick portals, a studded blue plate roof with a green plate on top */
@@ -4133,7 +4137,7 @@ function skyInit(S,G,secIn){var A=ARENA,L=(A.tunSec||[]).slice().sort(function(a
   A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1]:[Math.min(sec.s0,sec.s1)-2,Math.max(sec.s0,sec.s1)+.1,sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(x,z){var K2=S.sdx;if(!K2||!K2.down)return 0;var u=skyU(sec,x,z),lo=sec.s1-dir*K2.L*Math.cos(K2.th),f=(u-lo)/(sec.s1-lo);if(f<=0)return 0;var hh=Math.min(sec.top,f*sec.top);return ((me.y||0)>hh-1.8||hh<1.3)?hh:0}});
   A.zones.push({r:sec.V?[sec.c0-sec.W/2,sec.c0+sec.W/2,Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1)]:[Math.min(sec.s1,sec.a1),Math.max(sec.s1,sec.a1),sec.c0-sec.W/2,sec.c0+sec.W/2],h:function(){var K2=S.sdx;return K2&&K2.down&&(me.y||0)>sec.top-2.2?sec.top:0}});
   
-  if(K.st!=='idle')skyDrop(S,1);if(K.st==='done')skyFlyerOn(S);window.__sky=K}
+  if(K.st==='ramp')skyDrop(S,1);if(K.st==='done'){skyRestore(S,true);skyFlyerOn(S)}window.__sky=K}
 function skyDrop(S,u){var K=S.sdx,sec=K.sec,a=K.th*u*(K.dir>0?1:-1);if(sec.V)sec.pv.rotation.x=-a;else sec.pv.rotation.z=a;K.down=u>=1}
 function skyPillarDown(p){var n=0,m=0;PROPS.list.forEach(function(b){if(b.tag!==p.tag)return;n++;if(b.live||Math.hypot(b.x-b.x0,b.z-b.z0)>.6||b.y<b.y0-.4)m++});return n&&m>=Math.max(2,n*.25)}
 function skyTick(S,dt){var K=S.sdx;if(!K||!K.mk)return;if(!K.hud&&S.hud){var hud=document.createElement('div');hud.className='skyh';hud.style.cssText='position:absolute;left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 84px);padding:6px 14px;border-radius:999px;background:rgba(6,20,40,.82);border:2px solid #3fd0ff;color:#bff0ff;font:900 italic 15px "Saira Extra Condensed",system-ui;letter-spacing:.08em;display:none;pointer-events:none;white-space:nowrap';S.hud.appendChild(hud);K.hud=hud}if(!K.hud)return;var sec=K.sec,tt=performance.now()/1000,free=!S.mis&&!S.cut&&S.stage==='free';
@@ -4158,7 +4162,7 @@ function skyCutOpen(S){var K=S.sdx,sec=K.sec,hp=skyP(sec,0,K.u0),cp=skyP(sec,sec
     {d:4,title:'SKY DRIVE',say:['SKY DRIVE','You found me! GLITCH locked my hangar up here so nobody could ever fly after him.'],cam:function(u){var a=u*1.2;return [ip[0]+Math.cos(a)*7,sec.top+2.6,ip[1]+Math.sin(a)*7,ip[0],sec.top+1,ip[1]]}},
     {d:4,say:['SKY DRIVE','I am on your team now. Pick me in the garage and press TAKE OFF to fly over anything!'],cam:function(u){return [hp[0]+(cp[0]-hp[0])*.5,sec.top+3+u*2,hp[1]+(cp[1]-hp[1])*.5,ip[0],sec.top+1,ip[1]]}},
     {d:3.4,title:'TAKE OFF!',start:function(){K.launch=0},tick:function(u,dt){if(!K.car)return;K.launch+=dt;var c=K.car,f=skyP(sec,0,-K.dir);c.position.y+=dt*(2+K.launch*6);c.position.x+=(f[0]-(sec.V?0:-sec.c0*0))*0;try{if(Math.random()<.5)shock(c.position.x,c.position.y-.5,c.position.z,0x3fd0ff,3)}catch(e){}},cam:function(u){return [cp[0],sec.top+3+u*10,cp[1],ip[0],sec.top+2+u*16,ip[1]]}}],
-    function(){K.st='done';S.prog.sky=1;storySave(S.prog);if(K.car){K.G.remove(K.car);K.car=null}skyUnlock(S);skyFlyerOn(S)})}
+    function(){K.st='done';S.prog.sky=1;storySave(S.prog);if(K.car){K.G.remove(K.car);K.car=null}skyRestore(S,false);skyUnlock(S);skyFlyerOn(S)})}
 function skyUnlock(S){try{var d=JSON.parse(localStorage.getItem('bs-store')||'{}');d.chars=d.chars||{};d.chars.skydrive=1;localStorage.setItem('bs-store',JSON.stringify(d))}catch(e){}
   var c=document.createElement('div');c.style.cssText='position:absolute;inset:0;z-index:95;display:grid;place-items:center;background:rgba(2,10,24,.72);pointer-events:auto;font-family:system-ui,sans-serif;animation:stcIn .35s ease-out';
   c.innerHTML='<div style="width:min(380px,86vw,70vh);background:linear-gradient(160deg,#0d2a4a,#061426);border:3px solid #3fd0ff;border-radius:18px;padding:12px;box-shadow:0 0 40px rgba(63,208,255,.55);text-align:center;color:#e8f9ff">'+
@@ -4194,8 +4198,14 @@ function stCarWash(S,G){var A=ARENA,r=A.hide&&A.hide[0];if(!r)return null;var c0
   propsFlush(G);
   /* when the roof comes down the side walls under it fall away outwards */
   sec.wallOff=function(){PROPS.list.forEach(function(b){if(b.tag!=='cwA')return;b.live=true;var sd=b.z>c0?1:-1;b.vz=sd*(3+Math.random()*4);b.vx=(Math.random()-.5)*3;b.vy=2+Math.random()*3;b.wx=(Math.random()-.5)*6;b.wz=(Math.random()-.5)*6})};
-  if(S.prog.skyRamp||S.prog.sky)PROPS.list.forEach(function(b){if(b.tag==='cwA'){b.y=b.h;b.z=c0+(b.z>c0?1:-1)*(hr+3+Math.random()*4);b.x+=(Math.random()-.5)*3;b.ry=Math.random()*3;propPose(b)}});PROPS.ims.forEach(function(m){m.instanceMatrix.needsUpdate=true});
+  if(S.prog.skyRamp&&!S.prog.sky)PROPS.list.forEach(function(b){if(b.tag==='cwA'){b.y=b.h;b.z=c0+(b.z>c0?1:-1)*(hr+3+Math.random()*4);b.x+=(Math.random()-.5)*3;b.ry=Math.random()*3;propPose(b)}});PROPS.ims.forEach(function(m){m.instanceMatrix.needsUpdate=true});
   return sec}
+
+/* after you have Sky Drive the car wash goes back to normal: roof up, walls and pillars rebuilt, hangar gone. Smashing it again does nothing special */
+function skyRestore(S,quiet){var K=S.sdx;if(!K)return;var sec=K.sec;skyDrop(S,0);K.down=false;K.G.visible=false;
+  (ARENA.blocks||[]).forEach(function(b){if(b[5]!=null&&Math.abs(b[5]-(sec.top-1.2))<.01)b[4]=-1});
+  propsReset(function(b){return b.tag&&b.tag!=='skywall'&&(b.tag==='cwA'||b.tag==='cwB'||b.tag.indexOf('cw')===0)});propsHide(function(b){return b.tag==='skywall'});
+  if(!quiet){var p=skyP(sec,-sec.hr*.45,sec.s0-K.dir*10);me.x=p[0];me.z=p[1];me.y=0;me.v=0;me.a=K.dir>0?Math.PI/2:-Math.PI/2;try{shock(me.x,1,me.z,0x3fd0ff,14)}catch(e){}stSay(S,'SKY DRIVE','The car wash is fixed and back to normal. See you in the sky!',4)}}
 
 /* ================= TEST LAB: a small arena with everything turned up to the max:
    polished reflective floor (environment map), sharp soft shadows, neon, a grandstand, a pit garage, an LED screen,
