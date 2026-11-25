@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795635472">
+<meta name="bs-build" content="1795635918">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -1821,6 +1821,22 @@ function cityDetail(G,A,ROOFS,PAVE){var R=srng(77),V=scVMat();
   scInst(G,(function(){var g=new T.PlaneGeometry(3,3);g.rotateX(-Math.PI/2);return g})(),new T.MeshBasicMaterial({map:ptc,transparent:true,depthWrite:false}),pa);
 }
 
+/* unique apartment blocks: 6 Higgsfield facades (red brick, cream balconies, teal glass, pastel, art deco, panel block), tiled at real size; lit windows at night */
+var CFL={base:'https://d2ol7oe51mr4n9.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/',ids:['efee6248-854e-4795-8994-132a3c5d2312','7f1dc552-852f-432a-92c9-588196f65668','d6924069-121b-4cf6-ab24-163ecd1bcfdc','318eb44b-d2f0-4637-abad-15436e4727fb','378d9ae2-396c-442f-b3b4-db4d84229c29','ffa61d0d-3578-4493-92b5-494550f10567'],mats:{}};
+function cityFlatMat(st,fb){var k=st%CFL.ids.length;if(CFL.mats[k])return CFL.mats[k];
+  var m=new T.MeshStandardMaterial({map:fb[0],emissive:0xffffff,emissiveMap:fb[1],emissiveIntensity:.7,roughness:.6,metalness:.05});m.userData.vb=1;m.userData.flat=1;CFL.mats[k]=m;
+  var im=new Image();im.crossOrigin='anonymous';im.onload=function(){try{var N=512,c1=document.createElement('canvas');c1.width=c1.height=N;var g=c1.getContext('2d');g.drawImage(im,0,0,N,N);
+    var tx=new T.CanvasTexture(c1);tx.encoding=T.sRGBEncoding;tx.wrapS=tx.wrapT=T.RepeatWrapping;try{tx.anisotropy=renderer.capabilities.getMaxAnisotropy()}catch(e){}
+    var E=128,c2=document.createElement('canvas');c2.width=c2.height=E;var g2=c2.getContext('2d');g2.drawImage(im,0,0,E,E);var d=g2.getImageData(0,0,E,E),p=d.data;
+    for(var y=0;y<E;y++)for(var x=0;x<E;x++){var i=(y*E+x)*4,L=.3*p[i]+.59*p[i+1]+.11*p[i+2],cx=(x*4/E)|0,cy=(y*4/E)|0,on=((cx*7+cy*13+k*5)%10)<4,glass=L<75&&p[i+2]>=p[i]-10;
+      if(glass&&on){p[i]=255;p[i+1]=200+(cx*31%40);p[i+2]=120}else{p[i]=p[i+1]=p[i+2]=0}}
+    g2.putImageData(d,0,0);var ex=new T.CanvasTexture(c2);ex.wrapS=ex.wrapT=T.RepeatWrapping;
+    m.map=tx;m.emissiveMap=ex;m.needsUpdate=true}catch(e){console.warn('flat tex',e)}};im.src=CFL.base+CFL.ids[k]+'.jpg';return m}
+function cityFlat(G,x,h,z,sx,sz,st,fb){var g=new T.BoxGeometry(sx,h,sz),P=g.attributes.position,Nn=g.attributes.normal,uv=g.attributes.uv,TW=12.8,TH=12.8;
+  for(var i=0;i<P.count;i++){var px=P.getX(i),py=P.getY(i)+h/2,pz=P.getZ(i),nx=Math.abs(Nn.getX(i)),ny=Math.abs(Nn.getY(i));
+    if(ny>.5)uv.setXY(i,px/TW,pz/TW);else if(nx>.5)uv.setXY(i,(pz+sz/2)/TW,py/TH);else uv.setXY(i,(px+sx/2)/TW,py/TH)}
+  uv.needsUpdate=true;var ms=new T.Mesh(g,cityFlatMat(st,fb));ms.position.set(x,h/2,z);ms.castShadow=true;ms.receiveShadow=true;ms.userData.pl=1;G.add(ms);return ms}
+
 /* ================= TAG CITY: flats, shops, a supermarket with a car park, parks and a plaza ================= */
 function buildArena(m,G){
   if(m.arena&&m.arena.style==='fun')return buildFun(m,G);
@@ -1840,7 +1856,7 @@ function buildArena(m,G){
     if(ty==='flats'){ /* apartment blocks with balconies */
       A.blocks.push([x0+1,x1-1,z0+1,z1-1]);var alongX=(i+j)%2===0,n=2;
       for(var k=0;k<n;k++){var tw=(w-2)/n,h=18+((rr()*5)|0)*5,tx=alongX?x0+1+tw*(k+.5):cx,tz=alongX?cz:z0+1+tw*(k+.5),sx=alongX?tw-.4:w-2,sz=alongX?w-2:tw-.4,fc=FL[(i*7+j*3+k)%FL.length];
-        towers.add(tx,h/2,tz,sx,h,sz,fc);ROOFS.push([tx,h+.8,tz,sx,sz,0]);solid.add(tx,h+.4,tz,sx+.4,.8,sz+.4,0x5a5048);
+        cityFlat(G,tx,h,tz,sx,sz,i*3+j*5+k*2+((h/5)|0),window.__cfFB||(window.__cfFB=cityFacade()));ROOFS.push([tx,h+.8,tz,sx,sz,0]);solid.add(tx,h+.4,tz,sx+.4,.8,sz+.4,0x5a5048);
         for(var by=3.4;by<h-1;by+=3.2){solid.add(tx,by,tz-sz/2-.45,sx*.7,.18,.9,0xe8e4da);solid.add(tx,by,tz+sz/2+.45,sx*.7,.18,.9,0xe8e4da);solid.add(tx-sx/2-.45,by,tz,.9,.18,sz*.7,0xe8e4da);solid.add(tx+sx/2+.45,by,tz,.9,.18,sz*.7,0xe8e4da)}
         solid.add(tx+sx*.2,h+1.6,tz,2.2,2.4,2.2,0x7a6a5a)}}
     else if(ty==='garage'){A.blocks.push([x0+1,x1-1,z0+1,z1-1]);towers.add(cx,7,cz,w-2,14,w-2,0x8c8f98);ROOFS.push([cx,14.8,cz,w-2,w-2,0]);solid.add(cx,14.4,cz,w-1.6,.8,w-1.6,0x5a5e68);signPlane(G,'PARKING','#2a7bff',cx,11,z0+.85,Math.PI,14)}
@@ -5243,11 +5259,11 @@ function vibAll(){if(typeof scene==='undefined'||!scene)return;scene.traverse(fu
 setInterval(function(){try{if(race.on)vibAll()}catch(e){}},2500);
 /* Higgsfield textures for big surfaces: baseplate studs on flat plates + roofs, LEGO brick wall on the sides of big blocks.
    UVs are rebuilt in world metres so studs/bricks keep their real size on any block. Procedural fallback until the images load. */
-var HFTX='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261125_',PLT=null,WLT=null,PLB=null,PLH={},PLM={},PLW=new T.Vector3();
-function hfTex(url,fallback){var N=512,cv=document.createElement('canvas');cv.width=cv.height=N;var g=cv.getContext('2d');fallback(g,N);var tx=new T.CanvasTexture(cv);tx.encoding=T.sRGBEncoding;tx.wrapS=tx.wrapT=T.RepeatWrapping;try{tx.anisotropy=renderer.capabilities.getMaxAnisotropy()}catch(e){}
+var HFTX='https://d2ol7oe51mr4n9.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/',PLT=null,WLT=null,PLB=null,PLH={},PLM={},PLW=new T.Vector3();
+function hfTexU(url,fallback){var N=512,cv=document.createElement('canvas');cv.width=cv.height=N;var g=cv.getContext('2d');fallback(g,N);var tx=new T.CanvasTexture(cv);tx.encoding=T.sRGBEncoding;tx.wrapS=tx.wrapT=T.RepeatWrapping;try{tx.anisotropy=renderer.capabilities.getMaxAnisotropy()}catch(e){}
   var im=new Image();im.crossOrigin='anonymous';im.onload=function(){try{g.clearRect(0,0,N,N);g.filter='brightness(1.14) contrast(1.08)';g.drawImage(im,0,0,N,N);g.filter='none';tx.needsUpdate=true}catch(e){}};im.src=HFTX+url;return tx}
-function plateTex(){if(PLT)return PLT;PLT=hfTex('192246_57846fce-f1c5-4145-a343-169573549844.png',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);for(var y=0;y<8;y++)for(var x=0;x<8;x++){var cx=(x+.5)*N/8,cy=(y+.5)*N/8,r=N*.038;g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.arc(cx+r*.2,cy+r*.25,r*1.06,0,7);g.fill();g.fillStyle='#fafafa';g.beginPath();g.arc(cx,cy,r,0,7);g.fill()}});return PLT}
-function wallTex(){if(WLT)return WLT;WLT=hfTex('192251_bf5e5726-171c-497b-9d10-7f4446be8e07.png',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);g.fillStyle='rgba(0,0,0,.28)';for(var r=0;r<8;r++){var y=r*N/8;g.fillRect(0,y,N,3);var off=(r%2)*N/6;for(var x=off;x<N+1;x+=N/3)g.fillRect(x,y,3,N/8)}});return WLT}
+function plateTex(){if(PLT)return PLT;PLT=hfTexU('c11614ac-e8c0-4f39-ba46-8c7c73cd1f4c.jpg',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);for(var y=0;y<8;y++)for(var x=0;x<8;x++){var cx=(x+.5)*N/8,cy=(y+.5)*N/8,r=N*.038;g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.arc(cx+r*.2,cy+r*.25,r*1.06,0,7);g.fill();g.fillStyle='#fafafa';g.beginPath();g.arc(cx,cy,r,0,7);g.fill()}});return PLT}
+function wallTex(){if(WLT)return WLT;WLT=hfTexU('d483bd47-5b12-44d5-ad21-44e87badeaa5.jpg',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);g.fillStyle='rgba(0,0,0,.28)';for(var r=0;r<8;r++){var y=r*N/8;g.fillRect(0,y,N,3);var off=(r%2)*N/6;for(var x=off;x<N+1;x+=N/3)g.fillRect(x,y,3,N/8)}});return WLT}
 function plMat(m,tex){var k=m.uuid+tex.uuid;if(!PLM[k]){var nm=m.clone();nm.map=tex;nm.needsUpdate=true;PLM[k]=nm}return PLM[k]}
 function plUV(o,ts,tw){var g=o.geometry.clone(),P=g.attributes.position,Nn=g.attributes.normal;if(!P||!Nn)return null;o.getWorldScale(PLW);var uv=new Float32Array(P.count*2);
   for(var i=0;i<P.count;i++){var x=P.getX(i)*PLW.x,y=P.getY(i)*PLW.y,z=P.getZ(i)*PLW.z,nx=Math.abs(Nn.getX(i)),ny=Math.abs(Nn.getY(i));
@@ -9125,12 +9141,12 @@ function frame3(){if(!R3)return;var s=R3.size,a=R3.cam.aspect||1.6,far=R3.others
  R3.cam.position.set(Math.sin(R3.yaw)*Math.cos(R3.pit)*d,s*.12+Math.sin(R3.pit)*d,cy+Math.cos(R3.yaw)*Math.cos(R3.pit)*d);R3.cam.lookAt(0,s*(far?.1:.14),cy);var LC=window.BSLobCam;if(LC){LC.yaw=R3.yaw;LC.pit=R3.pit;LC.k=d/s;LC.dist=d*4.6/s}}
 /* Rocket League style garage: the car stands in a 3D arena you can look around (drag to orbit, pinch / wheel to zoom) */
 function orbit3d(cv){var P={},d0=0,moved=0,sx=0,sy=0;cv.style.touchAction='none';
- cv.addEventListener('pointerdown',function(e){P[e.pointerId]={x:e.clientX,y:e.clientY};moved=0;sx=e.clientX;sy=e.clientY;try{cv.setPointerCapture(e.pointerId)}catch(_){}var k=Object.keys(P);if(k.length===2){var a=P[k[0]],b=P[k[1]];d0=Math.hypot(a.x-b.x,a.y-b.y)}});
+ cv.addEventListener('pointerdown',function(e){P[e.pointerId]={x:e.clientX,y:e.clientY};if(R3){R3.vy=0;R3.drag=1;R3.mt=performance.now()}moved=0;sx=e.clientX;sy=e.clientY;try{cv.setPointerCapture(e.pointerId)}catch(_){}var k=Object.keys(P);if(k.length===2){var a=P[k[0]],b=P[k[1]];d0=Math.hypot(a.x-b.x,a.y-b.y)}});
  cv.addEventListener('pointermove',function(e){var q=P[e.pointerId];if(!q||!R3)return;var k=Object.keys(P);
-  if(k.length===1){var dx=e.clientX-q.x,dy=e.clientY-q.y;R3.tgt=null;R3.yaw-=dx*.008;R3.pit=Math.max(.04,Math.min(1.1,R3.pit+dy*.005));R3.vy=-dx*.008;R3.idle=0}
+  if(k.length===1){var dx=e.clientX-q.x,dy=e.clientY-q.y;R3.tgt=null;R3.yaw-=dx*.008;R3.pit=Math.max(.04,Math.min(1.1,R3.pit+dy*.005));var nw=performance.now(),de=Math.max(8,nw-(R3.mt||nw-16))/1000;R3.mt=nw;var iv=-dx*.008/de;R3.vy=(R3.vy||0)*.6+iv*.4;R3.drag=1;R3.idle=0}
   else if(k.length===2){q.x=e.clientX;q.y=e.clientY;var a=P[k[0]],b=P[k[1]],dd=Math.hypot(a.x-b.x,a.y-b.y);if(d0)R3.zm=Math.max(.55,Math.min(1.8,R3.zm*d0/dd));d0=dd;frame3();return}
   q.x=e.clientX;q.y=e.clientY;if(Math.hypot(e.clientX-sx,e.clientY-sy)>8)moved=1;frame3()});
- function up(e){if(!P[e.pointerId])return;delete P[e.pointerId];if(!moved&&!Object.keys(P).length){var r=cv.getBoundingClientRect(),cx=(e.clientX-r.left)/r.width,cy=(e.clientY-r.top)/r.height;if(cx>.3&&cx<.7&&cy>.3&&cy<.85)panel('bslPDrv')}}
+ function up(e){if(!P[e.pointerId])return;delete P[e.pointerId];if(R3&&!Object.keys(P).length){R3.drag=0;if(performance.now()-(R3.mt||0)>90)R3.vy=0;R3.vy=Math.max(-9,Math.min(9,R3.vy||0))}if(!moved&&!Object.keys(P).length){var r=cv.getBoundingClientRect(),cx=(e.clientX-r.left)/r.width,cy=(e.clientY-r.top)/r.height;if(cx>.3&&cx<.7&&cy>.3&&cy<.85)panel('bslPDrv')}}
  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',function(e){delete P[e.pointerId]});
  cv.addEventListener('wheel',function(e){if(!R3)return;e.preventDefault();R3.zm=Math.max(.55,Math.min(1.8,R3.zm*(e.deltaY>0?1.08:.93)));frame3()},{passive:false})}
 function garage3d(T,sc,R){var G=new T.Group();sc.add(G);sc.fog=new T.Fog(0x0b1a44,30,90);
@@ -9237,7 +9253,7 @@ function carSet(){car3d();if(!R3)return;var c=cur();if(!c||R3.id===carKey())retu
 var lastT=0;
 function loop(t){requestAnimationFrame(loop);if(!B.classList.contains('bsl-on')||B.classList.contains('racing'))return;
  if(t-lastT<33)return;var dt=Math.min(.1,(t-lastT)/1000);lastT=t;
- dvFrame(dt);if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();othersSet();(R3.others||[]).forEach(function(o){o.userData.spin.rotation.y+=dt*.35;var gm=o.userData.spin.children[0];if(gm&&gm.top&&gm.top.anim)gm.top.anim(t/1000,0)});if(R3.car&&R3.car.top&&R3.car.top.anim&&R3.car.isGarage)R3.car.top.anim(t/1000,0);R3.idle+=dt;if(R3.tgt){var kk=Math.min(1,dt*2.6);R3.yaw+=(R3.tgt.y-R3.yaw)*kk;R3.pit+=(R3.tgt.p-R3.pit)*kk;R3.zm+=(R3.tgt.z-R3.zm)*kk;R3.idle=0;frame3();if(Math.abs(R3.tgt.y-R3.yaw)+Math.abs(R3.tgt.p-R3.pit)+Math.abs(R3.tgt.z-R3.zm)<.004)R3.tgt=null}if(Math.abs(R3.vy)>.0005){R3.yaw-=R3.vy;R3.vy*=.9;frame3()}if(R3G){var mapBg=false;try{mapBg=lobMapTick()}catch(e){}if(mapBg){if(!R3G.mb){R3G.mb=1;R3G.G.visible=false;R3.holder.visible=false;R3G.sky.visible=false;R3G.fl.visible=false;R3G.stad.forEach(function(o){o.visible=false});if(R3G.th)R3G.th.visible=false;R3.sc.fog=null;R3.R.setClearColor(0,0);B.classList.add('mapbg')}}else{try{garageTheme((gameOpts()||{}).mode||'race')}catch(e){}}R3G.tt.rotation.y=R3.holder.rotation.y;R3G.ring2.scale.setScalar(1+.03*Math.sin(t/400));R3G.bal.forEach(function(b,i){b.position.y+=Math.sin(t/900+i)*.004})}if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam);if(R3.car&&!R3.bootN){R3.bootN=1;setTimeout(function(){try{window.bsBootDone&&window.bsBootDone()}catch(e){}},400)}}}
+ dvFrame(dt);if(!R3)carSet();if(R3){if(R3.id!==carKey())carSet();othersSet();(R3.others||[]).forEach(function(o){o.userData.spin.rotation.y+=dt*.35;var gm=o.userData.spin.children[0];if(gm&&gm.top&&gm.top.anim)gm.top.anim(t/1000,0)});if(R3.car&&R3.car.top&&R3.car.top.anim&&R3.car.isGarage)R3.car.top.anim(t/1000,0);R3.idle+=dt;if(R3.tgt){var kk=Math.min(1,dt*2.6);R3.yaw+=(R3.tgt.y-R3.yaw)*kk;R3.pit+=(R3.tgt.p-R3.pit)*kk;R3.zm+=(R3.tgt.z-R3.zm)*kk;R3.idle=0;frame3();if(Math.abs(R3.tgt.y-R3.yaw)+Math.abs(R3.tgt.p-R3.pit)+Math.abs(R3.tgt.z-R3.zm)<.004)R3.tgt=null}if(!R3.drag&&Math.abs(R3.vy||0)>.01){R3.yaw+=R3.vy*Math.min(dt,.05);R3.vy*=Math.pow(.35,Math.min(dt,.05));frame3()}if(R3G){var mapBg=false;try{mapBg=lobMapTick()}catch(e){}if(mapBg){if(!R3G.mb){R3G.mb=1;R3G.G.visible=false;R3.holder.visible=false;R3G.sky.visible=false;R3G.fl.visible=false;R3G.stad.forEach(function(o){o.visible=false});if(R3G.th)R3G.th.visible=false;R3.sc.fog=null;R3.R.setClearColor(0,0);B.classList.add('mapbg')}}else{try{garageTheme((gameOpts()||{}).mode||'race')}catch(e){}}R3G.tt.rotation.y=R3.holder.rotation.y;R3G.ring2.scale.setScalar(1+.03*Math.sin(t/400));R3G.bal.forEach(function(b,i){b.position.y+=Math.sin(t/900+i)*.004})}if(R3.pop<1){R3.pop=Math.min(1,R3.pop+dt*3);var k=R3.pop,e=1-Math.pow(1-k,3);R3.holder.scale.setScalar(.6+.4*e+Math.sin(k*Math.PI)*.08)}R3.R.render(R3.sc,R3.cam);if(R3.car&&!R3.bootN){R3.bootN=1;setTimeout(function(){try{window.bsBootDone&&window.bsBootDone()}catch(e){}},400)}}}
 requestAnimationFrame(loop);
 
 // ---------- keep everything fresh ----------
