@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795616728">
+<meta name="bs-build" content="1795617806">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -3114,6 +3114,7 @@ function buildLava(m,G){
    Health bar, wanted stars (1-5, more stars = more police = more coins), BUSTED when they pin you or your health runs out. */
 var STY={blocks:null};
 function storySave(p){if(race&&race.m2&&race.m2.kind==='story'&&race.m2.clock!=null)p.clock=+race.m2.clock.toFixed(2);try{localStorage.setItem('bsStory',JSON.stringify(p))}catch(e){}}
+window.addEventListener('pagehide',function(){try{if(race.m2&&race.m2.kind==='story'&&race.m2.prog&&race.m2.prog.escaped)storySave(race.m2.prog)}catch(e){}});document.addEventListener('visibilitychange',function(){if(document.hidden)try{if(race.m2&&race.m2.kind==='story'&&race.m2.prog&&race.m2.prog.escaped)storySave(race.m2.prog)}catch(e){}});
 function storyLoad(){try{return JSON.parse(localStorage.getItem('bsStory')||'{}')||{}}catch(e){return {}}}
 function stBlock(i,j){var A=ARENA,hr=A.R/2,x0=A.c[i]+hr,x1=A.c[i+1]-hr,z0=A.c[j]+hr,z1=A.c[j+1]-hr;return {x0:x0,x1:x1,z0:z0,z1:z1,cx:(x0+x1)/2,cz:(z0+z1)/2}}
 function stInB(b,x,z,pad){pad=pad||0;return x>b.x0-pad&&x<b.x1+pad&&z>b.z0-pad&&z<b.z1+pad}
@@ -3633,7 +3634,7 @@ function storyInit(o){var S=race.m2,A=ARENA;STY.blocks=[];S.prog=storyLoad();if(
   else S.needIntro=true;
   S.ldN=0}
 function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;if(S.ldN!=null&&++S.ldN>8){S.ldN=null;stLoadDone()}
-  if(!S.placed){S.placed=true;if(S.stage==='free'){me.x=S.base.cx;me.z=S.base.z0+8;me.a=Math.PI}else{me.x=S.pr.cx+4;me.z=S.pr.cz;me.a=Math.PI/2}me.v=0;me.y=0}
+  if(!S.placed){S.placed=true;S.markLock=true;if(S.stage==='free'){me.x=S.base.cx;me.z=S.base.z0+8;me.a=Math.PI}else{me.x=S.pr.cx+4;me.z=S.pr.cz;me.a=Math.PI/2}me.v=0;me.y=0}
   S.lights.forEach(function(l){l.a.rotation.y=l.ph+Math.sin(t*.5+l.ph)*1.2;if(l.c){l.c.visible=S.day<.8;l.c.material.opacity=.13*(1-S.day)}});var fl=Math.floor(t*7)%2;
   cars.forEach(function(c){var u=c.model&&c.model.userData.bar;if(u&&!c.out){var on=c.stCop&&S.wanted>=.5;u.red.color.setHex(on&&fl?0xff2030:0x400008);u.blue.color.setHex(on&&!fl?0x2a5cff:0x0a1440);u.gl.material.opacity=on&&fl?1:0;u.gr.material.opacity=on&&!fl?1:0}});
   if(S.baseRing)S.baseRing.material.opacity=.16+.08*Math.sin(t*3);S.marks.forEach(function(k){k.ic.position.y=7.5+.4*Math.sin(t*2.4)});
@@ -5614,7 +5615,7 @@ function raceUpdate(dt){
   }else race.t+=dt;
   if(race.phase==='intro'){
     if(!race.introToast&&race.t>.25){race.introToast=true;toast3(race.mode!=='race'?modeName():MAPS[curMap].name.toUpperCase(),race.mode==='tag'?(race.teams?'RED catches, BLUE runs and rescues':'Tag someone, do not be IT at the end'):race.mode==='dozer'?'Stay ahead of the bulldozer':race.mode==='bomb'?'Survive 4 waves of bombs':M2[race.mode]?M2[race.mode].d:race.laps+(race.laps>1?' laps':' lap')+' · '+cars.length+' cars')}
-    if(race.t>=INTRO){race.phase='count';race.t=0;race.introToast=false;var fm=MAPS[curMap].fog;scene.fog.near=fm[0];scene.fog.far=fm[1]}
+    if(race.t>=INTRO||race.mode==='story'){race.phase='count';race.t=race.mode==='story'?2.95:0;race.introToast=false;var fm=MAPS[curMap].fog;scene.fog.near=fm[0];scene.fog.far=fm[1]}
     return;
   }
   if(race.phase==='count'){
