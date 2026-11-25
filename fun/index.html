@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="bs-build" content="1795639859">
+<meta name="bs-build" content="1795640031">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -9403,7 +9403,7 @@ setInterval(function(){try{var n=NETo();if(!n||!n.on||!n.host||!n.rematch||n.rac
 /* ================= OPERATOR: signed gifts =================
    The operator device keeps a private key (made on that device, never leaves it). The game only trusts gifts signed with it.
    Tap the BRICKSPEED logo 7 times to open the operator panel. Anyone can redeem a gift code in the panel's REDEEM box. */
-var OP_PUB='';  /* operator public key (BSOP-…), safe to publish */
+var OP_PUB='BSOP-BK13Spgjih195p8qI8Vnp5RlC7cJVsCULzDQH-uxE3yqTEFBm67tsAo2lFRl7u989Y5Wgugb7J-VVfCZyN4X19U';  /* operator public key (BSOP-…), safe to publish */
 var OP_RW=[['c100','100 COINS'],['c500','500 COINS'],['c1000','1,000 COINS'],['c5000','5,000 COINS'],['p10','10 POWER POINTS'],['p50','50 POWER POINTS'],['port','SKY PORT BASE']];
 function b64u(buf){var b=new Uint8Array(buf),s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function ub64(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
