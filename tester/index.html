@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795609495">
+<meta name="bs-build" content="1795610420">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5671,7 +5671,7 @@ function genCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;
    the room it is in right now (any room: its own, a random one or a FIND RACE room), so JOIN always finds it. */
 var FB={peer:null,ok:false,tries:0,pp:null,ppOk:false,q:[],busy:false,started:false};
 function fbId(code){return 'brickspeed-tfriend-'+String(code).toLowerCase()}
-function fbStatus(){return {t:'fs',room:NET.on&&NET.code?NET.code:'',race:!!NET.racing,full:!!(NET.on&&NET.players&&NET.players.length>=6),qm:!!NET.qm,n:NET.name||'',act:(function(){try{return race.on?String(race.mode||'race'):'lobby'}catch(e){return ''}})()}}
+function fbStatus(){return {t:'fs',room:NET.on&&NET.code?NET.code:'',race:!!NET.racing,full:!!(NET.on&&NET.players&&NET.players.length>=6),qm:!!NET.qm,n:NET.name||'',ic:(window.BSMyIcon?window.BSMyIcon():''),act:(function(){try{return race.on?String(race.mode||'race'):'lobby'}catch(e){return ''}})()}}
 function fbStart(){
   FB.started=true;var PC=peerCtor(),code=window.BSMyCode&&window.BSMyCode();if(!PC||!code){setTimeout(fbStart,3000);return}
   if(FB.peer&&!FB.peer.destroyed)return;
@@ -5698,7 +5698,7 @@ function fbPump(){if(FB.busy||!FB.q.length)return;FB.busy=true;var job=FB.q.shif
   FB.cur={code:job.code,done:done};
   fbProber(function(p){if(!p){done(null);return}var c;try{c=p.connect(fbId(job.code),{reliable:true})}catch(e){done(null);return}
     var tm=setTimeout(function(){try{c.close()}catch(e){}done(null)},4000);
-    c.on('data',function(d){clearTimeout(tm);try{c.close()}catch(e){}done(d&&d.t==='fs'?{room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm,act:String(d.act||'').replace(/[^a-z]/g,'').slice(0,10)}:null)});
+    c.on('data',function(d){clearTimeout(tm);try{c.close()}catch(e){}done(d&&d.t==='fs'?{room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm,act:String(d.act||'').replace(/[^a-z]/g,'').slice(0,10),ic:String(d.ic||'').replace(/[^a-z0-9]/g,'').slice(0,10)}:null)});
     c.on('error',function(){clearTimeout(tm);done(null)})})}
 function fbInvite(code,room,name,cb){code=String(code||'').toUpperCase();fbProber(function(p){if(!p){cb&&cb(false);return}var c;try{c=p.connect(fbId(code),{reliable:true})}catch(e){cb&&cb(false);return}var ok=false,tm=setTimeout(function(){try{c.close()}catch(e){}cb&&cb(ok)},4000);
   c.on('open',function(){try{c.send({t:'inv',room:room,n:name,f:window.BSMyCode&&window.BSMyCode()});ok=true}catch(e){}setTimeout(function(){clearTimeout(tm);try{c.close()}catch(e){}cb&&cb(ok)},600)});c.on('error',function(){clearTimeout(tm);cb&&cb(false)})})}
@@ -8045,6 +8045,7 @@ body.mapbg #bsl .bsl-app::before{content:"";position:fixed;inset:0;z-index:-1;po
 .bfs-slot.empty{background:rgba(255,255,255,.04);border:1.5px dashed rgba(170,200,255,.35);box-shadow:none;justify-content:center;backdrop-filter:none}
 .bfs-slot.empty .pl{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 28px/1 system-ui;color:#fff;background:linear-gradient(140deg,#3dffb0,#00b4ff);box-shadow:0 6px 18px rgba(0,200,255,.45)}
 .bfs-slot.empty b{font-size:12px;margin-top:8px;color:#bfe0ff}
+.bfs-slot .myic2{position:absolute;top:6px;right:6px}#bfd li .av.ic{background:none;box-shadow:none;width:auto;height:auto}#bslNameB .myic{display:inline-grid;margin-right:6px}#bslNameB .myic .pic{border-radius:8px}
 .bfs-slot .crown{position:absolute;top:6px;left:8px;font-size:16px}
 #bslPFr .bsl-box{border-radius:20px!important;border:1px solid rgba(160,190,255,.25)!important;background:linear-gradient(160deg,rgba(40,60,160,.45),rgba(10,16,48,.8))!important;box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)!important;backdrop-filter:blur(8px)}
 #bslPFr #bslFindBox{background:linear-gradient(150deg,rgba(0,200,160,.45),rgba(8,40,60,.85))!important;border-color:rgba(120,255,210,.35)!important}
@@ -8111,16 +8112,15 @@ body.mapbg #bsl .bsl-app::before{content:"";position:fixed;inset:0;z-index:-1;po
 
 </style>
 <div id="bsBoot" aria-label="Loading BrickSpeed"><div class="bg"></div><div class="sh"></div>
- <div class="in"><div class="lg"><span class="b">B</span><span class="t">BRICK<em>SPEED</em></span></div>
- <div class="bar"><i></i></div><div class="tp">STARTING ENGINES…</div></div>
- <div class="ft">Tip: <span id="bsBootTip">Tap the car in the lobby to change driver</span></div></div>
+ <div class="in"><div class="lg" id="bsBootLg"><span class="b">B</span><span class="t">BRICK<em>SPEED</em></span></div>
+ <div class="bar"><i></i></div><div class="tp" hidden>LOADING</div></div><span id="bsBootTip" hidden></span></div>
 <style>
 #bsBoot{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;background:#060d2c;color:#fff;font-family:system-ui,Arial,sans-serif;transition:opacity .6s,visibility .6s;overflow:hidden}
 #bsBoot.out{opacity:0;visibility:hidden}
 #bsBoot .bg{position:absolute;inset:-4%;background:url(https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261125_071010_66b91c09-b626-48bf-846f-5cc126c1a1a3.png) center/cover no-repeat;animation:bsKen 14s ease-out forwards;filter:saturate(1.15)}
 #bsBoot .sh{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(255,140,30,.35),transparent 60%),linear-gradient(180deg,rgba(4,8,30,.25) 0%,rgba(4,8,30,.1) 40%,rgba(4,8,30,.85) 100%)}
 @keyframes bsKen{from{transform:scale(1.12) translateY(1%)}to{transform:scale(1) translateY(0)}}
-#bsBoot .in{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:22vh;width:min(560px,84vw)}
+#bsBoot .in{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(14px,4vh,26px);width:min(520px,80vw)}#bsBoot .lg img.m{height:clamp(56px,16vh,110px);width:auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}#bsBoot .lg img.w{height:clamp(30px,8vh,56px);width:auto;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
 #bsBoot .lg{display:flex;align-items:center;gap:10px;animation:bsPop .9s cubic-bezier(.2,1.6,.4,1) both}
 #bsBoot .lg .b{display:grid;place-items:center;width:clamp(46px,9vh,70px);height:clamp(46px,9vh,70px);border-radius:14px;transform:skewX(-10deg);background:linear-gradient(180deg,#ffb020,#ff5a1a);font:900 italic clamp(30px,6vh,46px)/1 system-ui;box-shadow:0 5px 0 #7a2400,0 0 26px rgba(255,140,30,.7)}
 #bsBoot .lg .t{font:900 italic clamp(34px,8vh,64px)/1 "Saira Extra Condensed",system-ui;letter-spacing:.02em;text-shadow:0 4px 0 #04081e,0 0 30px rgba(63,140,255,.6)}
@@ -8134,9 +8134,10 @@ body.mapbg #bsl .bsl-app::before{content:"";position:fixed;inset:0;z-index:-1;po
 #bsBoot .ft{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 13px system-ui;color:#c9d6ff;text-shadow:0 2px 0 #000;padding:0 16px}
 @media (prefers-reduced-motion:reduce){#bsBoot *{animation:none!important}}
 </style>
-<script>(function(){var B=document.getElementById('bsBoot'),bar=B.querySelector('.bar i'),tp=B.querySelector('.tp'),n=0,done=false,st=['STARTING ENGINES…','BUILDING THE GARAGE…','POLISHING THE BRICKS…','WARMING UP THE TYRES…','ALMOST THERE…'],tips=['Tap the car in the lobby to change driver','Drag the garage to look around your car','Land jumps smoothly for a little boost','Some drivers are secret…','Play with friends: FRIENDS → JOIN'];
+<script>(function(){var B=document.getElementById('bsBoot');try{(document.body||document.documentElement).appendChild(B);document.addEventListener('DOMContentLoaded',function(){if(B.parentNode)document.body.appendChild(B)})}catch(e){}var bar=B.querySelector('.bar i'),tp=B.querySelector('.tp'),n=0,done=false,st=['STARTING ENGINES…','BUILDING THE GARAGE…','POLISHING THE BRICKS…','WARMING UP THE TYRES…','ALMOST THERE…'],tips=['Tap the car in the lobby to change driver','Drag the garage to look around your car','Land jumps smoothly for a little boost','Some drivers are secret…','Play with friends: FRIENDS → JOIN'];
  document.getElementById('bsBootTip').textContent=tips[Math.floor(Math.random()*tips.length)];
  var iv=setInterval(function(){n++;var p=Math.min(92,6+n*4*(1-n/60));bar.style.width=p+'%';tp.textContent=st[Math.min(st.length-1,Math.floor(n/6))]},200);
+ try{var lm=document.querySelector('.brand .lm'),lw=document.querySelector('.brand .lw'),lg=document.getElementById('bsBootLg');if(lm&&lw&&lg){lg.innerHTML='';var a1=lm.cloneNode();a1.className='m';a1.removeAttribute('width');a1.removeAttribute('height');var a2=lw.cloneNode();a2.className='w';a2.removeAttribute('width');a2.removeAttribute('height');lg.appendChild(a1);lg.appendChild(a2)}}catch(e){}
  var t0=Date.now();window.bsBootDone=function(){if(done)return;var w=2400-(Date.now()-t0);if(w>0){setTimeout(window.bsBootDone,w);return}done=true;clearInterval(iv);bar.style.width='100%';tp.textContent='GO!';setTimeout(function(){B.classList.add('out');setTimeout(function(){B.remove()},700)},350)};
  setTimeout(window.bsBootDone,16000);
  if(!/#lobby|\/tester\/|\/fun\//.test(location.href))setTimeout(window.bsBootDone,1200)})();</script>
@@ -8623,7 +8624,7 @@ var PROF=jget('bs-prof');
 })();
 function padIdx(id){return PADIDS.indexOf(id)}
 function owned(id){var sd=jget('bs-store');if(sd&&sd.chars&&sd.chars[id])return true;var i=padIdx(id);if(i<0)return false;if(!PROF)return id==='blaze';return !!((PROF.m>>>i)&1)}
-function level(id){var i=padIdx(id);return PROF&&PROF.lv[i]?PROF.lv[i]:1}
+function level(id){var i=padIdx(id),pl=PROF&&PROF.lv[i]?PROF.lv[i]:1,ol=0;try{ol=(storeData().lvl||{})[id]||0}catch(e){}return Math.max(pl,ol||1)}
 function skinIdx(id){var i=padIdx(id);if(!PROF||i<0)return -1;var k=+String(PROF.ks||'').charAt(i)||0;if(!k)return -1;var s=i*2+k-1;return ((PROF.kn>>>s)&1)?s:-1}
 function skinOwned(s){return !!(PROF&&((PROF.kn>>>s)&1))}
 window.BSSkinDeco=function(g,s,T){try{skinDeco(g,s,T)}catch(e){}return g};
@@ -8891,7 +8892,7 @@ var TC=['ROOKIE','SPEEDY','TURBO','BRICK BOSS','DRIFT KING','NO BRAKES','BRICK L
 function artFor(id){var i=padIdx(id);if(i>=0)return PADART.art(i);if(id==='skydrive')return skyArt();return ''}
 function teamDraw(){var el=$('bslTeam');if(!el)return;var n=NETo(),inr=inRoom(),L=chars(),h='',sl=[];
  if(inr)n.players.forEach(function(p){sl.push({name:p.name,char:p.char,me:p.pid===n.myPid,host:p.pid==='H',rd:p.rd})});else{var c=cur();sl.push({name:myName(),char:c&&c.id,me:true,host:false,rd:true,solo:true})}
- sl.forEach(function(p){h+='<div class="bfs-slot'+(p.me?' me':'')+'">'+(p.host?'<span class="crown">👑</span>':'')+'<span class="art">'+artFor(p.char)+'</span><b>'+esc(p.name||'PLAYER')+'</b><small class="'+(p.host?'h':p.rd?'y':'')+'">'+(p.solo?'YOU':p.host?'HOST':p.rd?'READY':'NOT READY')+'</small></div>'});
+ sl.forEach(function(p){h+='<div class="bfs-slot'+(p.me?' me':'')+'">'+(p.host?'<span class="crown">👑</span>':'')+(p.me&&window.BSIconHtml?'<span class="myic2">'+window.BSIconHtml(window.BSMyIcon(),26)+'</span>':'')+'<span class="art">'+artFor(p.char)+'</span><b>'+esc(p.name||'PLAYER')+'</b><small class="'+(p.host?'h':p.rd?'y':'')+'">'+(p.solo?'YOU':p.host?'HOST':p.rd?'READY':'NOT READY')+'</small></div>'});
  for(var k=sl.length;k<6;k++)h+='<div class="bfs-slot empty" data-inv="1"><span class="pl">+</span><b>'+(inr?'INVITE':'TEAM UP')+'</b></div>';
  if(el.__h!==h){el.__h=h;el.innerHTML=h}}
 function frDraw(){try{teamDraw()}catch(e){}var n=NETo(),inr=inRoom();$('bslFrOut').hidden=inr;$('bslFindBox').hidden=inr;$('bslFriends').hidden=inr;$('bslFrIn').hidden=!inr;$('bslInvite').hidden=!!(n&&n.qm);
@@ -8917,7 +8918,7 @@ function saveFriends(a){store('bs-friends',JSON.stringify(a.slice(0,30)))}
 function isFriend(code){return friends().some(function(f){return f.c===code})}
 function addFriend(name,code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4||code===myCode())return false;var a=friends().filter(function(f){return f.c!==code});a.unshift({n:cleanName(name)||'FRIEND',c:code,t:Date.now()});saveFriends(a);return true}
 var FST={},fstT=0;   /* friends' status: code -> {s:'room'|'race'|'on'|'off', room} */
-var fstP=0;function fstRun(){var a=friends();if(!a.length||!window.BSFriend||fstP>0)return;fstT=Date.now();fstP=a.length;a.forEach(function(f){if(!FST[f.c])FST[f.c]={s:'?'};window.BSFriend.probe(f.c,function(st){fstP=Math.max(0,fstP-1);FST[f.c]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full,act:st.act}:{s:'on',act:st.act};flDraw(1)})})}
+var fstP=0;function fstRun(){var a=friends();if(!a.length||!window.BSFriend||fstP>0)return;fstT=Date.now();fstP=a.length;a.forEach(function(f){if(!FST[f.c])FST[f.c]={s:'?'};window.BSFriend.probe(f.c,function(st){fstP=Math.max(0,fstP-1);FST[f.c]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full,act:st.act,ic:st.ic}:{s:'on',act:st.act,ic:st.ic};flDraw(1)})})}
 setInterval(function(){if($('bslPFr').classList.contains('on')&&!inRoom()&&Date.now()-fstT>5000)fstRun()},1000);
 function fstAct(a){var M={lobby:'ONLINE · IN THE LOBBY',story:'PLAYING STORY MODE',race:'RACING (SOLO)',battle:'IN A 1V1 BATTLE',tag:'PLAYING TAG',dozer:'PLAYING DOZER',bomb:'PLAYING BOMB',potato:'PLAYING HOT POTATO',koth:'PLAYING KING OF THE HILL',lava:'PLAYING LAVA FLOOR'};return M[a]||(a?'PLAYING '+a.toUpperCase():'ONLINE · NOT IN A ROOM')}
 function fstTxt(f){var q=FST[f.c]||{s:'?'};return q.s==='room'?'<em class="fs on">● IN A ROOM'+(q.full?' (FULL)':'')+'</em>':q.s==='race'?'<em class="fs on">● RACING NOW</em>':q.s==='on'?'<em class="fs on">● '+fstAct(q.act)+'</em>':q.s==='off'?'<em class="fs">○ OFFLINE</em>':'<em class="fs">CHECKING…</em>'}
@@ -9139,7 +9140,7 @@ function fdState(q){if(!q||!q.s||q.s==='?')return ['…','chk'];if(q.s==='off')r
 function fdDraw(){if(!FD.el||!FD.el.classList.contains('on'))return;$('bfdMe').textContent=myCode();var a=friends(),ORD={room:0,on:1,race:2,'?':3,off:4},on=0;
  a=a.slice().sort(function(x,y){var qx=(FST[x.c]||{}).s||'?',qy=(FST[y.c]||{}).s||'?';return (ORD[qx]==null?3:ORD[qx])-(ORD[qy]==null?3:ORD[qy])});
  var h='';a.forEach(function(f){var q=FST[f.c]||{},st=fdState(q),hu=0;for(var z=0;z<f.n.length;z++)hu=(hu*31+f.n.charCodeAt(z))%360;if(q.s&&q.s!=='off'&&q.s!=='?')on++;
-  h+='<li class="'+st[1]+'"><i class="av" style="--h:'+hu+'">'+esc(f.n.charAt(0).toUpperCase())+'</i><span><b>'+esc(f.n)+'</b><em>'+esc(st[0])+'</em></span>'+
+  h+='<li class="'+st[1]+'">'+(q.ic&&window.BSIconHtml?'<i class="av ic">'+window.BSIconHtml(q.ic,42)+'</i>':'<i class="av" style="--h:'+hu+'">'+esc(f.n.charAt(0).toUpperCase())+'</i>')+'<span><b>'+esc(f.n)+'</b><em>'+esc(st[0])+'</em></span>'+
    (q.s==='room'?'<button type="button" class="jn" data-j="'+esc(f.c)+'">JOIN</button>':'')+'<button type="button" class="iv" data-iv="'+esc(f.c)+'" data-n="'+esc(f.n)+'"'+(q.s==='off'?' disabled':'')+'>INVITE</button></li>'});
  if(!a.length)h='<li class="none">No friends yet. Add one below with their 4-letter code.</li>';
  var L=$('bfdList');if(L.__h!==h){L.__h=h;L.innerHTML=h}$('bfdOn').textContent=on+' ONLINE';
@@ -9262,12 +9263,14 @@ function osCss(){if($('oshopCss'))return;var st=document.createElement('style');
  '@media (max-height:420px){#oshop .bxgrid{height:auto}#oshop .oh h2{font-size:21px}}';document.head.appendChild(st)}
 function osBuild(){if($('oshop'))return;osCss();var A=window.OSA,d=document.createElement('div');d.id='oshop';
  d.innerHTML='<div class="oh"><button class="ob" id="osBack" type="button" aria-label="Back">‹</button><h2>ONLINE <i>SHOP</i></h2><span class="wal"><span class="coin" aria-hidden="true"></span><span id="osWal">0</span></span><span id="osTst"></span></div>'+
-  '<div class="tabs" id="osTabs"><button data-s="boxes" class="on">BOXES</button><button data-s="drivers">DRIVERS</button><button data-s="bundles">BUNDLES</button><button data-s="upgrades">UPGRADES</button><button data-s="looks">GLOW &amp; TRAIL</button></div>'+
+  '<div class="tabs" id="osTabs"><button data-s="boxes" class="on">BOXES</button><button data-s="drivers">DRIVERS</button><button data-s="bundles">BUNDLES</button><button data-s="levels">DRIVER UPGRADES</button><button data-s="icons">ICONS</button><button data-s="upgrades">CAR PARTS</button><button data-s="looks">GLOW &amp; TRAIL</button></div>'+
   '<div class="shrow" id="osRow">'+
    '<div class="shsec" data-s="boxes"><div class="shh">BOXES <small>A NEW DRIVER FOR ONLINE · TAP TO OPEN</small></div><div class="bxgrid" id="osBx"></div></div>'+
    '<div class="shsec" data-s="drivers"><div class="shh">DRIVERS <small>UNLOCKED FOR BRICKSPEED ONLINE</small></div><div class="ptgrid" id="osDr"></div></div>'+
    '<div class="shsec" data-s="bundles"><div class="shh">BUNDLES <small>ONLINE ONLY · ONE OF EACH</small></div><div class="ptgrid" id="osBu"></div></div>'+
-   '<div class="shsec" data-s="upgrades"><div class="shh">UPGRADES <small>STORY · TAG · LAB · PARTY (RACES STAY FAIR)</small></div><div class="ptgrid" id="osUp"></div></div>'+
+   '<div class="shsec" data-s="levels"><div class="shh">DRIVER UPGRADES <small>POWER POINTS FROM BOXES + COINS · SHORTER ABILITY COOLDOWN</small> <span class="ppw" id="osPP"></span></div><div class="ptgrid" id="osLv"></div></div>'+
+   '<div class="shsec" data-s="icons"><div class="shh">PLAYER ICONS <small>YOUR FRIENDS AND TEAM SEE IT</small></div><div class="ptgrid" id="osIc"></div></div>'+
+   '<div class="shsec" data-s="upgrades"><div class="shh">CAR PARTS <small>STORY · TAG · LAB · PARTY (RACES STAY FAIR)</small></div><div class="ptgrid" id="osUp"></div></div>'+
    '<div class="shsec" data-s="looks"><div class="shh">GLOW &amp; TRAIL <small>UNDER AND BEHIND YOUR CAR</small></div><div class="ptgrid" id="osLk"></div></div></div>'+
   '<div class="ov2" id="osOpen"><div class="ostage" id="osStage"><div class="beams" aria-hidden="true"></div><div class="rays" aria-hidden="true"></div><div class="halo" aria-hidden="true"></div><div class="lightup" aria-hidden="true"></div>'+
    '<div class="scene big" aria-hidden="true"><div class="jmp" id="osJmp"><div class="rig" id="osRig"></div></div></div><div class="ring" aria-hidden="true"></div>'+
@@ -9277,14 +9280,14 @@ function osBuild(){if($('oshop'))return;osCss();var A=window.OSA,d=document.crea
  $('osBack').onclick=function(){d.classList.remove('on');draw()};
  [].forEach.call($('osTabs').children,function(b){b.onclick=function(){var sec=$('osRow').querySelector('.shsec[data-s="'+b.dataset.s+'"]');$('osRow').scrollTo({left:sec.offsetLeft-$('osRow').offsetLeft,behavior:'smooth'})}});
  $('osRow').addEventListener('scroll',function(){var r=$('osRow'),best=null,bd=1e9;[].forEach.call(r.children,function(s){var dd=Math.abs(s.offsetLeft-r.offsetLeft-r.scrollLeft);if(dd<bd){bd=dd;best=s.dataset.s}});[].forEach.call($('osTabs').children,function(b){b.classList.toggle('on',b.dataset.s===best)})},{passive:true});
- $('osOpen').addEventListener('click',osTap)}
+ $('osOpen').style.touchAction='manipulation';$('osOpen').addEventListener('pointerdown',function(e){e.preventDefault();osTap()})}
 function osOwnedIdx(i){return owned(PADIDS[i])}
 function osDraw(){var A=window.OSA,d=storeData(),w=wallet(),TEST=/\/tester\//.test(location.pathname)||/gtest/.test(location.pathname),coin='<span class="coin" aria-hidden="true"></span>';
  $('osWal').textContent=w.toLocaleString();$('osTst').innerHTML=TEST?'<button class="tst" type="button" id="osT1k">+1000 TEST</button>':'';if(TEST)$('osT1k').onclick=function(){var d3=storeData();d3.test=(d3.test||0)+1000;jset('bs-store',d3);toast('+1000 test coins (test page only)');osDraw()};
  /* boxes */
  var h='';for(var r=1;r<=4;r++){var pool=A.CH.map(function(c,i){return i}).filter(function(i){return A.CH[i][2]==r&&!osOwnedIdx(i)&&i<12}),c=A.RC[r],poor=w<OS_COST[r];
   h+='<button class="bx r'+r+'" data-r="'+r+'" style="--bc:'+c+';--bl:'+A.shade(c,1.35)+';--bd:'+A.shade(c,.45)+'"><span class="bglow" aria-hidden="true"></span>'+(r==4?A.CROWN:'')+'<span class="bn"><b>'+OS_RN[r]+'</b></span>'+A.miniBox(r)+
-   '<span class="bc">'+(pool.length?pool.length+' NEW DRIVER'+(pool.length>1?'S':''):'ALL DRIVERS OWNED · COINS BACK')+'</span><span class="bp'+(poor?' poor':'')+'"><b>OPEN</b><span>'+coin+OS_COST[r]+'</span></span></button>'}
+   '<span class="bc">'+(pool.length?pool.length+' NEW DRIVER'+(pool.length>1?'S':'')+' · POWER · ICONS':'POWER POINTS · ICONS · COINS')+'</span><span class="bp'+(poor?' poor':'')+'"><b>OPEN</b><span>'+coin+OS_COST[r]+'</span></span></button>'}
  $('osBx').innerHTML=h;[].forEach.call($('osBx').children,function(b){b.onclick=function(){osOpenBox(+b.dataset.r)}});
  /* drivers */
  h='';A.CH.forEach(function(c,i){if(i>=12)return;var pad=PROF&&((PROF.m>>>i)&1),onl=d.chars&&d.chars[PADIDS[i]],free=c[2]==0,ow=pad||onl||free,p=OS_CHP[c[2]];
@@ -9305,21 +9308,68 @@ function osOpenBox(r){if(OS.busy)return;if(wallet()<OS_COST[r]){toast('You need 
  $('osRig').innerHTML=A.box3d(104,r);$('osRig').style.setProperty('--ry','-28deg');$('osRig').style.setProperty('--lid','0deg');var os=$('osStage');os.style.setProperty('--hc',A.RC[r]);os.style.setProperty('--p',0);
  os.className='ostage tapping idle';$('osPrize').innerHTML='';$('osText').textContent='TAP TAP!';osTapUI();$('osOpen').classList.add('on');osDraw()}
 function osTapUI(){var t=OS.tap;if(!t)return;$('osTapF').style.width=(t.n/t.need*100)+'%';$('osTapN').textContent=t.n+'/'+t.need;$('osStage').style.setProperty('--p',t.n/t.need)}
-function osTap(){var os=$('osStage');if(OS.done){$('osOpen').classList.remove('on');OS.done=false;OS.busy=false;osDraw();return}var t=OS.tap;if(!t)return;t.n++;os.classList.remove('idle');
- var jm=$('osJmp');jm.classList.remove('hop');void jm.offsetWidth;jm.classList.add('hop');var pr=t.n/t.need;$('osRig').style.setProperty('--lid',(5+pr*11)+'deg');setTimeout(function(){$('osRig').style.setProperty('--lid',(pr*5)+'deg')},140);vib(12+t.n);osTapUI();
+function osTap(){var os=$('osStage');if(OS.done){if(Date.now()-(OS.doneT||0)<700)return;$('osOpen').classList.remove('on');OS.done=false;OS.busy=false;$('osRig').classList.remove('opened');$('osJmp').className='jmp';osDraw();return}var t=OS.tap;if(!t)return;t.n++;t.last=Date.now();os.classList.remove('idle');
+ var jm=$('osJmp');jm.classList.remove('hop');void jm.offsetWidth;jm.classList.add('hop');var pr=t.n/t.need;$('osRig').style.setProperty('--lid',(5+pr*11)+'deg');setTimeout(function(){if(OS.tap)$('osRig').style.setProperty('--lid',(pr*5)+'deg')},140);vib(12+t.n);osTapUI();
  var left=t.need-t.n;$('osText').textContent=left<=0?'':t.n==1?'TAP AGAIN!':left<=2?'ALMOST!':'KEEP IT GOING!';
- if(left<=0){OS.tap=null;os.className='ostage shake';$('osText').textContent='Opening…';setTimeout(function(){os.className='ostage charge';setTimeout(function(){osReveal(t.r)},900)},700)}}
-function osReveal(r){var A=window.OSA,os=$('osStage'),pool=A.CH.map(function(c,i){return i}).filter(function(i){return A.CH[i][2]==r&&!osOwnedIdx(i)&&i<12}),d=storeData();
- $('osRig').style.setProperty('--lid','110deg');$('osRig').classList.add('opened');
- if(pool.length){var i=pool[(Math.random()*pool.length)|0];d.chars=d.chars||{};d.chars[PADIDS[i]]=1;jset('bs-store',d);
-  $('osPrize').innerHTML='<div class="av">'+A.charArt(i)+'</div><b>'+A.CH[i][0]+'</b><span>'+OS_RN[r]+' · '+A.CH[i][1]+'</span><em>NEW DRIVER · ONLINE</em>';$('osHype').textContent='NEW DRIVER!';os.className='ostage open hyped burst';osConf([A.RC[r],A.CH[i][3],'#ffffff'],160)}
- else{var back=Math.round(OS_COST[r]*.6);d.test=(d.test||0)+back;jset('bs-store',d);
-  $('osPrize').innerHTML='<b>🪙 +'+back+'</b><span>YOU HAVE EVERY '+OS_RN[r]+' DRIVER</span><em>COINS BACK</em>';$('osHype').textContent='COINS!';os.className='ostage open burst';osConf(['#ffd23a','#fff'],80)}
- $('osText').textContent='TAP TO CLOSE';vib([30,30,90]);OS.done=true;osDraw();draw()}
+ if(left<=0){OS.tap=null;os.className='ostage shake';$('osText').textContent='Opening…';setTimeout(function(){osReveal(t.r)},700)}}
+setInterval(function(){var t=OS.tap;if(t&&t.last&&Date.now()-t.last>1400){var os=$('osStage');if(os){os.classList.add('idle');$('osText').textContent='TAP TAP!'}}},300);
+function osFlash(){var f=$('osFlash');if(!f){f=document.createElement('div');f.id='osFlash';f.style.cssText='position:fixed;inset:0;z-index:9700;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s';$('oshop').appendChild(f)}f.style.transition='none';f.style.opacity='.85';void f.offsetWidth;f.style.transition='opacity .45s';f.style.opacity='0'}
+function osCrazy(os,rr,done){var rg=$('osRig'),jm=$('osJmp'),n=0,steps=4+rr*3,lines=['Something special…','It is shaking!','WHAT IS IN THERE?!','HOLD ON…!','HERE IT COMES!'],A=window.OSA;
+ os.className='ostage charge crazy';$('osText').textContent=lines[0];
+ (function step(){n++;var k=n/steps;jm.classList.remove('hop','jhop','jspin');void jm.offsetWidth;jm.classList.add(n%3==0?'jspin':'jhop');jm.style.setProperty('--jh',(30+k*70)+'px');
+  rg.style.setProperty('--lid',(8+Math.random()*30*k+10*k)+'deg');setTimeout(function(){rg.style.setProperty('--lid',(4*k)+'deg')},150);os.style.setProperty('--glow',k);vib(20+Math.round(k*60));
+  $('osText').textContent=lines[Math.min(lines.length-1,Math.floor(k*lines.length))];if(rr>=3&&n%2==0)osConf([A.RC[rr],'#ffffff'],10+Math.round(k*20));if(n%4==0)osFlash();
+  if(n<steps)setTimeout(step,Math.max(170,380-k*200));else setTimeout(function(){os.classList.remove('crazy');done()},260)})()}
+function osLidOff(){var rg=$('osRig');rg.classList.add('opened');rg.style.setProperty('--lid','122deg');var jm=$('osJmp');jm.classList.remove('hop','boom','jhop','jspin');void jm.offsetWidth;jm.classList.add('boom')}
+function osReveal(r){var A=window.OSA,os=$('osStage'),pool=A.CH.map(function(c,i){return i}).filter(function(i){return A.CH[i][2]==r&&!osOwnedIdx(i)&&i<12}),d=storeData(),PPR=[0,[10,25],[20,45],[40,80],[80,150]][r],pz=$('osPrize');
+ var fin=function(html,hype,cols,n,big){pz.innerHTML=html;$('osHype').textContent=hype;osFlash();osLidOff();os.className='ostage charge open burst'+(big?' hyped':'');osConf(cols,n);vib(big?[80,40,250]:[30,30,90]);setTimeout(function(){os.className='ostage open'+(big?' hyped':'')+' burst'},700);$('osText').textContent='TAP TO CLOSE';OS.done=true;OS.doneT=Date.now();osDraw();draw()};
+ var roll=Math.random(),icPool=OS_ICONS.filter(function(ic){return !(d.icons||{})[ic.id]&&ic.r<=r});
+ if(pool.length&&roll<.55){var i=pool[(Math.random()*pool.length)|0];d.chars=d.chars||{};d.chars[PADIDS[i]]=1;jset('bs-store',d);
+  osCrazy(os,r,function(){fin('<div class="av">'+A.charArt(i)+'</div><b>'+A.CH[i][0]+'</b><span>'+OS_RN[r]+' · '+A.CH[i][1]+'</span><em>NEW DRIVER · ONLINE</em><span class="stars">'+'★★★★★'.slice(0,r+1)+'</span>','NEW DRIVER!',[A.RC[r],A.CH[i][3],'#ffffff','#ffc400'],r>=4?260:r>=3?200:150,true)});return}
+ if(icPool.length&&roll<.8){var ic=icPool[(Math.random()*icPool.length)|0];d.icons=d.icons||{};d.icons[ic.id]=1;jset('bs-store',d);
+  osCrazy(os,Math.max(1,r-1),function(){fin('<div class="av">'+osIconHtml(ic,150)+'</div><b>'+ic.n+'</b><span>PLAYER ICON</span><em>NEW ICON · USE IT IN THE ICONS TAB</em>','NEW ICON!',[A.RC[r],'#ffffff'],120,true)});return}
+ var pp=PPR[0]+Math.floor(Math.random()*(PPR[1]-PPR[0]+1)),back=Math.round(OS_COST[r]*.3);d.pp=(d.pp||0)+pp;d.test=(d.test||0)+back;jset('bs-store',d);
+ setTimeout(function(){fin('<b class="ppb">⚡ +'+pp+'</b><span>POWER POINTS</span><em>+ 🪙 '+back+' COINS · UPGRADE YOUR DRIVERS</em>','POWER!',['#3fd0ff','#ffd23a','#fff'],90,false)},500)}
 function osConf(cols,n){var cv=$('osConf'),dp=Math.min(2,window.devicePixelRatio||1);cv.width=innerWidth*dp;cv.height=innerHeight*dp;var g=cv.getContext('2d'),W=cv.width,H=cv.height,P=[];
  for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,v=(4+Math.random()*12)*dp;P.push({x:W/2,y:H*.45,vx:Math.cos(a)*v,vy:Math.sin(a)*v-6*dp,r:Math.random()*6.3,vr:(Math.random()-.5)*.4,s:(5+Math.random()*7)*dp,c:cols[i%cols.length],l:1})}
  (function f(){g.clearRect(0,0,W,H);P.forEach(function(p){p.vy+=.35*dp;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.l-=.006;g.save();g.globalAlpha=Math.max(0,p.l);g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore()});P=P.filter(function(p){return p.l>0&&p.y<H+40});if(P.length)requestAnimationFrame(f);else g.clearRect(0,0,W,H)})()}
-function osShow(){osBuild();storeDraw();osDraw();$('oshop').classList.add('on');$('osRow').scrollLeft=0}
+function osShow(){osBuild();storeDraw();osDraw();try{osIconsDraw();osLevelsDraw()}catch(e){console.warn(e)}$('oshop').classList.add('on');$('osRow').scrollLeft=0}
+
+/* ===== PLAYER ICONS ===== */
+var OS_ICONS=(function(){var L=[],B=[['flame','FIREBALL','🔥',1,'#ff6a1a','#ffd23a'],['bolt','THUNDER','⚡',1,'#2a7bff','#7fe6ff'],['flag','CHECKERED','🏁',1,'#2b2f3a','#9aa6c8'],['rocket','ROCKET','🚀',2,'#7a5cff','#ff4fd8'],['shark','SHARK','🦈',2,'#0a6fa8','#3fd0ff'],['skull','GHOST RIDER','💀',3,'#1b1f27','#8a5cff'],['dragon','DRAGON','🐉',3,'#0f7a3a','#7dff9a'],['crown','CHAMPION','👑',4,'#c98f00','#fff3a0'],['diamond','DIAMOND','💎',4,'#3fd0ff','#ff4fd8']];
+ B.forEach(function(b){L.push({id:b[0],n:b[1],e:b[2],r:b[3],c1:b[4],c2:b[5],p:[0,120,250,450,800][b[3]]})});
+ for(var i=0;i<16;i++)L.push({id:'d'+i,n:'',drv:i,r:1,p:100});return L})();
+function osIconHtml(ic,sz){sz=sz||64;if(!ic)ic=OS_ICONS[0];if(ic.drv!=null){var A=window.OSA;return '<span class="pic d" style="width:'+sz+'px;height:'+sz+'px">'+A.charArt(ic.drv)+'</span>'}
+ return '<span class="pic" style="width:'+sz+'px;height:'+sz+'px;background:linear-gradient(150deg,'+ic.c2+','+ic.c1+');font-size:'+Math.round(sz*.55)+'px">'+ic.e+'</span>'}
+function osIconById(id){for(var i=0;i<OS_ICONS.length;i++)if(OS_ICONS[i].id===id)return OS_ICONS[i];return null}
+function osIconOwned(ic,d){d=d||storeData();if(ic.drv!=null)return osOwnedIdx(ic.drv)||!!(d.icons||{})[ic.id];return !!(d.icons||{})[ic.id]||ic.id==='flag'}
+window.BSMyIcon=function(){var d=storeData();return d.icon||'flag'};
+window.BSIconHtml=function(id,sz){var ic=osIconById(id||'flag');if(ic&&ic.drv==null&&!ic.e)ic=null;return osIconHtml(ic||OS_ICONS[2],sz)};
+function osIconsDraw(){var A=window.OSA,d=storeData(),coin='<span class="coin" aria-hidden="true"></span>',cur=d.icon||'flag',h='';
+ OS_ICONS.forEach(function(ic){var own=osIconOwned(ic,d),eq=cur===ic.id,nm=ic.drv!=null?A.CH[ic.drv][0]:ic.n;
+  h+='<button class="skc icc'+(own?' own':'')+(eq?' on':'')+'" data-ic="'+ic.id+'" style="--fr:'+(A.RC[ic.r]||'#8ea5cc')+'">'+osIconHtml(ic,64)+'<b>'+nm+'</b><small>'+(OS_RN[ic.r]||'')+'</small><span class="pb2">'+(eq?'IN USE':own?'USE':coin+' '+ic.p)+'</span></button>'});
+ $('osIc').innerHTML=h;[].forEach.call($('osIc').children,function(b){b.onclick=function(){var ic=osIconById(b.dataset.ic),d2=storeData();if(!osIconOwned(ic,d2)){if(!spend(ic.p)){toast('Not enough online coins');vib(30);return}d2=storeData();d2.icons=d2.icons||{};d2.icons[ic.id]=1;osConf([A.RC[ic.r]||'#ffd23a','#fff'],70);toast('New icon!')}
+  d2.icon=ic.id;jset('bs-store',d2);vib(20);osIconsDraw();try{iconChip()}catch(e){}}})}
+/* ===== DRIVER UPGRADES (like the pad): power points + coins, up to level 10 ===== */
+function osLvCost(lv){return {pp:15+lv*15,c:60+lv*60}}
+function osLevelsDraw(){var A=window.OSA,d=storeData(),coin='<span class="coin" aria-hidden="true"></span>',h='';$('osPP').innerHTML='⚡ '+(d.pp||0)+' POWER';
+ A.CH.forEach(function(c,i){if(i>=16)return;var id=PADIDS[i];if(!owned(id))return;var lv=level(id),mx=lv>=10,k=osLvCost(lv),can=!mx&&(d.pp||0)>=k.pp&&wallet()>=k.c,pips='';for(var q=1;q<=10;q++)pips+='<i'+(q<=lv?' class="on"':'')+'></i>';
+  h+='<button class="skc lvc'+(mx?' own on':'')+'" data-i="'+i+'" style="--fr:'+A.RC[Math.max(1,c[2])]+'"><span class="who">'+A.charArt(i)+'</span><b>'+c[0]+' <em class="lvt">LV '+lv+'</em></b><small>−'+Math.round((lv-1)*3)+'% COOLDOWN</small><span class="lvb l10">'+pips+'</span><span class="pb2'+(can?'':' poor')+'">'+(mx?'MAX':'UPGRADE · ⚡'+k.pp+' + '+coin+k.c)+'</span></button>'});
+ if(!h)h='<p class="none" style="opacity:.7">Unlock drivers first, then level them up here.</p>';
+ $('osLv').innerHTML=h;[].forEach.call($('osLv').querySelectorAll('.lvc'),function(b){b.onclick=function(){var i=+b.dataset.i,id=PADIDS[i],lv=level(id),k=osLvCost(lv),d2=storeData();if(lv>=10){toast('Max level');return}
+  if((d2.pp||0)<k.pp){toast('You need '+(k.pp-(d2.pp||0))+' more power points (open boxes)');vib(30);return}if(!spend(k.c)){toast('Not enough online coins');vib(30);return}
+  d2=storeData();d2.pp=(d2.pp||0)-k.pp;d2.lvl=d2.lvl||{};d2.lvl[id]=lv+1;jset('bs-store',d2);osFlash();osConf([A.CH[i][3],'#ffd23a','#ffffff'],lv+1==5||lv+1==10?200:90);vib(lv+1==5||lv+1==10?[60,40,200]:[40,30,80]);
+  toast(A.CH[i][0]+' is level '+(lv+1)+'!');osLevelsDraw();var nb=$('osLv').querySelector('.lvc[data-i="'+i+'"] .who');if(nb){nb.classList.remove('pow');void nb.offsetWidth;nb.classList.add('pow')}draw()}})}
+(function(){var st=document.createElement('style');st.textContent='#oshop .pic,.pic{display:inline-grid;place-items:center;border-radius:22%;box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 6px 14px rgba(0,0,0,.35);line-height:1;overflow:hidden;flex:none}.pic.d{background:radial-gradient(circle at 50% 35%,#2a3c7e,#0b1430)}.pic.d svg{width:100%;height:100%}'+
+ '#oshop .icc{display:flex;flex-direction:column;align-items:center;gap:4px}#oshop .lvc{display:flex;flex-direction:column;align-items:center}#oshop .lvc .who{position:static;display:grid;place-items:center;width:100%;height:96px;background:none;border:0;box-shadow:none}#oshop .lvc .who svg{width:auto;height:96px}#oshop .lvc .lvt{font-style:normal;color:#ffd23a;font-size:13px}'+
+ '#oshop .lvb.l10{width:90%}#oshop .lvb.l10 i{height:5px}#oshop .pb2.poor{opacity:.55}#oshop .ppw{margin-left:8px;padding:3px 10px;border-radius:99px;background:rgba(63,208,255,.18);color:#7fe6ff;font:900 12px system-ui}'+
+ '#oshop .prize .ppb{font-size:54px;color:#7fe6ff;text-shadow:0 0 24px #3fd0ff}#oshop .prize .stars{color:#ffd23a;font-size:22px;letter-spacing:4px}'+
+ '#oshop .who.pow,#oshop .who.pow svg{animation:osPow .6s cubic-bezier(.2,1.6,.4,1)}@keyframes osPow{0%{transform:scale(1)}35%{transform:scale(1.35) rotate(-6deg)}70%{transform:scale(.95)}100%{transform:scale(1)}}'+
+ '#osOpen{touch-action:manipulation;-webkit-user-select:none;user-select:none}';document.head.appendChild(st)})();
+/* my icon on the lobby name button */
+function iconChip(){var b=$('bslNameB');if(!b)return;var s2=b.querySelector('.myic');if(!s2){s2=document.createElement('span');s2.className='myic';b.insertBefore(s2,b.firstChild)}s2.innerHTML=window.BSIconHtml(window.BSMyIcon(),30)}
+setTimeout(function(){try{iconChip()}catch(e){}},1500);
+var _osD0=osDraw;osDraw=function(){_osD0();try{osIconsDraw();osLevelsDraw()}catch(e){}};
 /* ===== Tutorial: dims the screen, lights up one thing, you tap it.
    Part 1 (first visit): driver -> Race -> first track -> laps -> DONE -> PLAY.
    Part 2 (after that first race): what the pad is and how coins get to it. ===== */
