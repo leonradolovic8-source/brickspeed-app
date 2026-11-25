@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795627346">
+<meta name="bs-build" content="1795635472">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -3447,6 +3447,17 @@ function stMarkers(S,G){var A=ARENA;S.marks=[];var seen={};ST_MIS.forEach(functi
   ic.scale.set(2.6,2.6,1);ic.position.y=8.2;ic.renderOrder=6;g.add(ic);g.position.set(x,0,z);if(sp&&sp.f)g.rotation.y=Math.atan2(sp.f[0],sp.f[1]);G.add(g);
   var share=sp&&dup>1&&S.homeA&&S.homeA[m.who],ac=share||stLookCar(ST_LOOK[m.who]);if(sp){S.homeA=S.homeA||{};S.homeA[m.who]=ac;ac.position.set(sp.ax,0,sp.az);ac.rotation.y=sp.ar}else{var aa=Math.atan2(A.c[m.node[0]]-x,A.c[m.node[1]]-z);ac.position.set(x+Math.cos(aa)*4.2,0,z-Math.sin(aa)*4.2);ac.rotation.y=aa+Math.PI}G.add(ac);
   var K={g:g,x:x,z:z,m:m,ic:ic,i:i,op:OP,actor:ac,gar:sp&&sp.gar,f:sp&&sp.f,home:!!sp,ap:sp&&sp.ap};stMarkBlock(S,K,G);S.marks.push(K)})}
+/* job givers cruise laps around their outpost block; they drive back and park when you come close, a job runs for them, or a cutscene plays */
+function stActorDrive(S,dt){var A=ARENA,hr=A.R/2,seen=[];S.marks.forEach(function(k){var ac=k.actor;if(!ac||!k.blk||seen.indexOf(ac)>=0)return;seen.push(ac);
+  if(!k.ah)k.ah={x:ac.position.x,z:ac.position.z,r:ac.rotation.y,s:0,st:'home',sp:9+Math.random()*4};var H=k.ah,P0=ac.position;
+  if(S.cut){P0.set(H.x,0,H.z);ac.rotation.y=H.r;H.st='home';return}
+  var b=k.blk,o=hr*.5,x0=b.x0-o,x1=b.x1+o,z0=b.z0-o,z1=b.z1+o,W=x1-x0,D=z1-z0,P=2*(W+D);
+  var per=function(q){q=((q%P)+P)%P;if(q<W)return [x0+q,z0];q-=W;if(q<D)return [x1,z0+q];q-=D;if(q<W)return [x1-q,z1];q-=W;return [x0,z1-q]};
+  var face=function(dx,dz){var a=Math.atan2(dx,dz),d=a-ac.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));ac.rotation.y+=d*Math.min(1,dt*6)};
+  var busy=(S.mis&&S.mis.m&&S.mis.m.who===k.m.who)||Math.hypot(me.x-H.x,me.z-H.z)<40;
+  if(busy){if(H.st==='home')return;var dx=H.x-P0.x,dz=H.z-P0.z,dd=Math.hypot(dx,dz);if(dd<.6){H.st='home';P0.set(H.x,0,H.z);ac.rotation.y=H.r;return}var st=Math.min(dd,H.sp*dt);P0.x+=dx/dd*st;P0.z+=dz/dd*st;face(dx,dz);return}
+  if(H.st==='home'){H.st='out';var bs=0,bd=1e9;for(var q=0;q<P;q+=2){var pp=per(q),d2=Math.hypot(pp[0]-P0.x,pp[1]-P0.z);if(d2<bd){bd=d2;bs=q}}H.s=bs}
+  var p=per(H.s+3.5),dx2=p[0]-P0.x,dz2=p[1]-P0.z,d3=Math.hypot(dx2,dz2)||1;if(d3<4.5)H.s=(H.s+H.sp*dt)%P;var mv=Math.min(d3,H.sp*1.1*dt);P0.x+=dx2/d3*mv;P0.z+=dz2/d3*mv;face(dx2,dz2)})}
 /* the whole block around an outpost is the job pad: touch the block and the job starts (not the base block) */
 function stMarkBlock(S,K,G){var A=ARENA,bi=-1,bj=-1;for(var q=0;q<A.c.length-1;q++){if(K.x>A.c[q]&&K.x<A.c[q+1])bi=q;if(K.z>A.c[q]&&K.z<A.c[q+1])bj=q}if(bi<0||bj<0)return;var b=stBlock(bi,bj);if(S.base&&stInB(b,S.base.cx,(S.base.z0+S.base.z1)/2||S.base.cz||0))return;K.blk=b;
   var col=new T.Color(K.m.col),mt=new T.MeshBasicMaterial({color:col,transparent:true,opacity:.85,toneMapped:false,depthWrite:false}),bo=new T.Group(),e=1.2,w=b.x1-b.x0+2*e,d=b.z1-b.z0+2*e,cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;
@@ -3517,7 +3528,7 @@ function stOutpostTick(k,dt,d){var P=k.op;if(!P)return;var tt=performance.now()/
   var a=P.fg.attributes.position,b=P.fbase;for(var i=0;i<a.count;i++){var x=b[i*3]+.8;a.array[i*3+2]=Math.sin(x*3.2-tt*6)*.12*x}a.needsUpdate=true;
   if(k.ic){k.ic.position.y=8.2+Math.sin(tt*2)*.25;k.ic.material.opacity=k.rep?.55:1}}
 function stUnlocked(S,i){for(var q=0;q<i;q++)if(S.prog.done.indexOf(ST_MIS[q].id)<0)return false;return true}
-function stMarkPick(S){var pick={},rep={};S.marks.forEach(function(k){var w=k.m.who,dn=S.prog.done.indexOf(k.m.id)>=0;if(!dn){if(!pick[w]&&stUnlocked(S,k.i))pick[w]=k;else if(!pick[w])pick[w]=-1}else if(k.m.p===2?S.prog.part2:S.prog.part1)rep[w]=k});
+function stMarkPick(S){var nxi=-1;ST_MIS.some(function(q,qi){if(S.prog.done.indexOf(q.id)<0){nxi=qi;return true}});if(nxi>=0&&S.marks[nxi])return [S.marks[nxi]];var pick={},rep={};S.marks.forEach(function(k){var w=k.m.who,dn=S.prog.done.indexOf(k.m.id)>=0;if(!dn){if(!pick[w]&&stUnlocked(S,k.i))pick[w]=k;else if(!pick[w])pick[w]=-1}else if(k.m.p===2?S.prog.part2:S.prog.part1)rep[w]=k});
   var out=[];Object.keys(rep).concat(Object.keys(pick)).forEach(function(w){var k=pick[w];if(k===-1)return;if(!k)k=rep[w];if(k&&out.indexOf(k)<0)out.push(k)});return out}
 function stMarkOn(S){var free=!S.mis&&!S.cut&&S.stage==='free',on=free?stMarkPick(S):(S.cut&&S.cut.showK?[S.cut.showK]:[]);S.marks.forEach(function(k){k.g.visible=on.indexOf(k)>=0;if(k.bo)k.bo.visible=k.g.visible;k.rep=k.g.visible&&S.prog.done.indexOf(k.m.id)>=0;k.actor.visible=k.g.visible||!!(S.cut&&S.cut.k===k)});S.marks.forEach(function(k){if(k.home)k.actor.visible=true;if(k.op&&k.op.blocks)k.op.blocks.forEach(function(r){r[4]=k.g.visible?3.2:-1})})}
 /* mission cars: borrow parked bots (police give their car back if needed) */
@@ -3644,6 +3655,7 @@ function storyTick(dt){var S=race.m2,A=ARENA;if(!S||!S.hud)return;if(S.ldN!=null
   if(!S.placed){S.placed=true;S.markLock=true;if(S.stage==='free'){me.x=S.base.cx;me.z=S.base.z0+8;me.a=Math.PI}else{me.x=S.pr.cx+4;me.z=S.pr.cz;me.a=Math.PI/2}me.v=0;me.y=0}
   S.lights.forEach(function(l){l.a.rotation.y=l.ph+Math.sin(t*.5+l.ph)*1.2;if(l.c){l.c.visible=S.day<.8;l.c.material.opacity=.13*(1-S.day)}});var fl=Math.floor(t*7)%2;
   cars.forEach(function(c){var u=c.model&&c.model.userData.bar;if(u&&!c.out){var on=c.stCop&&S.wanted>=.5;u.red.color.setHex(on&&fl?0xff2030:0x400008);u.blue.color.setHex(on&&!fl?0x2a5cff:0x0a1440);u.gl.material.opacity=on&&fl?1:0;u.gr.material.opacity=on&&!fl?1:0}});
+  try{stActorDrive(S,dt)}catch(e){}
   if(S.baseRing)S.baseRing.material.opacity=.16+.08*Math.sin(t*3);S.marks.forEach(function(k){k.ic.position.y=7.5+.4*Math.sin(t*2.4)});
   stDayNight(S,dt);try{rimTick(S.day)}catch(e){}try{skyPortTick(S,dt)}catch(e){}stSkyTick(S);stLightsTick(S,dt);stGarTick(S,dt);stCivTick(S,dt);stTramTick(S,dt);stTalkTick(S,dt);stHudTick(S);stDamageFx(S,dt);
   if(race.phase!=='go'){S.gps.count=0;if(S.gpsO)S.gpsO.count=0;S.arrow.visible=false;return}
@@ -4726,7 +4738,7 @@ var cockpit=new T.Group();
   var orange=plastic(0xff7a1a);
   var b=new T.Mesh(new T.BoxGeometry(2.4,.34,1.8),orange);b.position.set(0,.5,-2.15);b.receiveShadow=true;cockpit.add(b);
   var st=[];for(var x=-1;x<=1.01;x+=.4)for(var z=-2.85;z<=-1.45;z+=.4)st.push([x,.72,z]);
-  cockpit.add(studs(st,orange));
+  cockpit.add(studs(st,orange));b.visible=false;cockpit.children[1].visible=false;/* hood hidden: only dash + wheel in cockpit */
   var dash=new T.Mesh(new T.BoxGeometry(2.6,.3,.5),M.black);dash.position.set(0,.66,-1.05);cockpit.add(dash);
 })();
 cam.add(cockpit);cockpit.position.set(0,-1.18,-.1);
@@ -5229,22 +5241,24 @@ function airLand(c,imp,air,gl){if(!c||!c.me||!race.on||!(air>.45))return;c.landT
 var VBH={};function vibMat(m){if(!m||m.userData&&m.userData.vb||!m.color)return;m.userData=m.userData||{};m.userData.vb=1;m.color.getHSL(VBH);if(VBH.s>.08&&VBH.l>.05&&VBH.l<.94){var L=VBH.l>.5?.5+(VBH.l-.5)*.7:VBH.l*.97;m.color.setHSL(VBH.h,Math.min(1,VBH.s*1.35+.06),L)}}
 function vibAll(){if(typeof scene==='undefined'||!scene)return;scene.traverse(function(o){var m=o.material;if(!m)return;if(Array.isArray(m))m.forEach(vibMat);else vibMat(m)})}
 setInterval(function(){try{if(race.on)vibAll()}catch(e){}},2500);
-/* baseplate texture: big flat surfaces get studs + fine grain instead of one flat colour */
-var PLT=null,PLB=null;
-function plateTex(){if(PLT)return PLT;var N=256;PLT=canvasTex(N,N,function(g){var im=g.createImageData(N,N),d=im.data;for(var i=0;i<N*N;i++){var v=212+((Math.random()*18)|0)-9;d[i*4]=d[i*4+1]=d[i*4+2]=v;d[i*4+3]=255}g.putImageData(im,0,0);
-  g.fillStyle='rgba(0,0,0,.16)';g.fillRect(0,0,N,3);g.fillRect(0,0,3,N);
-  for(var y=0;y<2;y++)for(var x=0;x<2;x++){var cx=N/4+x*N/2,cy=N/4+y*N/2,r=N*.15;
-    g.fillStyle='rgba(0,0,0,.38)';g.beginPath();g.arc(cx+r*.2,cy+r*.26,r*1.08,0,7);g.fill();
-    var gr=g.createRadialGradient(cx-r*.35,cy-r*.35,r*.1,cx,cy,r);gr.addColorStop(0,'#ffffff');gr.addColorStop(.65,'#f4f4f4');gr.addColorStop(1,'#bdbdbd');g.fillStyle=gr;g.beginPath();g.arc(cx,cy,r,0,7);g.fill();
-    g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=N*.012;g.beginPath();g.arc(cx,cy,r*.72,3.6,5.4);g.stroke()}});
-  PLT.wrapS=PLT.wrapT=T.RepeatWrapping;PLT.needsUpdate=true;return PLT}
-var PLH={};
-function plateAll(){if(typeof scene==='undefined'||!scene||typeof canvasTex!=='function')return;PLB=PLB||new T.Box3();var n=0;
-  scene.traverse(function(o){if(n>60||!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||(o.userData&&o.userData.pl))return;o.userData.pl=1;var m=o.material;if(!m||Array.isArray(m)||m.map||m.transparent||!m.color||!(m.isMeshStandardMaterial||m.isMeshPhongMaterial||m.isMeshLambertMaterial))return;
-    if(o.parent&&o.parent.userData&&o.parent.userData.car)return;
-    m.color.getHSL(PLH);if(PLH.l<.28)return;
-    if(!o.geometry)return;PLB.setFromObject(o);var sx=PLB.max.x-PLB.min.x,sz=PLB.max.z-PLB.min.z,sy=PLB.max.y-PLB.min.y;if(sx<8||sz<8||sy>1.6||sx>900)return;
-    var tx=plateTex().clone();tx.needsUpdate=true;tx.repeat.set(Math.max(1,Math.round(sx/2.4)),Math.max(1,Math.round(sz/2.4)));var nm=m.clone();nm.map=tx;nm.needsUpdate=true;o.material=nm;n++});
+/* Higgsfield textures for big surfaces: baseplate studs on flat plates + roofs, LEGO brick wall on the sides of big blocks.
+   UVs are rebuilt in world metres so studs/bricks keep their real size on any block. Procedural fallback until the images load. */
+var HFTX='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261125_',PLT=null,WLT=null,PLB=null,PLH={},PLM={},PLW=new T.Vector3();
+function hfTex(url,fallback){var N=512,cv=document.createElement('canvas');cv.width=cv.height=N;var g=cv.getContext('2d');fallback(g,N);var tx=new T.CanvasTexture(cv);tx.encoding=T.sRGBEncoding;tx.wrapS=tx.wrapT=T.RepeatWrapping;try{tx.anisotropy=renderer.capabilities.getMaxAnisotropy()}catch(e){}
+  var im=new Image();im.crossOrigin='anonymous';im.onload=function(){try{g.clearRect(0,0,N,N);g.filter='brightness(1.14) contrast(1.08)';g.drawImage(im,0,0,N,N);g.filter='none';tx.needsUpdate=true}catch(e){}};im.src=HFTX+url;return tx}
+function plateTex(){if(PLT)return PLT;PLT=hfTex('192246_57846fce-f1c5-4145-a343-169573549844.png',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);for(var y=0;y<8;y++)for(var x=0;x<8;x++){var cx=(x+.5)*N/8,cy=(y+.5)*N/8,r=N*.038;g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.arc(cx+r*.2,cy+r*.25,r*1.06,0,7);g.fill();g.fillStyle='#fafafa';g.beginPath();g.arc(cx,cy,r,0,7);g.fill()}});return PLT}
+function wallTex(){if(WLT)return WLT;WLT=hfTex('192251_bf5e5726-171c-497b-9d10-7f4446be8e07.png',function(g,N){g.fillStyle='#ececec';g.fillRect(0,0,N,N);g.fillStyle='rgba(0,0,0,.28)';for(var r=0;r<8;r++){var y=r*N/8;g.fillRect(0,y,N,3);var off=(r%2)*N/6;for(var x=off;x<N+1;x+=N/3)g.fillRect(x,y,3,N/8)}});return WLT}
+function plMat(m,tex){var k=m.uuid+tex.uuid;if(!PLM[k]){var nm=m.clone();nm.map=tex;nm.needsUpdate=true;PLM[k]=nm}return PLM[k]}
+function plUV(o,ts,tw){var g=o.geometry.clone(),P=g.attributes.position,Nn=g.attributes.normal;if(!P||!Nn)return null;o.getWorldScale(PLW);var uv=new Float32Array(P.count*2);
+  for(var i=0;i<P.count;i++){var x=P.getX(i)*PLW.x,y=P.getY(i)*PLW.y,z=P.getZ(i)*PLW.z,nx=Math.abs(Nn.getX(i)),ny=Math.abs(Nn.getY(i));
+    if(ny>.5){uv[i*2]=x/ts;uv[i*2+1]=z/ts}else if(nx>.5){uv[i*2]=z/tw;uv[i*2+1]=y/tw}else{uv[i*2]=x/tw;uv[i*2+1]=y/tw}}
+  g.setAttribute('uv',new T.BufferAttribute(uv,2));return g}
+function plateAll(){if(typeof scene==='undefined'||!scene)return;PLB=PLB||new T.Box3();var n=0;
+  scene.traverse(function(o){if(n>40||!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||(o.userData&&o.userData.pl))return;o.userData.pl=1;var m=o.material;if(!m||Array.isArray(m)||m.map||m.transparent||!m.color||!(m.isMeshStandardMaterial||m.isMeshPhongMaterial))return;
+    if(!o.geometry||!o.geometry.attributes||!o.geometry.attributes.normal)return;m.color.getHSL(PLH);PLB.setFromObject(o);var sx=PLB.max.x-PLB.min.x,sz=PLB.max.z-PLB.min.z,sy=PLB.max.y-PLB.min.y;if(sx>900||sz>900)return;
+    var flat=sx>=8&&sz>=8&&sy<=1.6&&PLH.l>=.28,big=o.geometry.type==='BoxGeometry'&&sy>=3&&Math.max(sx,sz)>=6&&PLH.l>=.12;if(!flat&&!big)return;
+    var g=plUV(o,6.4,flat?6.4:4.8);if(!g)return;o.geometry=g;
+    if(flat)o.material=plMat(m,plateTex());else{var w=plMat(m,wallTex()),pt=plMat(m,plateTex());o.material=[w,w,pt,w,w,w]}n++});
   return n}
 setInterval(function(){try{if(race.on||document.querySelector('.mapbg'))plateAll()}catch(e){}},1500);
 
