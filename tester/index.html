@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795638051">
+<meta name="bs-build" content="1795638455">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5576,13 +5576,14 @@ window.addEventListener('keydown',function(e){
 /* tilt steering: portrait uses left/right tilt, landscape works like a steering wheel */
 var tiltOn=false,tiltRaw=0,tiltZero=0;
 function readTilt(e){
-  var ang=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);
+  var ang=typeof bsAng==='function'?bsAng():((screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0));
   if(ang===90)return e.beta;if(ang===270||ang===-90)return -e.beta;if(ang===180)return -e.gamma;return e.gamma;
 }
 /* flight height: tilt the phone's top toward you to climb, away to dive (angle of the screen from upright, so it ignores steering) */
 var pitchRaw=null,pitchZero=0,flyBtn=0,motionSeen=false;
+var bsGX=0;function bsAng(){var a=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);a=((a%360)+360)%360;var land=innerWidth>innerHeight;if(land&&(a===0||a===180)){if(Math.abs(bsGX)>2)return bsGX>0?90:270;return 90}if(!land&&(a===90||a===270))return 0;return a}
 var gyP=(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')||/iPhone|iPad|iPod/.test(navigator.userAgent)?-1:1,gyOk=false,gyG=0,gyPO=null,gyPG=0,gyAcc=0,gyMT=0;
-window.addEventListener('devicemotion',function(e){var g=e.accelerationIncludingGravity;if(!g||g.z==null)return;motionSeen=true;var ax=(g.x||0)*gyP,ay=(g.y||0)*gyP,az=(g.z||0)*gyP,h=Math.hypot(ax,ay);var p=Math.atan2(az,h)*57.3;pitchRaw=pitchRaw==null?p:pitchRaw+(p-pitchRaw)*.35;var ang=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0),o=ang===90?1:(ang===270||ang===-90)?-1:0;if(!o||h<2.5){gyOk=false;return}var st=Math.atan2(o*ay,o*ax)*57.3;gyG=st;gyOk=true;gyMT=performance.now();tiltRaw=tiltRaw+(st-tiltRaw)*.5;if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
+window.addEventListener('devicemotion',function(e){var g=e.accelerationIncludingGravity;if(!g||g.z==null)return;motionSeen=true;var ax=(g.x||0)*gyP,ay=(g.y||0)*gyP,az=(g.z||0)*gyP,h=Math.hypot(ax,ay);var p=Math.atan2(az,h)*57.3;pitchRaw=pitchRaw==null?p:pitchRaw+(p-pitchRaw)*.35;bsGX=ax;var ang=bsAng(),o=ang===90?1:(ang===270||ang===-90)?-1:0;if(!o||h<2.5){gyOk=false;return}var st=Math.atan2(o*ay,o*ax)*57.3;gyG=st;gyOk=true;gyMT=performance.now();tiltRaw=tiltRaw+(st-tiltRaw)*.5;if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
 function flyInput(){var v=0;if(tiltOn&&pitchRaw!=null){var d=(pitchZero-pitchRaw)/14;if(Math.abs(d)<.12)d=0;v=Math.max(-1,Math.min(1,d))}
   v+=flyBtn+(keys['r']?1:0)-(keys['f']?1:0);return Math.max(-1,Math.min(1,v))}
 window.addEventListener('deviceorientation',function(e){if(e.beta==null)return;var oV=readTilt(e);if(gyOk&&Math.abs(e.gamma||0)<50&&gyPO!=null){var d1=oV-gyPO,d2=gyG-gyPG;if(Math.abs(d1)>.6&&Math.abs(d2)>.6&&Math.abs(d1)<20&&Math.abs(d2)<20){gyAcc+=d1*d2>0?1:-1;if(gyAcc<-14){gyP=-gyP;gyAcc=0;tiltZero=-tiltZero;pitchZero=-pitchZero}if(gyAcc>14)gyAcc=14}}gyPO=oV;gyPG=gyG;if(gyOk&&performance.now()-gyMT<400)return;tiltRaw=oV;if(tiltOn){tilt=Math.max(-1,Math.min(1,(tiltRaw-tiltZero)/22));if(Math.abs(tilt)>.15)lastInput=t}});
@@ -5834,7 +5835,7 @@ function genCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<4;
 /* ================= FRIENDS: a small "beacon" for every open game =================
    Each player's game listens on its own friend code. A friend's game asks it "where are you?" and gets back
    the room it is in right now (any room: its own, a random one or a FIND RACE room), so JOIN always finds it. */
-var FB={peer:null,ok:false,tries:0,pp:null,ppOk:false,q:[],busy:false,started:false};
+var FB={peer:null,ok:false,tries:0,pp:null,ppOk:false,q:[],busy:false,started:false,live:{}};
 function fbId(code){return 'brickspeed-tfriend-'+String(code).toLowerCase()}
 function fbStatus(){return {t:'fs',room:NET.on&&NET.code?NET.code:'',race:!!NET.racing,full:!!(NET.on&&NET.players&&NET.players.length>=6),qm:!!NET.qm,n:NET.name||'',ic:(window.BSMyIcon?window.BSMyIcon():''),act:(function(){try{return race.on?String(race.mode||'race'):'lobby'}catch(e){return ''}})()}}
 function fbStart(){
@@ -5842,7 +5843,7 @@ function fbStart(){
   if(FB.peer&&!FB.peer.destroyed)return;
   var p;try{p=new PC(fbId(code),peerOpts())}catch(e){setTimeout(fbStart,15000);return}FB.peer=p;
   p.on('open',function(){FB.ok=true;FB.tries=0});
-  p.on('connection',function(c){c.on('data',function(d){if(d&&d.t==='inv'){var rm=String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),fc=String(d.f||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),nm=String(d.n||'').slice(0,12);if(rm.length===4){try{c.send({t:'invok'})}catch(e){}if(window.BSOnInvite)try{window.BSOnInvite(nm,fc,rm)}catch(e){}}}});c.on('open',function(){try{c.send(fbStatus())}catch(e){}setTimeout(function(){try{c.close()}catch(e){}},2500)})});
+  p.on('connection',function(c){c.on('data',function(d){if(d&&d.t==='inv'){var rm=String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),fc=String(d.f||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),nm=String(d.n||'').slice(0,12);if(rm.length===4){try{c.send({t:'invok'})}catch(e){}if(window.BSOnInvite)try{window.BSOnInvite(nm,fc,rm)}catch(e){}}}});c.on('open',function(){try{c.send(fbStatus())}catch(e){}if(c.metadata&&c.metadata.live){var last='',n=0,iv=setInterval(function(){if(!c.open){clearInterval(iv);return}var st=fbStatus(),js=JSON.stringify(st);n++;if(js!==last||n%3===0){last=js;try{c.send(st)}catch(e){}}},1000);c.on('close',function(){clearInterval(iv)});c.on('error',function(){clearInterval(iv)})}else setTimeout(function(){try{c.close()}catch(e){}},2500)})});
   p.on('error',function(e){var ty=e&&e.type;if(ty==='peer-unavailable')return;
     FB.ok=false;try{p.destroy()}catch(x){}FB.peer=null;FB.tries++;setTimeout(fbStart,Math.min(30000,4000*FB.tries))});   /* code still held by an old tab: try again soon */
   p.on('disconnected',function(){FB.ok=false;setTimeout(function(){try{if(!p.destroyed)p.reconnect()}catch(x){}},2500)});
@@ -5852,7 +5853,7 @@ function fbProber(cb){ /* a separate anonymous peer that only asks other beacons
   var PC=peerCtor();if(!PC){cb(null);return}
   if(!FB.pp||FB.pp.destroyed){var p;try{p=new PC(peerOpts())}catch(e){cb(null);return}FB.pp=p;FB.ppOk=false;FB.ppWait=[];
     p.on('open',function(){FB.ppOk=true;var w=FB.ppWait;FB.ppWait=[];w.forEach(function(f){f(p)})});
-    p.on('error',function(e){var ty=e&&e.type;if(ty==='peer-unavailable'){var m=String(e.message||'').match(/brickspeed-friend-([a-z0-9]{4})/i);if(m&&FB.cur&&FB.cur.code===m[1].toUpperCase())FB.cur.done(null);return}
+    p.on('error',function(e){var ty=e&&e.type;if(ty==='peer-unavailable'){var m=String(e.message||'').match(/brickspeed-friend-([a-z0-9]{4})/i);if(m){var cu=m[1].toUpperCase();if(FB.cur&&FB.cur.code===cu)FB.cur.done(null);var Lv=FB.live[cu];if(Lv){Lv.c=null;Lv.connecting=false;Lv.st=null;Lv.at=Date.now();Lv.off=true}}return}
       FB.ppOk=false;try{p.destroy()}catch(x){}FB.pp=null;var w=FB.ppWait||[];FB.ppWait=[];w.forEach(function(f){f(null)})});
     p.on('disconnected',function(){try{if(!p.destroyed)p.reconnect()}catch(x){}})}
   FB.ppWait.push(cb);setTimeout(function(){if(!FB.ppOk){var i=FB.ppWait.indexOf(cb);if(i>=0){FB.ppWait.splice(i,1);cb(null)}}},9000);
@@ -5870,7 +5871,18 @@ function fbInvite(code,room,name,cb,tries){code=String(code||'').toUpperCase();t
    c.on('open',function(){try{c.send({t:'inv',room:room,n:name,f:window.BSMyCode&&window.BSMyCode()})}catch(e){}});
    c.on('data',function(d){if(d&&d.t==='invok'){clearTimeout(tm);setTimeout(function(){try{c.close()}catch(e){}},200);done(true)}});
    c.on('error',function(){clearTimeout(tm);done(false)})})}
-window.BSFriend={start:function(){if(!FB.started)fbStart()},probe:fbProbe,invite:fbInvite,online:function(){return FB.ok}};
+function fbParse(d){return {room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm,act:String(d.act||'').replace(/[^a-z]/g,'').slice(0,10),ic:String(d.ic||'').replace(/[^a-z0-9]/g,'').slice(0,10)}}
+/* live watch: one open connection per friend; their game pushes its status every second */
+function fbWatch(code){code=String(code||'').toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code))return;var L=FB.live[code]||(FB.live[code]={st:null,at:0,next:0,off:false});
+  if((L.c&&L.c.open)||L.connecting||Date.now()<L.next)return;L.connecting=true;L.next=Date.now()+(L.off?4000:2000);
+  fbProber(function(p){if(!p){L.connecting=false;return}var c;try{c=p.connect(fbId(code),{reliable:true,metadata:{live:1}})}catch(e){L.connecting=false;return}L.c=c;
+    var to=setTimeout(function(){if(!c.open){try{c.close()}catch(e){}if(L.c===c)L.c=null;L.connecting=false;L.off=true;L.st=null;L.at=Date.now()}},6000);
+    c.on('open',function(){clearTimeout(to);L.connecting=false});
+    c.on('data',function(d){if(d&&d.t==='fs'){L.st=fbParse(d);L.at=Date.now();L.off=false}else if(d&&d.t==='invok'&&L.inv){var f=L.inv;L.inv=null;f(true)}});
+    var gone=function(){clearTimeout(to);if(L.c===c)L.c=null;L.connecting=false};c.on('close',gone);c.on('error',gone)})}
+function fbLive(code){var L=FB.live[String(code||'').toUpperCase()];if(!L)return undefined;if(L.st&&Date.now()-L.at<4000)return L.st;if(L.off||(L.at&&Date.now()-L.at>=4000))return null;return undefined}
+function fbInviteFast(code,room,name,cb){var L=FB.live[String(code||'').toUpperCase()];if(L&&L.c&&L.c.open){var fin=false,tm=setTimeout(function(){if(fin)return;fin=true;L.inv=null;fbInvite(code,room,name,cb)},2500);L.inv=function(ok){if(fin)return;fin=true;clearTimeout(tm);cb&&cb(ok)};try{L.c.send({t:'inv',room:room,n:name,f:window.BSMyCode&&window.BSMyCode()})}catch(e){clearTimeout(tm);fin=true;fbInvite(code,room,name,cb)}return}fbInvite(code,room,name,cb)}
+window.BSFriend={watch:fbWatch,live:fbLive,start:function(){if(!FB.started)fbStart()},probe:fbProbe,invite:fbInviteFast,online:function(){return FB.ok}};
 
 function roomId(code){return 'brickspeed-test-'+code.toLowerCase()}
 function send(conn,m){try{if(conn&&conn.open)conn.send(m)}catch(e){}}
@@ -7835,6 +7847,7 @@ body.bsl-on #bsl{display:block}
 #bsl [hidden]{display:none!important}
 body.bsl-on{overflow:hidden}
 body.bsl-on.racing #bsl{display:none}
+html:has(body.bsl-on),body.bsl-on{overflow:hidden;overscroll-behavior:none}body.bsl-on .hero{position:fixed!important;inset:0!important;height:100%!important;width:100%!important;max-height:none!important}
 body.bsl-on #mp{display:none!important}
 body.bsl-on > header,body.bsl-on .hero .feel,body.bsl-on .hero .hud,body.bsl-on .hero .hint,body.bsl-on .hero .pads{visibility:hidden}
 body.bsl-on.racing .hero .hud,body.bsl-on.racing .hero .pads{visibility:visible}
@@ -9088,7 +9101,8 @@ function isFriend(code){return friends().some(function(f){return f.c===code})}
 function addFriend(name,code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4||code===myCode())return false;var a=friends().filter(function(f){return f.c!==code});a.unshift({n:cleanName(name)||'FRIEND',c:code,t:Date.now()});saveFriends(a);return true}
 var FST={},fstT=0;   /* friends' status: code -> {s:'room'|'race'|'on'|'off', room} */
 var fstP=0;function fstRun(){var a=friends();if(!a.length||!window.BSFriend||fstP>0)return;fstT=Date.now();fstP=a.length;a.forEach(function(f){if(!FST[f.c])FST[f.c]={s:'?'};window.BSFriend.probe(f.c,function(st){fstP=Math.max(0,fstP-1);FST[f.c]=!st?{s:'off'}:st.room?{s:st.race?'race':'room',room:st.room,full:st.full,act:st.act,ic:st.ic}:{s:'on',act:st.act,ic:st.ic};flDraw(1)})})}
-setInterval(function(){if($('bslPFr').classList.contains('on')&&!inRoom()&&Date.now()-fstT>5000)fstRun()},1000);
+function fstLive(){var a=friends();if(!a.length)return;var ch=false;a.forEach(function(f){window.BSFriend.watch(f.c);var r=window.BSFriend.live(f.c);if(r===undefined){if(!FST[f.c])FST[f.c]={s:'?'};return}var n=r===null?{s:'off'}:r.room?{s:r.race?'race':'room',room:r.room,full:r.full,act:r.act,ic:r.ic}:{s:'on',act:r.act,ic:r.ic};if(JSON.stringify(n)!==JSON.stringify(FST[f.c]||{})){FST[f.c]=n;ch=true}});if(ch){try{flDraw(1)}catch(e){}try{fdDraw()}catch(e){}}}
+setInterval(function(){var op=$('bslPFr').classList.contains('on')||(typeof FD!=='undefined'&&FD.el&&FD.el.classList.contains('on'));if(window.BSFriend&&window.BSFriend.watch){if(op||document.visibilityState==='visible')fstLive();return}if(op&&!inRoom()&&Date.now()-fstT>5000)fstRun()},1000);
 function fstAct(a){var M={lobby:'ONLINE · IN THE LOBBY',story:'PLAYING STORY MODE',race:'RACING (SOLO)',battle:'IN A 1V1 BATTLE',tag:'PLAYING TAG',dozer:'PLAYING DOZER',bomb:'PLAYING BOMB',potato:'PLAYING HOT POTATO',koth:'PLAYING KING OF THE HILL',lava:'PLAYING LAVA FLOOR'};return M[a]||(a?'PLAYING '+a.toUpperCase():'ONLINE · NOT IN A ROOM')}
 function fstTxt(f){var q=FST[f.c]||{s:'?'};return q.s==='room'?'<em class="fs on">● IN A ROOM'+(q.full?' (FULL)':'')+'</em>':q.s==='race'?'<em class="fs on">● RACING NOW</em>':q.s==='on'?'<em class="fs on">● '+fstAct(q.act)+'</em>':q.s==='off'?'<em class="fs">○ OFFLINE</em>':'<em class="fs">CHECKING…</em>'}
 function flDraw(noProbe){$('bslMyCode').textContent=myCode();var a=friends(),h='';
