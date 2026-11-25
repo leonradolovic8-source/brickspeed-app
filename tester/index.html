@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795620260">
+<meta name="bs-build" content="1795621183">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5179,12 +5179,12 @@ function glideStart(c){try{var DM=window.DeviceMotionEvent;if(DM&&typeof DM.requ
 function glideEnd(land){var c=GL.c;c.glide=false;var hs=Math.hypot(GL.vx,GL.vz);c.v=Math.min(60,hs);c.a=c.va=Math.atan2(GL.vx,GL.vz);c.air=false;c.vy=0;c.y=arenaH(c.x,c.z);
   if(land){var hard=-GL.vy;airLand(c,hard,9,true);try{shock(c.x,c.y+.2,c.z,0x3fd0ff,12)}catch(e){}}
   var w=c.model.userData.wings;if(w)w.userData.closing=1;if(GL.trail){scene.remove(GL.trail)}GL=null;var fp=document.getElementById('glhud');if(fp)fp.style.display='none'}
-function glideTick(dt){if(!GL)return;var c=GL.c;if(!race.on||race.phase!=='go'||!c.model){glideEnd(false);return}dt=Math.min(dt,.05);
+function glideTick(dt){if(!GL)return;var c=GL.c;if(!race.on||race.phase!=='go'||!c.model){glideEnd(false);return}dt=Math.min(dt,.05);var px0=GL.x,pz0=GL.z;
   var w=c.model.userData.wings,G=30;
   if(GL.ph==='up'){GL.vy-=G*dt;if(GL.vy<=4){GL.ph='glide';try{comic('WINGS OUT!','#3fd0ff');kick(.25,1)}catch(e){}GL.pitch=.25;GL.p0=(typeof pitchRaw!=='undefined'&&pitchRaw!=null)?pitchRaw:null}
     GL.a+=(c.steer||0)*-1.2*dt*0;GL.x+=GL.vx*dt;GL.z+=GL.vz*dt;GL.y+=GL.vy*dt;GL.vx*=1-dt*.4;GL.vz*=1-dt*.4}
   else{/* elytra: inputs set the pitch (positive = nose down) */
-    var inp=glideInp(GL);var tp=.22-inp*(inp>0?1.12:.95);tp=Math.max(-.9,Math.min(1.25,tp));GL.pitch+=(tp-GL.pitch)*Math.min(1,dt*3);
+    var raw=glideInp(GL);GL.inS=GL.inS==null?raw:GL.inS+(raw-GL.inS)*Math.min(1,dt*4);var inp=Math.abs(GL.inS)<.04?0:GL.inS;var tp=.22-inp*(inp>0?1.12:.95);tp=Math.max(-.9,Math.min(1.25,tp));GL.pitch+=(tp-GL.pitch)*Math.min(1,dt*2.2);
     GL.a+=(c.steer||0)*1.15*dt;GL.roll+=(((c.steer||0)*.55)-GL.roll)*Math.min(1,dt*4);
     /* Minecraft elytra maths, run at 20 ticks per second and scaled up a bit for a car */
     var hs0=Math.hypot(GL.vx,GL.vz),sp=Math.hypot(hs0,GL.vy);
@@ -5200,19 +5200,21 @@ function glideTick(dt){if(!GL)return;var c=GL.c;if(!race.on||race.phase!=='go'||
   /* keep inside the city */var lim=(ARENA.half||200)-4;if(Math.abs(GL.x)>lim){GL.x=Math.sign(GL.x)*lim;GL.vx*=-.3}if(Math.abs(GL.z)>lim){GL.z=Math.sign(GL.z)*lim;GL.vz*=-.3}
   var gy=arenaH(GL.x,GL.z);if(GL.ph==='glide'&&GL.y<=gy+.25){c.x=GL.x;c.z=GL.z;glideEnd(true);return}if(GL.y<gy+.25)GL.y=gy+.25;
   /* hitting a building wall while low = bounce off and drop */
-  var hit=GL.ph==='glide'&&(ARENA.blocks||[]).some(function(b){return b[4]!=null&&b[4]>0&&GL.y<b[4]-.6&&!(b[5]!=null&&GL.y<b[5])&&GL.x>b[0]&&GL.x<b[1]&&GL.z>b[2]&&GL.z<b[3]});if(hit){GL.x-=GL.vx*dt*1.2;GL.z-=GL.vz*dt*1.2;GL.vx*=.55;GL.vz*=.55;GL.vy=Math.min(GL.vy,-2);if(!GL.hitT||t>GL.hitT){GL.hitT=t+.6;try{kick(.25,.6)}catch(e){}}}
+  /* buildings are solid: you can glide over them (skimming the roof) but never into them */
+  var BL=ARENA.blocks||[];for(var bi=0;bi<BL.length;bi++){var b=BL[bi];if(b[4]==null||b[4]<=0||b[4]>400)continue;if(b[5]!=null&&GL.y<b[5])continue;if(GL.x<=b[0]||GL.x>=b[1]||GL.z<=b[2]||GL.z>=b[3])continue;var top=b[4]+.35;if(GL.y>=top)continue;
+    var wasIn=px0>b[0]&&px0<b[1]&&pz0>b[2]&&pz0<b[3];if(!wasIn&&GL.y<top-1.2){if(px0<=b[0]||px0>=b[1]){GL.x=px0;GL.vx*=.15}if(pz0<=b[2]||pz0>=b[3]){GL.z=pz0;GL.vz*=.15}if(!GL.hitT||t>GL.hitT){GL.hitT=t+.6;try{kick(.2,.5)}catch(e){}}}else{GL.y=top;if(GL.vy<0)GL.vy=0}}
   /* throttle while gliding: full = max speed, pull back = brake slowly (easy landings) */
   if(GL.ph==='glide'){var th=(typeof STK!=='undefined'&&STK.used)?STK.t:((keys['arrowup']||keys['w'])?1:(keys['arrowdown']||keys['s'])?-1:0),h0=Math.hypot(GL.vx,GL.vz);
-    if(h0>.5){var nh=h0;if(th>.25)nh=Math.min(58,h0+dt*9*th);else if(th<-.15){nh=Math.max(7,h0-dt*7*(-th));GL.vy=Math.max(GL.vy,-9)}var kk=nh/h0;GL.vx*=kk;GL.vz*=kk}GL.brk=th<-.15}
+    if(h0>.5){var nh=h0;if(th<-.15){nh=Math.max(7,h0-dt*7*(-th));GL.vy=Math.max(GL.vy,-9)}var kk=nh/h0;GL.vx*=kk;GL.vz*=kk}GL.brk=th<-.15}
   c.x=GL.x;c.y=GL.y;c.z=GL.z;c.air=true;c.vy=0;c.airT=t;c.flyUntil=0;var hs=Math.hypot(GL.vx,GL.vz);c.v=hs;if(GL.ph==='glide'){c.a=c.va=GL.a}
   /* pose: nose follows the flight path, bank into turns, wings open */
   GL.open=Math.min(1,GL.open+dt*(GL.ph==='glide'?2.5:0));if(w){w.scale.setScalar(Math.max(.001,GL.open));w.children.forEach(function(k){if(k.userData.sd)k.rotation.z=k.userData.sd*(1-GL.open)*1.2});w.userData.fl.scale.set(1,GL.ph==='up'?1.6:.6+Math.min(1,hs/40),1);w.userData.fl.material.opacity=GL.ph==='up'?.95:.55}
-  var fp=GL.ph==='up'?-.9:Math.atan2(-GL.vy,Math.max(1,hs));c.model.position.set(c.x,c.y,c.z);c.model.rotation.set(-fp*.9,c.a+Math.PI,GL.roll,'YXZ');try{if(view==='cockpit'){rig.position.set(c.x,c.y,c.z);rig.rotation.set(-fp*.85,c.a+Math.PI,GL.roll*.8,'YXZ')}}catch(e){}if(c.model.fly)c.model.fly(1);
+  var fp0=GL.ph==='up'?-.9:Math.atan2(-GL.vy,Math.max(1,hs));GL.fpS=GL.fpS==null?fp0:GL.fpS+(fp0-GL.fpS)*Math.min(1,dt*4);var fp=GL.fpS;GL.sy=GL.sy==null?GL.y:GL.sy+(GL.y-GL.sy)*Math.min(1,dt*10);c.y=GL.sy;var ru=Math.min(1,(t-GL.t0)/1.2),rr=ru<1?(ru<.5?2*ru*ru:1-Math.pow(-2*ru+2,2)/2)*Math.PI*2:0;c.model.position.set(c.x,c.y,c.z);c.model.rotation.set(-fp*.9,c.a+Math.PI,GL.roll+rr,'YXZ');try{if(view==='cockpit'){rig.position.set(c.x,c.y,c.z);rig.rotation.set(-fp*.85,c.a+Math.PI,GL.roll*.8,'YXZ')}}catch(e){}if(c.model.fly)c.model.fly(1);
   /* contrail from the wing tips */
   if(GL.trail){var sa=Math.sin(GL.a),ca=Math.cos(GL.a);GL.tr.unshift([c.x+ca*3.4,c.y+1,c.z-sa*3.4],[c.x-ca*3.4,c.y+1,c.z+sa*3.4]);if(GL.tr.length>120)GL.tr.length=120;var d3=new T.Object3D();GL.tr.forEach(function(q,i){d3.position.set(q[0],q[1],q[2]);d3.scale.setScalar(GL.ph==='glide'?Math.max(.05,1-i/120)*1.3:.01);d3.updateMatrix();GL.trail.setMatrixAt(i,d3.matrix)});GL.trail.count=GL.tr.length;GL.trail.instanceMatrix.needsUpdate=true}
   /* HUD: height, speed and how to fly */
   var hd=document.getElementById('glhud');if(!hd){hd=document.createElement('div');hd.id='glhud';hd.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 120px);z-index:40;pointer-events:none;padding:6px 14px;border-radius:12px;background:rgba(4,20,40,.78);border:2px solid #3fd0ff;color:#dff8ff;font:900 italic 16px "Saira Extra Condensed",system-ui;letter-spacing:.06em;white-space:nowrap;text-align:center';document.body.appendChild(hd)}
-  hd.style.display='';hd.innerHTML=(GL.ph==='up'?'LAUNCHING ↑ ':GL.climb?'CLIMBING ↑ ':'GLIDING · ')+Math.round(c.y-gy)+' m · '+Math.round(Math.hypot(hs,GL.vy)*3.6)+' km/h<br><small style="font:800 11px system-ui;letter-spacing:.12em;color:#7fe6ff">'+(GL.tilt?'📱 TILT TOP TOWARD YOU = UP · AWAY = DIVE':'▼ DIVE = SPEED · ▲ PULL UP = HEIGHT')+' · STEER TO TURN · GAS = FASTER · BACK = BRAKE'+(GL.brk?' <b style="color:#ffd23a">BRAKING</b>':'')+'</small>'}
+  hd.style.display='';hd.innerHTML=(GL.ph==='up'?'LAUNCHING ↑ ':GL.climb?'CLIMBING ↑ ':'GLIDING · ')+Math.round(c.y-gy)+' m · '+Math.round(Math.hypot(hs,GL.vy)*3.6)+' km/h<br><small style="font:800 11px system-ui;letter-spacing:.12em;color:#7fe6ff">'+(GL.tilt?'📱 TILT TOP TOWARD YOU = UP · AWAY = DIVE':'▼ DIVE = SPEED · ▲ PULL UP = HEIGHT')+' · STEER TO TURN · STICK BACK = BRAKE'+(GL.brk?' <b style="color:#ffd23a">BRAKING</b>':'')+'</small>'}
 /* wings fold away after landing */
 function glidePost(dt){if(!me||!me.model)return;var w=me.model.userData&&me.model.userData.wings;if(w&&!GL&&w.userData.closing){var s=Math.max(.001,w.scale.x-dt*2.5);w.scale.setScalar(s);if(s<=.001)w.userData.closing=0}}
 window.glideStart=glideStart;
