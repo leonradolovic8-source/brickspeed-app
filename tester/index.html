@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795610420">
+<meta name="bs-build" content="1795611035">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5677,7 +5677,7 @@ function fbStart(){
   if(FB.peer&&!FB.peer.destroyed)return;
   var p;try{p=new PC(fbId(code),peerOpts())}catch(e){setTimeout(fbStart,15000);return}FB.peer=p;
   p.on('open',function(){FB.ok=true;FB.tries=0});
-  p.on('connection',function(c){c.on('data',function(d){if(d&&d.t==='inv'){var rm=String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),fc=String(d.f||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),nm=String(d.n||'').slice(0,12);if(rm.length===4&&window.BSOnInvite)try{window.BSOnInvite(nm,fc,rm)}catch(e){}}});c.on('open',function(){try{c.send(fbStatus())}catch(e){}setTimeout(function(){try{c.close()}catch(e){}},2500)})});
+  p.on('connection',function(c){c.on('data',function(d){if(d&&d.t==='inv'){var rm=String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),fc=String(d.f||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),nm=String(d.n||'').slice(0,12);if(rm.length===4){try{c.send({t:'invok'})}catch(e){}if(window.BSOnInvite)try{window.BSOnInvite(nm,fc,rm)}catch(e){}}}});c.on('open',function(){try{c.send(fbStatus())}catch(e){}setTimeout(function(){try{c.close()}catch(e){}},2500)})});
   p.on('error',function(e){var ty=e&&e.type;if(ty==='peer-unavailable')return;
     FB.ok=false;try{p.destroy()}catch(x){}FB.peer=null;FB.tries++;setTimeout(fbStart,Math.min(30000,4000*FB.tries))});   /* code still held by an old tab: try again soon */
   p.on('disconnected',function(){FB.ok=false;setTimeout(function(){try{if(!p.destroyed)p.reconnect()}catch(x){}},2500)});
@@ -5700,8 +5700,11 @@ function fbPump(){if(FB.busy||!FB.q.length)return;FB.busy=true;var job=FB.q.shif
     var tm=setTimeout(function(){try{c.close()}catch(e){}done(null)},4000);
     c.on('data',function(d){clearTimeout(tm);try{c.close()}catch(e){}done(d&&d.t==='fs'?{room:String(d.room||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),race:!!d.race,full:!!d.full,qm:!!d.qm,act:String(d.act||'').replace(/[^a-z]/g,'').slice(0,10),ic:String(d.ic||'').replace(/[^a-z0-9]/g,'').slice(0,10)}:null)});
     c.on('error',function(){clearTimeout(tm);done(null)})})}
-function fbInvite(code,room,name,cb){code=String(code||'').toUpperCase();fbProber(function(p){if(!p){cb&&cb(false);return}var c;try{c=p.connect(fbId(code),{reliable:true})}catch(e){cb&&cb(false);return}var ok=false,tm=setTimeout(function(){try{c.close()}catch(e){}cb&&cb(ok)},4000);
-  c.on('open',function(){try{c.send({t:'inv',room:room,n:name,f:window.BSMyCode&&window.BSMyCode()});ok=true}catch(e){}setTimeout(function(){clearTimeout(tm);try{c.close()}catch(e){}cb&&cb(ok)},600)});c.on('error',function(){clearTimeout(tm);cb&&cb(false)})})}
+function fbInvite(code,room,name,cb,tries){code=String(code||'').toUpperCase();tries=tries||0;var fin=false,done=function(ok){if(fin)return;fin=true;if(!ok&&tries<2){setTimeout(function(){fbInvite(code,room,name,cb,tries+1)},800);return}cb&&cb(ok)};
+  fbProber(function(p){if(!p){done(false);return}var c;try{c=p.connect(fbId(code),{reliable:true})}catch(e){done(false);return}var tm=setTimeout(function(){try{c.close()}catch(e){}done(false)},5000);
+   c.on('open',function(){try{c.send({t:'inv',room:room,n:name,f:window.BSMyCode&&window.BSMyCode()})}catch(e){}});
+   c.on('data',function(d){if(d&&d.t==='invok'){clearTimeout(tm);setTimeout(function(){try{c.close()}catch(e){}},200);done(true)}});
+   c.on('error',function(){clearTimeout(tm);done(false)})})}
 window.BSFriend={start:function(){if(!FB.started)fbStart()},probe:fbProbe,invite:fbInvite,online:function(){return FB.ok}};
 
 function roomId(code){return 'brickspeed-test-'+code.toLowerCase()}
@@ -9141,17 +9144,17 @@ function fdDraw(){if(!FD.el||!FD.el.classList.contains('on'))return;$('bfdMe').t
  a=a.slice().sort(function(x,y){var qx=(FST[x.c]||{}).s||'?',qy=(FST[y.c]||{}).s||'?';return (ORD[qx]==null?3:ORD[qx])-(ORD[qy]==null?3:ORD[qy])});
  var h='';a.forEach(function(f){var q=FST[f.c]||{},st=fdState(q),hu=0;for(var z=0;z<f.n.length;z++)hu=(hu*31+f.n.charCodeAt(z))%360;if(q.s&&q.s!=='off'&&q.s!=='?')on++;
   h+='<li class="'+st[1]+'">'+(q.ic&&window.BSIconHtml?'<i class="av ic">'+window.BSIconHtml(q.ic,42)+'</i>':'<i class="av" style="--h:'+hu+'">'+esc(f.n.charAt(0).toUpperCase())+'</i>')+'<span><b>'+esc(f.n)+'</b><em>'+esc(st[0])+'</em></span>'+
-   (q.s==='room'?'<button type="button" class="jn" data-j="'+esc(f.c)+'">JOIN</button>':'')+'<button type="button" class="iv" data-iv="'+esc(f.c)+'" data-n="'+esc(f.n)+'"'+(q.s==='off'?' disabled':'')+'>INVITE</button></li>'});
+   (q.s==='room'?'<button type="button" class="jn" data-j="'+esc(f.c)+'">JOIN</button>':'')+'<button type="button" class="iv" data-iv="'+esc(f.c)+'" data-n="'+esc(f.n)+'">INVITE</button></li>'});
  if(!a.length)h='<li class="none">No friends yet. Add one below with their 4-letter code.</li>';
  var L=$('bfdList');if(L.__h!==h){L.__h=h;L.innerHTML=h}$('bfdOn').textContent=on+' ONLINE';
  var n=NETo(),r=$('bfdRoom');if(inRoom()&&n&&n.code&&!n.qm){r.hidden=false;r.innerHTML='YOUR ROOM <b>'+esc(n.code)+'</b> · '+n.players.length+'/6';$('bfdCreate').textContent='📨 SHARE INVITE'}else{r.hidden=true;$('bfdCreate').textContent='＋ CREATE ROOM'}}
 function fdInvite(code,name,btn){if(!window.BSFriend||!window.BSFriend.invite){toast('Invites need the online game');return}
  if(!inRoom()){FD.pend={c:code,n:name};$('bslCreate').click();toast('Making your room…');return}
  var n=NETo();if(!n||!n.code||n.qm){toast('Make your own room first');return}if(btn){btn.textContent='SENT ✓';btn.disabled=true}
- window.BSFriend.invite(code,n.code,myName(),function(ok){toast(ok?'Invite sent to '+name+'!':name+' did not answer')})}
+ toast('Sending invite to '+name+'…');window.BSFriend.invite(code,n.code,myName(),function(ok){toast(ok?name+' got your invite! ✓':name+' could not be reached. Are they online with BrickSpeed open?');if(btn&&!ok){btn.textContent='INVITE';btn.disabled=false}})}
 setInterval(function(){try{if(FD.pend&&inRoom()){var n=NETo();if(n&&n.code&&!n.qm){var p=FD.pend;FD.pend=null;fdInvite(p.c,p.n,null)}}fdDraw()}catch(e){}},1000);
 /* someone invited you: a 5 s banner drops from the top, wherever you are (lobby or in a race) */
-window.BSOnInvite=function(name,fc,room){if(fc&&!isFriend(fc))return;var b=document.createElement('div');b.className='bfinv';
+window.BSOnInvite=function(name,fc,room){if(fc&&fc===myCode())return;if(window.__lastInv&&window.__lastInv.r===room&&Date.now()-window.__lastInv.t<4000)return;window.__lastInv={r:room,t:Date.now()};var b=document.createElement('div');b.className='bfinv';
  b.innerHTML='<i class="av">'+esc((name||'?').charAt(0).toUpperCase())+'</i><span><b>'+esc(name||'A friend')+'</b><em>invites you to play · room '+esc(room)+'</em></span><button type="button">JOIN</button><i class="bar"></i>';
  document.body.appendChild(b);requestAnimationFrame(function(){b.classList.add('on')});try{navigator.vibrate&&navigator.vibrate([30,40,30])}catch(e){}
  var gone=function(){b.classList.remove('on');setTimeout(function(){b.remove()},400)},tm=setTimeout(gone,5000);
