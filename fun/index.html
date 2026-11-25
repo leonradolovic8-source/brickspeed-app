@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="bs-build" content="1795611035">
+<meta name="bs-build" content="1795614635">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5186,12 +5186,16 @@ function arenaBotFree(c,goal){var A=ARENA,ai=c.ai||(c.ai={}),L=A.half-12,tx,tz,g
    with a showroom camera that follows the lobby's orbit; your car stands there on its turntable */
 var LOBC={on:false,yaw:.55,pit:.2,dist:15,cam:null,f:null,hid:false};window.BSLobCam=LOBC;window.BSCurMap=function(){return curMap};
 function lobCamGet(){if(!LOBC.cam)LOBC.cam=new T.PerspectiveCamera(30,1,.1,2500);var c=LOBC.cam,el=renderer.domElement,w=el.clientWidth||1,h=el.clientHeight||1;if(Math.abs(c.aspect-w/h)>.001){c.aspect=w/h;c.updateProjectionMatrix()}
-  if(!LOBC.f||LOBC.fm!==curMap){LOBC.fm=curMap;var gx=me.x,gz=me.z;if(ARENA){if(ARENA.open){gx=0;gz=ARENA.tn?0:-14}else if(ARENA.c&&ARENA.c.length>3){gx=ARENA.c[2]+4.5;gz=ARENA.c[2]+(ARENA.c[3]-ARENA.c[2])*.3}}var gy=0;try{gy=ARENA?arenaH(gx,gz):(me.y||0)}catch(e){}LOBC.f={x:gx,z:gz,y:gy,a:ARENA?(ARENA.open?3.9-Math.PI:3.3-Math.PI):(me.a||0)+Math.PI}}
+  if(!LOBC.f||LOBC.fm!==curMap){LOBC.fm=curMap;var gx=me.x,gz=me.z;if(ARENA){if(ARENA.open){gx=0;gz=ARENA.tn?0:-14}else if(ARENA.c&&ARENA.c.length>3){gx=ARENA.c[2]+4.5;gz=ARENA.c[2]+(ARENA.c[3]-ARENA.c[2])*.3}}var gy=0,ta=null;try{gy=ARENA?arenaH(gx,gz):(me.y||0)}catch(e){}if(!ARENA){try{var Pn=P.length,qi=Math.floor(Pn*.14),q=P[qi],q2=P[(qi+3)%Pn];gx=q.x;gz=q.z;gy=q.y||0;ta=Math.atan2(q2.x-q.x,q2.z-q.z)}catch(e){}}LOBC.f={x:gx,z:gz,y:gy,a:ARENA?(ARENA.open?3.9-Math.PI:3.3-Math.PI):(ta!=null?ta:(me.a||0))+Math.PI}}
   /* size the orbit to the real parked car (the 3D model can load later and be a different size) */
   if(LOBC.car&&(!LOBC.szT||performance.now()>LOBC.szT)){LOBC.szT=performance.now()+700;try{var vis=LOBC.car.visible;LOBC.car.visible=true;var bx=new T.Box3().setFromObject(LOBC.car),sz=new T.Vector3(),ct=new T.Vector3();bx.getSize(sz);bx.getCenter(ct);LOBC.car.visible=vis;if(sz.x>.3&&sz.x<60){LOBC.cs=Math.max(sz.x,sz.z);LOBC.ch=sz.y;LOBC.cx=ct.x-LOBC.car.position.x;LOBC.cz=ct.z-LOBC.car.position.z}}catch(e){}}
-  var f=LOBC.f,cs=LOBC.cs||4.6,d=LOBC.k?LOBC.k*cs:LOBC.dist,ly=(LOBC.ch||1.4)*.45,tx=f.x+(LOBC.cx||0),tz=f.z+(LOBC.cz||0);c.position.set(tx+Math.sin(LOBC.yaw)*Math.cos(LOBC.pit)*d,f.y+ly+Math.sin(LOBC.pit)*d,tz+Math.cos(LOBC.yaw)*Math.cos(LOBC.pit)*d);c.lookAt(tx,f.y+ly-(LOBC.ch||1.4)*.75,tz);return c}
+  var f=LOBC.f,cs=LOBC.cs||4.6,d=LOBC.k?LOBC.k*cs:LOBC.dist,ly=(LOBC.ch||1.4)*.45,tx=f.x+(LOBC.cx||0),tz=f.z+(LOBC.cz||0);if(LOBC.r){d=d+LOBC.r*2.1;tx=f.x;tz=f.z;ly+=LOBC.r*.12}c.position.set(tx+Math.sin(LOBC.yaw)*Math.cos(LOBC.pit)*d,f.y+ly+Math.sin(LOBC.pit)*d,tz+Math.cos(LOBC.yaw)*Math.cos(LOBC.pit)*d);c.lookAt(tx,f.y+ly-(LOBC.ch||1.4)*.75,tz);return c}
+window.BSLobSetOthers=function(L){(LOBC.oth||[]).forEach(function(g){if(g.parent)g.parent.remove(g)});LOBC.oth=L||[];LOBC.oth.forEach(function(g){g.visible=false;scene.add(g)})};
+function lobCircle(){var N=1+(LOBC.oth||[]).length,f=LOBC.f;if(!f)return;var r=N<2?0:Math.max(5.6,N*1.6);if(LOBC.cN!==N||LOBC.cM!==curMap){LOBC.cN=N;LOBC.cM=curMap;LOBC.cb=LOBC.yaw}var base=LOBC.cb;LOBC.r=r;
+  var place=function(o,i){var th=base+i*Math.PI*2/N,x=f.x+Math.sin(th)*r,z=f.z+Math.cos(th)*r,y=f.y;try{if(ARENA)y=arenaH(x,z)}catch(e){}o.position.set(x,y,z);o.rotation.set(0,N<2?f.a:th+.35,0)};
+  if(LOBC.car)place(LOBC.car,0);(LOBC.oth||[]).forEach(function(g,i){g.visible=true;place(g,i+1)})}
 window.BSLobSetCar=function(m){if(LOBC.car&&LOBC.car.parent)LOBC.car.parent.remove(LOBC.car);LOBC.car=m;if(m){m.visible=false;m.traverse(function(o){if(o.isMesh)o.castShadow=true});scene.add(m)}};
-function lobTick(){var on=LOBC.on&&!race.on;if(LOBC.car){var cv=on&&!!LOBC.f;LOBC.car.visible=cv;if(cv){LOBC.car.position.set(LOBC.f.x,LOBC.f.y,LOBC.f.z);LOBC.car.rotation.set(0,LOBC.f.a,0)}}if(on){if(me&&me.model&&me.model.visible){me.model.visible=false;LOBC.hid=true}}else if(LOBC.hid){LOBC.hid=false;if(me&&me.model)me.model.visible=true}}
+function lobTick(){var on=LOBC.on&&!race.on;if(LOBC.car){var cv=on&&!!LOBC.f;LOBC.car.visible=cv;if(cv){LOBC.car.position.set(LOBC.f.x,LOBC.f.y,LOBC.f.z);LOBC.car.rotation.set(0,LOBC.f.a,0)}}var circ=on&&LOBC.f&&(LOBC.oth||[]).length;if(circ){lobCircle()}else{LOBC.r=0;(LOBC.oth||[]).forEach(function(g){g.visible=false})}if(!!circ!==!!LOBC.hb){LOBC.hb=!!circ;try{cars.forEach(function(c){if(!c.me&&c.model)c.model.visible=!circ})}catch(e){}}if(on){if(me&&me.model&&me.model.visible){me.model.visible=false;LOBC.hid=true}}else if(LOBC.hid){LOBC.hid=false;if(me&&me.model)me.model.visible=true}}
 
 /* city rim: the town looks like it keeps going past the edge. Streets carry on, blocks of buildings
    line them, but every street is shut with a ROAD CLOSED barrier: the real border stays where it was. */
@@ -9091,14 +9095,16 @@ function nameTag(T,p,s){var cv=document.createElement('canvas');cv.width=320;cv.
  x.font='italic 900 42px "Saira Extra Condensed",Impact,sans-serif';x.lineWidth=8;x.strokeStyle='rgba(0,0,0,.9)';var nm=String(p.name||'PLAYER').slice(0,12);x.strokeText(nm,160,32);x.fillStyle='#fff';x.fillText(nm,160,32);
  var rt=p.pid==='H'?'👑 HOST':p.rd?'READY ✓':'NOT READY';x.font='900 26px system-ui';x.lineWidth=6;x.strokeText(rt,160,76);x.fillStyle=p.pid==='H'?'#ffd23a':p.rd?'#3dff8a':'#9aa6c8';x.fillText(rt,160,76);
  var sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv),depthTest:false,transparent:true}));sp.renderOrder=9;sp.scale.set(s*.85,s*.85*96/320,1);return sp}
-function othersSet(){if(!R3)return;var k=othersKey();if(R3.ok===k)return;R3.ok=k;var T=R3.T;
+function othersSet(){if(!R3)return;var mb=B.classList.contains('mapbg')&&!!window.BSLobSetOthers,k=othersKey()+(mb?'|mb':'');if(R3.ok===k)return;R3.ok=k;var T=R3.T,MB=[];
  (R3.others||[]).forEach(function(o){R3.sc.remove(o);o.traverse(function(q){if(q.material&&q.material.map&&q.isSprite)q.material.map.dispose()})});R3.others=[];
  if(k){var n=NETo(),L=chars(),s=R3.size,SL=[[-.85,.95],[.85,.95],[-1.75,1.55],[1.75,1.55],[0,2.1]];
   n.players.filter(function(p){return p.pid!==n.myPid}).slice(0,5).forEach(function(p,i){var c=null;L.forEach(function(q){if(q.id===p.char)c=q});c=c||L[0];if(!c)return;var ch=c;
    if(window.BSSkinOf&&p.kk)ch=window.BSSkinOf(ch,(p.kk|0)-1);if(window.BSPaintSk&&p.sk)ch=window.BSPaintSk(ch,p.sk);
    var m;try{m=window.BSMakeCar(ch)}catch(e){return}var g=new T.Group(),spin=new T.Group();spin.add(m);g.add(spin);
    var bx=new T.Box3().setFromObject(m),ctr=new T.Vector3();bx.getCenter(ctr);m.position.x-=ctr.x;m.position.z-=ctr.z;m.position.y-=bx.min.y;
+   if(mb){var tg2=nameTag(T,p,4.6);tg2.position.y=3.1;g.add(tg2);MB.push(g);return}
    g.position.set(SL[i][0]*s,0,-SL[i][1]*s);spin.rotation.y=SL[i][0]<0?.6:-.6;g.userData.spin=spin;var tg=nameTag(T,p,s);tg.position.y=s*.62;g.add(tg);R3.sc.add(g);R3.others.push(g)})}
+ if(mb)try{window.BSLobSetOthers(MB)}catch(e){}else if(window.BSLobSetOthers)try{window.BSLobSetOthers([])}catch(e){}
  frame3()}
 function carKey(){var c=cur();return c?c.id+'/'+(PROF?PROF.sp:0)+'/'+skinIdx(c.id):''}
 function carSet(){car3d();if(!R3)return;var c=cur();if(!c||R3.id===carKey())return;R3.id=carKey();
