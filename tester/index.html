@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795590948">
+<meta name="bs-build" content="1795593941">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4617,7 +4617,7 @@ var STK={t:0,s:0,tOn:false,used:false};
   var LYS=[['#stkL','GAS'],['#stkR','STEER'],['#stkW','WHEEL'],['.pads','BOOST · CAM'],['#abil','ABILITY'],['.drb','DRIFT'],['#gearbox','GEARS'],['#stkM','STEER MODE'],['#lyB','⚙']];
   function lyGet(){try{var L=JSON.parse(localStorage.getItem('bs-layout')||'{}')||{};if(L['.abar']){var o=L['.abar'];delete L['.abar'];if(!L['#abil'])L['#abil']=o;try{localStorage.setItem('bs-layout',JSON.stringify(L))}catch(_){}}return L}catch(_){return {}}}
   function lySet(L){try{localStorage.setItem('bs-layout',JSON.stringify(L))}catch(_){}}
-  function lyApply(){var L=lyGet();LYS.forEach(function(q){var el=hero.querySelector(q[0]);if(!el)return;var v=L[q[0]];el.style.transform=v?'translate('+(v.x||0)+'px,'+(v.y||0)+'px) scale('+(v.s||1)+')':'';el.style.transformOrigin='center'})}
+  function lyApply(){try{if(localStorage.getItem('bs-layout-v')!=='3'){localStorage.removeItem('bs-layout');localStorage.setItem('bs-layout-v','3')}}catch(_){}var L=lyGet(),fix=false;LYS.forEach(function(q){var el=hero.querySelector(q[0]);if(!el)return;var v=L[q[0]];el.style.transform=v?'translate('+(v.x||0)+'px,'+(v.y||0)+'px) scale('+(v.s||1)+')':'';el.style.transformOrigin='center';if(v){var r=el.getBoundingClientRect();if(r.width>2&&(r.right<20||r.bottom<20||r.left>innerWidth-20||r.top>innerHeight-20)){delete L[q[0]];el.style.transform='';fix=true}}});if(fix)lySet(L)}
   lyApply();window.addEventListener('resize',lyApply);
   var LB=document.getElementById('lyB');if(LB)LB.addEventListener('click',function(e){e.stopPropagation();lyOpen()});
   function lyOpen(){var L=lyGet(),O=document.createElement('div');O.className='lyO';document.body.appendChild(O);var sel=null,hs=[];
@@ -9068,6 +9068,6 @@ setInterval(function(){var B=document.body.classList;if(B.contains('racing'))tut
  if(ok&&(st===0||(st===1&&tutRaced))){tutStart.w=(tutStart.w||0)+1;if(tutStart.w>=3){tutStart.w=0;tutStart(st===0?0:1)}}else tutStart.w=0},500);
 })();
 </script>
-<div style="position:fixed;left:50%;top:max(4px,env(safe-area-inset-top));transform:translateX(-50%);z-index:99999;background:#ff3b5c;color:#fff;font:800 11px/1 system-ui;letter-spacing:.12em;padding:4px 10px;border-radius:99px;pointer-events:none">TEST VERSION</div>
+<div style="position:fixed;left:50%;bottom:max(2px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;background:rgba(255,59,92,.75);color:#fff;font:800 8px/1 system-ui;letter-spacing:.14em;padding:2px 7px;border-radius:99px;pointer-events:none">TEST VERSION</div>
 </body>
 </html>
