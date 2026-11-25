@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795636455">
+<meta name="bs-build" content="1795636785">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -2080,7 +2080,7 @@ function arenaTick(dt){
   var A=ARENA;if(!A||!A.movers)return;var T2=RT(),i;
   /* drawbridge: down 8 s, up 1 s, raised 2 s, down 1 s */
   if(A.bridge){var u=((T2%12)+12)%12,k=u<8?0:u<9?u-8:u<11?1:12-u;A.bridge.h=k*9;A.bridge.halves.forEach(function(p){p.rotation.x=p.sd*k*1.15})}
-  A.movers.forEach(function(mv){var p=mv.pos(T2);mv.p=p;mv.g.visible=!p.hidden;mv.g.position.set(p.x,0,p.z);mv.g.rotation.y=p.a});
+  A.movers.forEach(function(mv){var p=mvSmooth(mv,T2);mv.p=p;mv.g.visible=!p.hidden;mv.g.position.set(p.x,0,p.z);mv.g.rotation.y=p.a;if(!mv.tram){mv.g.rotation.order='YXZ';mv.g.rotation.z=(p.lean||0)*(mv.rate==null?1:mv.rate)}});
   if(A.tramSig){var tr=A.movers.filter(function(m){return m.tram&&m.p&&!m.p.hidden});A.tramSig.forEach(function(s,j){var near=tr.some(function(m){return Math.abs(m.p.x-ARENA.c[j])<45});s.material.emissiveIntensity=near?(Math.sin(t*12)>0?4:0):0})}
   if(A.dyn.length){var ph=Math.floor(T2/6)%2,u6=((T2%6)+6)%6,open=u6>3.5;A.dyn.forEach(function(d){var want=!open&&d.dir===ph;var mv=A.movers.some(function(m){return m.p&&!m.p.hidden&&Math.hypot(m.p.x-d.x,m.p.z-d.z)<16});d.on=want&&!mv;var tg=d.on?0:1.45;d.ang+=(tg-d.ang)*Math.min(1,dt*(d.on?7:4));d.lift.rotation.z=d.ang;var amber=!d.on&&open&&d.dir!==ph&&u6>4.8,st=d.on?0:amber?1:2;d.lights.forEach(function(mt,k){mt.emissiveIntensity=k===st?(k===1?(Math.sin(t*14)>0?3.2:.4):3.2):0});d.tip.visible=d.on||Math.sin(t*10)>0})}
   if(A.items)A.items.forEach(function(it){var on=t>=it.next;if(on&&race.on)cars.forEach(function(c){if(!localCar(c)&&alive(c)&&Math.hypot(c.x-it.x,c.z-it.z)<2.6)it.next=t+10});it.m.visible=t>=it.next;it.m.rotation.y=t*1.5;it.m.position.y=1.6+Math.sin(t*2+it.x)*.3});
@@ -2609,6 +2609,10 @@ function tumbleFx(c){var T0=c.tmb,k=t-T0.t0;if(c.air){T0.ax=T0.rx*k;T0.az=T0.rz*
   else{if(!T0.b&&k>.25){T0.b=1;c.air=true;c.airT=t;c.vy=5;T0.rx*=.45;T0.rz*=.45;T0.t0=t-(T0.ax/(T0.rx||1));if(c.me){try{shock(c.x,.2,c.z,0xcccccc,9)}catch(e){}}return}
     if(!T0.lt)T0.lt=t;var f=Math.max(0,1-(t-T0.lt)/.45);var w=function(a){a=a%(Math.PI*2);if(a>Math.PI)a-=Math.PI*2;if(a<-Math.PI)a+=Math.PI*2;return a};T0.ax=w(T0.ax)*f;T0.az=w(T0.az)*f;if(f<=0){c.tmb=null;return}}
   c.model.rotation.x+=T0.ax;c.model.rotation.z+=T0.az}
+function mvSmooth(mv,T2){var base=mv.pos(T2);if(mv.tram||!base||base.hidden)return base;var t0=mv.bsOrig?(mv.vt==null?T2:mv.vt):T2,g=mv.bsOrig?mv.bsOrig:mv.pos;
+  var sm=function(o){var sx=0,sz=0,n=0;for(var d=-.55;d<=.551;d+=.11){var q=g(t0+o+d);sx+=q.x;sz+=q.z;n++}return [sx/n,sz/n]};
+  var a=sm(-.18),b=sm(0),c=sm(.18),h1=Math.atan2(b[0]-a[0],b[1]-a[1]),h2=Math.atan2(c[0]-b[0],c[1]-b[1]),dh=Math.atan2(Math.sin(h2-h1),Math.cos(h2-h1)),sp=Math.hypot(c[0]-a[0],c[1]-a[1])/.36;
+  if(sp<.3)return {x:b[0],z:b[1],a:base.a,lean:0};return {x:b[0],z:b[1],a:Math.atan2(c[0]-a[0],c[1]-a[1]),lean:Math.max(-.12,Math.min(.12,-dh/.18*sp*(mv.len>8?.012:.008)))}}
 function land(c,gy){
   var imp=-c.vy;c.air=false;c.y=gy;c.vy=0;try{if(!c.softLand)airLand(c,imp,t-(c.airT||t),false)}catch(e){}
   var trk=c.sc?SC.ANG[c.sk]:ANG[c.k],err=Math.max(Math.abs(wrap(c.va-trk)),Math.abs(wrap(c.a-c.va)));if(c.softLand||ARENA){c.softLand=false;err=0}
@@ -3474,15 +3478,26 @@ function stMarkers(S,G){var A=ARENA;S.marks=[];var seen={};ST_MIS.forEach(functi
   var K={g:g,x:x,z:z,m:m,ic:ic,i:i,op:OP,actor:ac,gar:sp&&sp.gar,f:sp&&sp.f,home:!!sp,ap:sp&&sp.ap};stMarkBlock(S,K,G);S.marks.push(K)})}
 /* job givers cruise laps around their outpost block; they drive back and park when you come close, a job runs for them, or a cutscene plays */
 function stActorDrive(S,dt){var A=ARENA,hr=A.R/2,seen=[];S.marks.forEach(function(k){var ac=k.actor;if(!ac||!k.blk||seen.indexOf(ac)>=0)return;seen.push(ac);
-  if(!k.ah)k.ah={x:ac.position.x,z:ac.position.z,r:ac.rotation.y,s:0,st:'home',sp:9+Math.random()*4};var H=k.ah,P0=ac.position;
-  if(S.cut){P0.set(H.x,0,H.z);ac.rotation.y=H.r;H.st='home';return}
-  var b=k.blk,o=hr*.5,x0=b.x0-o,x1=b.x1+o,z0=b.z0-o,z1=b.z1+o,W=x1-x0,D=z1-z0,P=2*(W+D);
+  var b=k.blk,o=hr-4.3,x0=b.x0-o,x1=b.x1+o,z0=b.z0-o,z1=b.z1+o,W=x1-x0,D=z1-z0,P=2*(W+D),P0=ac.position;
   var per=function(q){q=((q%P)+P)%P;if(q<W)return [x0+q,z0];q-=W;if(q<D)return [x1,z0+q];q-=D;if(q<W)return [x1-q,z1];q-=W;return [x0,z1-q]};
-  var face=function(dx,dz){var a=Math.atan2(dx,dz),d=a-ac.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));ac.rotation.y+=d*Math.min(1,dt*6)};
-  var busy=(S.mis&&S.mis.m&&S.mis.m.who===k.m.who)||Math.hypot(me.x-H.x,me.z-H.z)<40;
-  if(busy){if(H.st==='home')return;var dx=H.x-P0.x,dz=H.z-P0.z,dd=Math.hypot(dx,dz);if(dd<.6){H.st='home';P0.set(H.x,0,H.z);ac.rotation.y=H.r;return}var st=Math.min(dd,H.sp*dt);P0.x+=dx/dd*st;P0.z+=dz/dd*st;face(dx,dz);return}
-  if(H.st==='home'){H.st='out';var bs=0,bd=1e9;for(var q=0;q<P;q+=2){var pp=per(q),d2=Math.hypot(pp[0]-P0.x,pp[1]-P0.z);if(d2<bd){bd=d2;bs=q}}H.s=bs}
-  var p=per(H.s+3.5),dx2=p[0]-P0.x,dz2=p[1]-P0.z,d3=Math.hypot(dx2,dz2)||1;if(d3<4.5)H.s=(H.s+H.sp*dt)%P;var mv=Math.min(d3,H.sp*1.1*dt);P0.x+=dx2/d3*mv;P0.z+=dz2/d3*mv;face(dx2,dz2)})}
+  var near=function(x,z){var bs=0,bd=1e9;for(var q=0;q<P;q+=1.5){var pp=per(q),d2=Math.hypot(pp[0]-x,pp[1]-z);if(d2<bd){bd=d2;bs=q}}return bs};
+  if(!k.ah){k.ah={x:P0.x,z:P0.z,r:ac.rotation.y,st:'home',sp:8+Math.random()*3,v:0};k.ah.hs=near(k.ah.x,k.ah.z)}var H=k.ah;
+  if(S.cut){if(H.st!=='home'){P0.set(H.x,0,H.z);ac.rotation.y=H.r;H.st='home';H.v=0}return}
+  var face=function(dx,dz,r){var a=Math.atan2(dx,dz),d=a-ac.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));ac.rotation.y+=d*Math.min(1,dt*(r||4))};
+  var busy=(S.mis&&S.mis.m&&S.mis.m.who===k.m.who)||Math.hypot(me.x-H.x,me.z-H.z)<45;
+  if(H.st==='home'){if(busy)return;H.st='out';H.s=H.hs;H.v=0}
+  if(H.st==='in'){var dx=H.x-P0.x,dz=H.z-P0.z,dd=Math.hypot(dx,dz);if(dd<.4){H.st='home';P0.set(H.x,0,H.z);H.v=0;return}H.v=Math.min(H.v+dt*4,Math.max(2,dd*1.2),6);var st=Math.min(dd,H.v*dt);P0.x+=dx/dd*st;P0.z+=dz/dd*st;face(dx,dz,5);if(dd<2){var dr=H.r-ac.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));ac.rotation.y+=dr*Math.min(1,dt*3)}return}
+  /* on the loop: follow the lane (right-hand traffic), slow for corners, stop for red lights, traffic and you */
+  if(H.st==='out'){var pj=per(H.s),dj=Math.hypot(pj[0]-P0.x,pj[1]-P0.z);if(dj>1.2){var mv0=Math.min(dj,5*dt);P0.x+=(pj[0]-P0.x)/dj*mv0;P0.z+=(pj[1]-P0.z)/dj*mv0;face(pj[0]-P0.x,pj[1]-P0.z,5);return}H.st='loop'}
+  var ah=per(H.s+5),hx=ah[0]-P0.x,hz=ah[1]-P0.z,hd=Math.hypot(hx,hz)||1,sa=hx/hd,ca=hz/hd,tgt=busy?H.sp*1.5:H.sp;
+  var a2=per(H.s+10),turn=Math.abs(Math.atan2(sa*(a2[1]-ah[1])-ca*(a2[0]-ah[0]),sa*(a2[0]-ah[0])+ca*(a2[1]-ah[1])));if(turn>.3)tgt=Math.min(tgt,5.5);
+  try{if(stRedAhead({x:P0.x,z:P0.z,a:Math.atan2(sa,ca)}))tgt=0}catch(e){}
+  var obs=(S.civ||[]).concat([me]);for(var q=0;q<obs.length;q++){var oc=obs[q];if(!oc)continue;var ox=oc.x-P0.x,oz=oc.z-P0.z,al=ox*sa+oz*ca,lat=Math.abs(ox*ca-oz*sa);if(al>0&&al<9&&lat<2.3)tgt=Math.min(tgt,Math.max(0,(al-4.5)*1.5))}
+  H.v+=(tgt-H.v)*Math.min(1,dt*(tgt<H.v?4:1.4));H.s=(H.s+H.v*dt)%P;var pp=per(H.s),cx=pp[0]-P0.x,cz=pp[1]-P0.z;P0.x+=cx*Math.min(1,dt*6);P0.z+=cz*Math.min(1,dt*6);face(sa,ca,6);
+  /* heading home: keep driving the loop until the bit of road in front of the outpost, then pull in */
+  if(busy){var ds=((H.hs-H.s)%P+P)%P;if(ds<2||ds>P-1){H.st='in'}}
+  /* you can't drive through them */
+  var px=me.x-P0.x,pz=me.z-P0.z,pd=Math.hypot(px,pz);if(pd<2.6&&pd>.01&&!(me.y>1.5)){me.x=P0.x+px/pd*2.6;me.z=P0.z+pz/pd*2.6;me.v*=.6}})}
 /* the whole block around an outpost is the job pad: touch the block and the job starts (not the base block) */
 function stMarkBlock(S,K,G){var A=ARENA,bi=-1,bj=-1;for(var q=0;q<A.c.length-1;q++){if(K.x>A.c[q]&&K.x<A.c[q+1])bi=q;if(K.z>A.c[q]&&K.z<A.c[q+1])bj=q}if(bi<0||bj<0)return;var b=stBlock(bi,bj);if(S.base&&stInB(b,S.base.cx,(S.base.z0+S.base.z1)/2||S.base.cz||0))return;K.blk=b;
   var col=new T.Color(K.m.col),mt=new T.MeshBasicMaterial({color:col,transparent:true,opacity:.85,toneMapped:false,depthWrite:false}),bo=new T.Group(),e=1.2,w=b.x1-b.x0+2*e,d=b.z1-b.z0+2*e,cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;
@@ -3889,8 +3904,12 @@ function stCutBase(S){var b=S.base,tk;
    {d:4.4,say:['TECHNO','BLAZE drives for the bank. She hid the security tapes. Go and see her: follow the GPS!'],cam:function(u){var k=S.marks[0];return [b.cx,20+u*10,b.cz+10,b.cx+(k.x-b.cx)*.4*u,0,b.cz+(k.z-b.cz)*.4*u]}}]}
 function stCutNextLead(S,shots){var nx=stNextMis(S),k=nx&&S.marks[ST_MIS.indexOf(nx)];if(!k)return shots;var x0=me.x,z0=me.z,x1=k.x,z1=k.z;
   shots.push({d:3.4,start:function(C){C.showK=k},title:'NEXT LEAD: '+nx.who,say:[nx.who,'Come to my place, it is on your GPS. Clue #'+(ST_MIS.indexOf(nx)+1)+': '+nx.n+'.'],cam:function(u){var e=stEase(u),cx=x0+(x1-x0)*e,cz=z0+(z1-z0)*e;return [cx+14*(1-e)+9*e,10+Math.sin(Math.PI*u)*40,cz+14*(1-e)+9*e,x0+(x1-x0)*Math.min(1,e*1.3),1,z0+(z1-z0)*Math.min(1,e*1.3)]}});return shots}
-function stCutGiver(S,k,lines,title){var shots=[];lines.forEach(function(l,i){var who=l[0],ax=k.actor.position.x,az=k.actor.position.z,a0=i*1.1+.4,f=k.f;
+function stCutGiver(S,k,lines,title){var shots=[];if(k.ah&&k.actor){k.actor.position.set(k.ah.x,0,k.ah.z);k.actor.rotation.y=k.ah.r;k.ah.st='home';k.ah.v=0}lines.forEach(function(l,i){var who=l[0],ax=k.actor.position.x,az=k.actor.position.z,a0=i*1.1+.4,f=k.f;
     shots.push({d:Math.max(3.6,l[1].length*.055),say:[who,l[1]],title:i===0?title:'',cam:function(u){if(f){var sd=(i%2?-1:1)*(1.6-u*3.2);return [ax+f[0]*11.5-f[1]*sd,2.3+i*.4,az+f[1]*11.5+f[0]*sd,ax,1.1,az]}var a=a0+u*.35;return [ax+Math.cos(a)*8.5,2.4+i*.6,az+Math.sin(a)*8.5,ax,1,az]}})});
+  try{var c0=new T.Vector3(),q0=new T.Vector3();activeCam().getWorldPosition(c0);var e0=shots[0].cam(0),ax0=k.actor.position.x,az0=k.actor.position.z,lx=me.x,lz=me.z,
+    dist=Math.hypot(e0[0]-c0.x,e0[2]-c0.z);
+    shots.unshift({d:Math.min(2.6,1.1+dist/60),say:null,title:'',cam:function(u){var e=u*u*(3-2*u),lift=Math.sin(u*Math.PI)*Math.min(22,6+dist*.25);
+      return [c0.x+(e0[0]-c0.x)*e,c0.y+(e0[1]-c0.y)*e+lift,c0.z+(e0[2]-c0.z)*e,lx+(ax0-lx)*e,1+(e0[4]-1)*e,lz+(az0-lz)*e]}})}catch(e){}
   shots.k=k;return shots}
 function stChooser(S){S.choose=true;var d=document.createElement('div');d.className='stch';var P1=ST_MIS.filter(function(q){return !q.p}),P2=ST_MIS.filter(function(q){return q.p===2}),
     n1=P1.filter(function(q){return S.prog.done.indexOf(q.id)>=0}).length,n2=P2.filter(function(q){return S.prog.done.indexOf(q.id)>=0}).length;
