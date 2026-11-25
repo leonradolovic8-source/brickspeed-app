@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795624857">
+<meta name="bs-build" content="1795626582">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -817,7 +817,7 @@ try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreferen
 var T=THREE,small=Math.min(screen.width,screen.height)<700;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,small?1.6:2));
 renderer.outputEncoding=T.sRGBEncoding;
-renderer.toneMapping=T.ACESFilmicToneMapping;
+renderer.toneMapping=T.ACESFilmicToneMapping;(function(){var C=T.ShaderChunk;if(!C||C.dithering_fragment.indexOf('BSCS')>=0)return;C.dithering_fragment=C.dithering_fragment+'\n#if defined(STANDARD)||defined(PHONG)\n{/*BSCS*/vec3 cs=gl_FragColor.rgb;float cL=dot(cs,vec3(.299,.587,.114));float cU=dot(normalize(normal),normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz));float cK=clamp(cU*.5+.5,0.,1.)*.65+smoothstep(.12,.75,cL)*.35;cs*=mix(vec3(.82,.87,1.1),vec3(1.07,1.01,.9),cK);cs=mix(vec3(dot(cs,vec3(.299,.587,.114))),cs,1.12);cs+=vec3(.012,.0,.03)*(1.-smoothstep(0.,.35,cL));gl_FragColor.rgb=clamp(cs,0.,1.);}\n#endif\n'})();
 renderer.toneMappingExposure=1.08;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=T.PCFSoftShadowMap;
