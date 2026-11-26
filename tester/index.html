@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795702825">
+<meta name="bs-build" content="1795705050">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4327,10 +4327,13 @@ function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f
 function hxOcc(B){if(!B.occ)return;var cam=null;try{cam=activeCam()}catch(e){}if(!cam)return;var P=new T.Vector3(me.x,(me.y||0)+1,me.z),C=cam.position,dir=P.clone().sub(C),L=dir.length();if(L<.1)return;dir.divideScalar(L);
   var rc=B.rc||(B.rc=new T.Raycaster());rc.set(C,dir);rc.far=L-.6;var hit=new Set();if(B.inside)rc.intersectObjects(B.occ,false).forEach(function(h){hit.add(h.object)});
   B.occ.forEach(function(m){var o=m.userData.o0==null?(m.userData.o0=m.material.transparent?m.material.opacity:1):m.userData.o0,want=hit.has(m)?Math.min(.18,o):o,cur=m.material.opacity;if(Math.abs(cur-want)<.01)return;m.material.transparent=true;m.material.opacity=cur+(want-cur)*.25;m.material.depthWrite=m.material.opacity>.95})}
+/* keep the chase camera inside the bank while you are inside, so no outer wall ever fills the screen */
+function hxCamFix(c){var B=HB;if(!B||!B.inside||!me||!c||(race.m2&&race.m2.cut))return;try{if(c===introCam)return}catch(e){}var u=c.position.x-B.X0,v=c.position.z-B.Z0,m=1.2,u2=Math.max(m,Math.min(B.W-m,u)),v2=Math.max(m,Math.min(B.D-m,v));if(u2===u&&v2===v)return;
+  var fy=[0,B.F2,B.F3][B.floor||0],k=Math.min(1,Math.hypot(u2-u,v2-v)/4);c.position.x=B.X0+u2;c.position.z=B.Z0+v2;c.position.y=Math.max(c.position.y,fy+3.2+k*2.5);c.lookAt(me.x,(me.y||0)+.8,me.z)}
 function hxWarm(B){try{var vis=B.fl.map(function(f){return f.visible}),lv=B.low.map(function(f){return f.visible});B.fl.forEach(function(f){f.visible=true});B.low.forEach(function(f){f.visible=true});(typeof renderer!=='undefined'&&renderer.compile)&&renderer.compile(scene,activeCam());B.fl.forEach(function(f,i){f.visible=vis[i]});B.low.forEach(function(f,i){f.visible=lv[i]})}catch(e){}}
 /* dollhouse camera: inside you see the current floor with low walls, the shell and floors above disappear */
 function hxView(B){if(!B||!me)return;var u=me.x-B.X0,v=me.z-B.Z0,inside=u>-.3&&u<B.W+.3&&v>-.3&&v<B.D+.3,y=me.y||0,f=y>B.F3-1.5?2:y>B.F2-1.5?1:0;
-  B.shell.visible=!inside;if(inside){me.stkT=0;me.stuckN=0}if(!B.warm){B.warm=1;hxWarm(B)}for(var i=0;i<3;i++){B.fl[i].visible=inside?i<=f:(i===0||(i===2&&B.broken));B.low[i].visible=inside&&i===f}B.inside=inside;B.floor=f;hxOcc(B)}
+  B.shell.visible=!inside;if(inside){me.stkT=0;me.stuckN=0}if(!B.warm){B.warm=1;hxWarm(B)}for(var i=0;i<3;i++){B.fl[i].visible=inside?i<=f:(i===0||(i===2&&B.broken));B.low[i].visible=inside&&i===f}B.inside=inside;B.floor=f;hxOcc(B);if(typeof renderer!=='undefined'&&renderer&&!renderer.__hx){renderer.__hx=1;var r0=renderer.render.bind(renderer);renderer.render=function(sc,c){try{hxCamFix(c)}catch(e){}return r0(sc,c)}}}
 /* ---------- the mission ---------- */
 function hxClean(S,M){var B=S.bank&&S.bank.hb;if(!B)return;(M.carts||[]).forEach(function(c){if(c.g.parent)c.g.parent.remove(c.g)});(M.gas||[]).forEach(function(g){if(g.m.parent)g.m.parent.remove(g.m)});
   var ov=document.getElementById('hxGas');if(ov)ov.remove();window.BSTimeK=1;hxBars(false);
