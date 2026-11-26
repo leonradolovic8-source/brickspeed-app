@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795721656">
+<meta name="bs-build" content="1795721921">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5285,6 +5285,7 @@ function step(dt){
     var c=cars[i];
     if(c.remote){remoteStep(c,dt);continue}
     if(c.out)continue;
+    try{botAbil(c,dt)}catch(e){}
     if(ARENA){var gb=arenaBot(c,modeGoal(c)),bvA=gb[1]*(race.on?botMul(c)*modeMul(c):1);if(race.on){if(c.fx.stop>t||modeFrozen(c)){bvA=0;c.v=0}if(frozen){bvA=0;c.v=0}}drive(c,dt,c.fx.lag>t?gb[0]*.4+Math.sin(t*9+i)*.45:gb[0],bvA);continue}
     var pr=c.pers||(c.pers=persona());
     c.laneTimer-=dt;if(c.laneTimer<0){c.ovr=0;c.laneTimer=rnd(3,8);if(Math.random()<pr.mist){c.mistUntil=t+rnd(.7,1.5);c.mistDir=Math.random()<.5?-1:1}}
@@ -5772,6 +5773,44 @@ function rimLifeTick(A,dt){var L=A.rim&&A.rim.life;if(!L)return;var H=A.half,hr=
     var d=Math.hypot(q[0]-mx,q[1]-mz);if(me&&d<4.5&&mv>3){var a=Math.atan2(q[0]-mx,q[1]-mz);p.dx=Math.sin(a);p.dz=Math.cos(a);p.dodge=1.2;p.fall=d<1.8&&mv>9;try{if(p.fall&&typeof comic==='function')comic(['HEY!','WATCH IT!','OI!'][(Math.random()*3)|0],'#ffffff')}catch(e){}}})}
 var _rimT=0;function rimTick(day){var A=ARENA;if(!A||!A.rim)return;var nw=performance.now()/1000,dt=_rimT?Math.min(.1,nw-_rimT):0;_rimT=nw;try{rimLifeTick(A,dt*(window.BSTimeK||1))}catch(e){}A.rim.mat.emissiveIntensity=.15+.85*(1-Math.max(0,Math.min(1,day)))}
 
+/* race bots feel like real players: each bot is a random driver from the roster (its own car + skin),
+   it drifts through corners and fires its ability when it makes sense, with a human-ish delay */
+var BOTPOOL=[];
+function botRaceOn(){return race.on&&!race.m2&&!race.mp&&(race.mode==='race'||!race.mode)}
+function botChar(c){if(c.me||c.remote||c.human||!botRaceOn()||!window.BSChars)return;
+  if(!BOTPOOL.length){BOTPOOL=window.BSChars.filter(function(ch){return ch.id!=='skydrive'&&(!race.ch||ch.id!==race.ch.id)}).sort(function(){return Math.random()-.5})}
+  var ch=BOTPOOL.pop();if(!ch)return;var spec=Object.assign({},ch,{skin:Math.random()<.5?null:(Math.random()*2)|0});
+  if(!c.model0)c.model0=c.model;if(!c.d0)c.d0=c.d;
+  try{var m=makeCarExt?makeCarExt(spec):null;if(m){if(c.model!==c.model0)scene.remove(c.model);c.model0.visible=false;scene.remove(c.model0);c.model=m;scene.add(m)}}catch(e){console.warn('botChar',e)}
+  c.bch=ch;c.d=Object.assign({},c.d0,{name:ch.name,hex:ch.col,color:ch.body});c.bcd=4+Math.random()*6;c.bthink=0;c.starterGo=ch.id==='starter'}
+function botReset(){BOTPOOL=[];cars.forEach(function(c){if(c.me||!c.model0)return;if(c.model!==c.model0){scene.remove(c.model);c.model=c.model0;c.model.visible=true;scene.add(c.model)}if(c.d0)c.d=c.d0;c.bch=null;c.driftIn=false})}
+function botAbil(c,dt){if(!c.bch||!botRaceOn()||c.finished||c.left)return;
+  /* drifting like a player: slide through the tighter bends, let go on the straights */
+  var p=c.pers||{agg:1};c.driftIn=c.v>14&&Math.abs(c.steer)>(p.agg>.9?.3:.42)&&!c.falling;
+  if(race.phase!=='go')return;
+  if(c.starterGo&&race.startT!=null&&t-race.startT<.6){c.starterGo=false;if(Math.random()<.7){fxLocal(c,'mul',1.5,2.2);tag(c,'LAUNCH!',c.bch.col,2)}return}
+  c.bcd-=dt;if(c.bcd>0)return;c.bthink-=dt;if(c.bthink>0)return;c.bthink=.4+Math.random()*.6;
+  var id=c.bch.id,col=c.bch.col,ahead=aheadOf(c),dA=ahead?dist(ahead,c):1e9,near=cars.filter(function(o){return o!==c&&!o.left&&!o.finished&&dist(o,c)<18}),used=false,
+    boost=function(k,d,txt){fxLocal(c,'mul',k,d);tag(c,txt,col,d);used=true},
+    hitO=function(o,k,v,d,txt){if(!o)return;hit(o,k,v,d);tag(o,txt,col,d);used=true;if(o.me){toast3(c.d.name+' · '+c.bch.ab,txt);try{flash('rgba(255,60,60,.22)')}catch(e){}}};
+  switch(id){
+    case 'blaze':case 'skydrive':case 'shifter':case 'glider':if(Math.abs(c.steer)<.15)boost(1.25,2,'TURBO');break;
+    case 'drifter':if(Math.abs(c.steer)<.15)boost(1.4,2,'SLIDE BOOST');break;
+    case 'hunter':if(dA<35){boost(1.15,2,'LOCK ON');hitO(ahead,'mul',.8,2,'TARGETED')}break;
+    case 'chase':if(dA<30)boost(1.22,3,'TRACTOR');break;
+    case 'police':if(near.length){near.forEach(function(o){hitO(o,'lock',(Math.random()-.5)*.6,2,'SIREN!')})}break;
+    case 'techno':if(dA<30)hitO(ahead,'inv',1,3,'FLIPPED');break;
+    case 'elf':if(near.length||dA<40){var o=near.length?near[(Math.random()*near.length)|0]:ahead;hitO(o,'lock',(Math.random()-.5)*.6,2,'TANGLED')}break;
+    case 'snowman':var cl=null,cd=1e9;cars.forEach(function(o){if(o===c||o.left||o.finished)return;var d=dist(o,c);if(d<cd){cd=d;cl=o}});if(cd<20)hitO(cl,'stop',0,1.2,'FROZEN');break;
+    case 'reindeer':if(near.length){near.forEach(function(o){hitO(o,'hop',0,3,'HOP')})}break;
+    case 'rally':if(near.length){near.forEach(function(o){hitO(o,'mul',.9,3,'RALLY -10%')});boost(1.1,3,'RALLY')}break;
+    case 'santa':var last=cars.filter(function(o){return !o.left&&!o.finished}).sort(function(a,b){return a.prog-b.prog})[0];if(last){if(last===c)boost(1.3,2.5,'GIFT');else{hit(last,'mul',1.3,2.5);tag(last,'GIFT +30%',col,2.5);used=true}}break;
+    case 'swap':if(ahead&&dA<45&&dA>8&&typeof swapPlaces==='function'){swapPlaces(c,ahead);tag(ahead,'SWAPPED',col,2);used=true;if(ahead.me){toast3(c.d.name+' · SWAP','You swapped places');comic('SWAPPED!',col)}}break;
+    case 'bomber':var behind=cars.some(function(o){return o!==c&&!o.left&&o.prog<c.prog&&dist(o,c)<35});if(behind&&typeof addBomb==='function'){var bx=c.x-Math.sin(c.a)*3.5,bz=c.z-Math.cos(c.a)*3.5;addBomb(bx,bz,c.pid,col);tag(c,'TRAP SET',col,2);used=true}break;
+    case 'rewind':if(dA<25)boost(1.3,2.5,'TIME RUSH');break;
+    default:if(Math.abs(c.steer)<.15)boost(1.2,2,c.bch.ab||'BOOST')}
+  if(used)c.bcd=(AB[id]||14)*(1.15+Math.random()*.5);else c.bthink=1+Math.random()}
+
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
 function beam(a,b,colr,dur){var g=new T.BufferGeometry().setFromPoints([new T.Vector3(a.x,(a.y||0)+1.2,a.z),new T.Vector3(b.x,(b.y||0)+1.2,b.z)]),ln=new T.Line(g,new T.LineBasicMaterial({color:colr,transparent:true}));ln.frustumCulled=false;scene.add(ln);
@@ -5972,7 +6011,7 @@ function placeGrid(grid){
     var back=6+i*6.5,k=(N-Math.round(back/DS))%N,lane=(i%2?2.6:-2.6);
     c.k=k;c.x=P[k].x+NX[k]*lane;c.z=P[k].z+NZ[k]*lane;c.a=ANG[k];c.v=0;c.steer=0;c.lap=0;c.prog=k;c.lane=lane;c.laneT=lane;c.finished=false;
     c.fx={mul:1,mulUntil:0,stop:0,lock:0,lockDir:0,inv:0,hop:0};c.tag.visible=false;c.tx=null;c.ty=null;c.left=false;c.time=0;c.pers=c.me?null:persona();c.ovr=0;c.mistUntil=0;c.drifting=false;c.dScore=0;c.mtUntil=0;c.lean=0;c.falling=0;c.lagCD=0;c.pad=0;c.slip=0;c.forkPick=false;c.sc=false;c.takeSC=false;
-    c.slot=i;c.out=false;c.ai=null;c.hiding=false;c.hideAcc=0;c.hideCD=0;c.holeCD=0;c.decoy=null;c.vmaxA=(c.vmax||24)*.9;
+    c.slot=i;c.out=false;c.ai=null;try{botChar(c)}catch(e){}c.hiding=false;c.hideAcc=0;c.hideCD=0;c.holeCD=0;c.decoy=null;c.vmaxA=(c.vmax||24)*.9;
     if(ARENA){var sp=arenaSpawn(i);c.x=sp.x;c.z=sp.z;c.a=sp.a;c.k=0;c.prog=0}
     seat(c);
   });
@@ -6044,7 +6083,7 @@ function endRace(keepRoom){
   scene.remove(me.model);me.model=defaultModel;scene.add(me.model);
   hoodMat.color.setHex(hoodDefault);hoodStuds.color.setHex(hoodDefault);
   race.bombs.forEach(function(b){scene.remove(b.mesh)});race.bombs=[];
-  cars.forEach(function(c){c.tag.visible=false;c.fx={mul:1,mulUntil:0,stop:0,lock:0,lockDir:0,inv:0,hop:0}});
+  cars.forEach(function(c){c.tag.visible=false;c.fx={mul:1,mulUntil:0,stop:0,lock:0,lockDir:0,inv:0,hop:0}});try{botReset()}catch(e){}
   hero.classList.remove('racing');document.body.classList.remove('racing');RUI.result.classList.remove('show');RUI.count.textContent='';
   setView('cockpit');lastInput=-10;lastLap=me.lap;lapStart=t;resize();
   if(window.BSSelectReset)window.BSSelectReset();
