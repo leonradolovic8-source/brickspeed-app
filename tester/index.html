@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795689296">
+<meta name="bs-build" content="1795692216">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4253,6 +4253,7 @@ function hxBank(S,G){var A=ARENA,X0=A.c[3]+A.R/2+1,X1=A.c[4]-A.R/2-1,Z0=A.c[0]+A
   wall(30.1,30.5,7,32,F3+1.2,5.5);wall(30.5,W,32,32.4,F3+1.2,12.5);wall(30.5,W,6.6,7,F3-.3,5.5);
   /* vault room on the top floor (back middle) */
   wall(13,13.6,31,D,22,12.5);wall(24.4,25,31,D,22,12.5);wall(13,16.5,30.6,31,22,12.5);wall(21.5,25,30.6,31,22,12.5);B.vdoorB=wall(16.5,21.5,30.6,31,22,12.5);
+  B.gates=[{fl:1,b:[wall(.6,7.5,7.3,8,2.6),wall(7.5,7.9,8,13,2.6)],u:4.05,v:7.65,y:0,w:6.9,ry:0},{fl:2,b:[wall(30.5,W,32.6,33.2,F2+2.6,5.5)],u:34.25,v:32.9,y:F2,w:7.5,ry:0}];
   B.F2=F2;B.F3=F3;B.door=[X0+19,Z0-6];hxBankLook(B,S);S.bank={x:X0+19,z:Z0-1,door:B.door,g:B.G,hb:B};HB=B;return B}
 function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f2=B.fl[1],f3=B.fl[2];
   var stone=hxMat(0xece4cf,{r:.55}),stone2=hxMat(0xd6ccb2,{r:.6}),gold=hxMat(0xffc83a,{r:.25,m:.85,e:0x553300,ei:.25}),win=hxMat(0x1d3a5c,{r:.08,m:.6,e:0xffd890,ei:.3}),wood=hxMat(0x6b3d1e,{r:.5}),dark=hxMat(0x23262e,{r:.4,m:.3}),glass=hxMat(0x9fd8ff,{op:.28,r:.05,m:.2}),red=hxMat(0xc81e2a,{r:.6});
@@ -4323,12 +4324,12 @@ function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f
   B.jumpSign=hxText(f3,'⬆ JUMP!','#ffd23c',null,5,1.4,19,F3+.06,4,Math.PI,true);B.jumpSign.rotation.x=-Math.PI/2;B.jumpSign.visible=false;hxMore(B)}
 /* dollhouse camera: inside you see the current floor with low walls, the shell and floors above disappear */
 function hxView(B){if(!B||!me)return;var u=me.x-B.X0,v=me.z-B.Z0,inside=u>-.3&&u<B.W+.3&&v>-.3&&v<B.D+.3,y=me.y||0,f=y>B.F3-1.5?2:y>B.F2-1.5?1:0;
-  B.shell.visible=!inside;for(var i=0;i<3;i++){B.fl[i].visible=inside?i<=f:i===0;B.low[i].visible=inside&&i===f}B.inside=inside;B.floor=f}
+  B.shell.visible=!inside;if(inside){me.stkT=0;me.stuckN=0}for(var i=0;i<3;i++){B.fl[i].visible=inside?i<=f:i===0;B.low[i].visible=inside&&i===f}B.inside=inside;B.floor=f}
 /* ---------- the mission ---------- */
 function hxClean(S,M){var B=S.bank&&S.bank.hb;if(!B)return;(M.carts||[]).forEach(function(c){if(c.g.parent)c.g.parent.remove(c.g)});(M.gas||[]).forEach(function(g){if(g.m.parent)g.m.parent.remove(g.m)});
   var ov=document.getElementById('hxGas');if(ov)ov.remove();window.BSTimeK=1;hxBars(false);
   if(ARENA.blocks.indexOf(B.vdoorB)<0)ARENA.blocks.push(B.vdoorB);if(ARENA.blocks.indexOf(B.win)<0)ARENA.blocks.push(B.win);
-  B.vault.open=false;B.vault.hits=0;if(B.pbox){B.pbox.cut=false;B.pbox.led.material.color.setHex(0x00ff66);B.pbox.led.material.emissive.setHex(0x00ff66)}B.lasers.forEach(function(l){l.m.visible=true});(M.nades||[]).forEach(function(n){n.m.parent&&n.m.parent.remove(n.m)});B.vault.piv.rotation.y=0;B.wglass.visible=true;B.jumpSign.visible=false;B.regs.forEach(function(r){r.hit=false;r.g.visible=true;r.g.position.y=1.65;r.g.rotation.set(0,-Math.PI/2,0)})}
+  B.vault.open=false;B.vault.hits=0;if(B.pbox){B.pbox.cut=false;B.pbox.led.material.color.setHex(0x00ff66);B.pbox.led.material.emissive.setHex(0x00ff66)}B.lasers.forEach(function(l){l.m.visible=true});(B.gates||[]).forEach(function(gt){gt.open=false;gt.g.visible=true;gt.g.position.y=gt.y;gt.b.forEach(function(b){if(ARENA.blocks.indexOf(b)<0)ARENA.blocks.push(b)})});(M.nades||[]).forEach(function(n){n.m.parent&&n.m.parent.remove(n.m)});B.vault.piv.rotation.y=0;B.wglass.visible=true;B.jumpSign.visible=false;B.regs.forEach(function(r){r.hit=false;r.g.visible=true;r.g.position.y=1.65;r.g.rotation.set(0,-Math.PI/2,0)})}
 /* extra bank detail: art, cubicles, cash pallets, alarm beacons, security cameras with view cones, the floor-2 power box */
 function hxMore(B){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,f1=B.fl[0],f2=B.fl[1],f3=B.fl[2],gold=hxMat(0xffc83a,{r:.25,m:.85}),wood=hxMat(0x6b3d1e,{r:.5});
   var art=function(G,y,u,v,ry,seed){var tx=hxCanvas(128,96,function(g){var c=['#2a5cff','#ffd23c','#e0182a','#3dbf5a','#7a5cff'];g.fillStyle='#f4ead2';g.fillRect(0,0,128,96);for(var i=0;i<5;i++){g.fillStyle=c[(i+seed)%5];g.beginPath();g.arc(20+((i*37+seed*13)%90),20+((i*23+seed*7)%56),10+((i+seed)%3)*8,0,7);g.fill()}g.strokeStyle='#1a1a24';g.lineWidth=3;g.beginPath();g.moveTo(0,70);g.quadraticCurveTo(64,40+seed*5,128,64);g.stroke()});tx.wrapS=tx.wrapT=T.ClampToEdgeWrapping;
@@ -4355,13 +4356,15 @@ function hxMore(B){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,f1=B.fl[0],f2=B.fl[1],f3=B.fl
     var cm=new T.Mesh(cone(c.R,c.h),new T.MeshBasicMaterial({color:0xffe14a,transparent:true,opacity:.22,depthWrite:false,side:T.DoubleSide}));cm.position.set(c.u,y+.08,c.v);G.add(cm);c.cm=cm;B.cams.push(c)});
   /* the power box on floor 2: ram it to cut the cameras + vault lasers */
   var pb=new T.Group();hxBox(pb,2,2.6,.9,hxMat(0x4a5563,{r:.4,m:.5}),0,1.3,0);hxBox(pb,1.6,.5,.05,hxMat(0xffd23c,{e:0x664400,ei:.4}),0,2.1,-.48);var led=hxBox(pb,.25,.25,.05,hxMat(0x00ff66,{e:0x00ff66,ei:2}),.6,1.4,-.48);hxText(pb,'⚡ POWER','#111','#ffd23c',1.5,.4,0,2.1,-.5,Math.PI,true);
+  B.gates.forEach(function(gt){var g=new T.Group(),G=B.fl[gt.fl-1];[-1,1].forEach(function(s2){hxBox(g,.4,2.8,.4,hxMat(0x2a2f3a,{m:.6,r:.3}),s2*gt.w/2,1.4,0)});gt.bars=[];for(var k=0;k<4;k++){var bar=hxBox(g,gt.w,.14,.14,hxMat(0xff1020,{e:0xff1020,ei:2.6}),0,.45+k*.6,0);bar.castShadow=false;gt.bars.push(bar)}
+    gt.lab=hxText(g,'CLEAR THE FLOOR','#ffffff','#c81e2a',Math.min(gt.w-.6,5),.7,0,2.55,-.25,Math.PI,true);g.position.set(gt.u,gt.y,gt.v);G.add(g);gt.g=g});
   pb.position.set(4,F2,D-1.2);f2.add(pb);B.pbox={g:pb,led:led,u:4,v:D-1.2,cut:false}}
 function heistBegin(S,M){var B=S.bank.hb;hxClean(S,{});M.stage=1;M.loot=0;M.alarm=0;M.limit=260;M.carts=[];M.gas=[];M.nades=[];M.kx=M.kz=0;M.backup=0;S.target={x:B.door[0],z:B.door[1],col:M.m.col,n:'GET INTO THE BRICK BANK'};
   M.add=function(kind,u,v,y,fl){var g=hxCart(B.G,kind);var c={g:g,k:kind,x:B.X0+u,z:B.Z0+v,y:y,a:Math.PI,ax:B.X0+u,az:B.Z0+v,ph:Math.random()*6,fl:fl,cd:0,gt:t+2+Math.random()*2};g.position.set(u,y,v);M.carts.push(c);return c};
   M.add('ward',13,16,0,1);M.add('ward',26,16,0,1);M.add('ward',19,27,0,1);M.add('gas',14,12,B.F2,2);M.add('gas',25,20,B.F2,2);M.add('gas',18,30,B.F2,2);M.add('cop',8,22,B.F3,3);M.add('cop',24,12,B.F3,3);M.add('cop',16,6,B.F3,3)}
 function hxHurt(S,M,c,dmg,al,push){var a=Math.atan2(me.x-c.x,me.z-c.z);M.kx=Math.sin(a)*push;M.kz=Math.cos(a)*push;me.v*=.25;S.hp-=dmg;M.alarm=Math.min(100,M.alarm+al);try{shock(me.x,(me.y||0)+1,me.z,c.k==='cop'?0xff2030:0xffffff,7);flash('rgba(255,40,40,.25)')}catch(e){}}
 function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);var inside=B.inside,fl=(B.floor||0)+1,pw=!B.pbox.cut;
-  if(M.stage===1&&inside&&fl===1){M.stage=2;S.wanted=0;stSay(S,'GHOST','We are in! Cameras see you, guards ram you. Ram the POWER box on floor 2 to kill the cameras and lasers!',4.2)}
+  if(M.stage===1&&inside&&fl===1){M.stage=2;S.wanted=0;stSay(S,'GHOST','We are in! Take out every guard to open the ramp. DRIFT into them or hit them head-on. Watch the cameras!',4.2)}
   if(M.stage>=2&&M.stage<5&&inside)S.wanted=0;
   /* the guards' shove */
   if(M.kx||M.kz){me.x+=M.kx*dt;me.z+=M.kz*dt;var kd=Math.pow(.02,dt);M.kx*=kd;M.kz*=kd;if(Math.abs(M.kx)+Math.abs(M.kz)<.2)M.kx=M.kz=0}
@@ -4376,7 +4379,7 @@ function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);v
   /* guards */
   var angry=M.alarm>=25;
   M.carts.forEach(function(c){var g=c.g;g.visible=c.fl===1||(inside&&fl>=c.fl);
-    if(c.ko){c.vy-=22*dt;c.y+=c.vy*dt;c.x+=c.kx*dt;c.z+=c.kz*dt;g.rotation.x+=c.sx*dt;g.rotation.z+=c.sz*dt;var fy=[0,0,B.F2,B.F3][c.fl];if(c.y<fy){c.y=fy;c.vy=0;c.kx*=.4;c.kz*=.4;c.sx=c.sz=0;g.rotation.x=g.rotation.z=0;if(t>c.ko)c.ko=0}}
+    if(c.ko){c.vy-=22*dt;c.y+=c.vy*dt;c.x+=c.kx*dt;c.z+=c.kz*dt;g.rotation.x+=c.sx*dt;g.rotation.z+=c.sz*dt;var fy=[0,0,B.F2,B.F3][c.fl];if(c.y<fy){c.y=fy;c.vy=0;c.kx*=.4;c.kz*=.4;c.sx=c.sz=0;if(c.out){g.rotation.x=0;g.rotation.z=1.35;if(!c.dim){c.dim=1;g.traverse(function(o){if(o.isMesh&&o.material&&o.material.color){o.material=o.material.clone();o.material.color.multiplyScalar(.45);if(o.material.emissiveIntensity!=null)o.material.emissiveIntensity=0}})}}else{g.rotation.x=g.rotation.z=0;if(t>c.ko)c.ko=0}}}
     else{if(g.userData.bk)g.userData.bk.material.emissiveIntensity=1.2+Math.sin(t*10+c.ph)*1.2;if(g.userData.bar)g.userData.bar.children.forEach(function(m,i){m.material.emissiveIntensity=Math.sin(t*12+i*Math.PI)>0?3:.3});
       var here=inside&&fl===c.fl&&M.stage>=2&&M.stage<5,pd=Math.hypot(me.x-c.x,me.z-c.z),chase=here&&(c.k==='cop'||(c.k==='ward'&&(angry||pd<10))),keep=here&&c.k==='gas',tx,tz,sp;
       if(chase){tx=me.x+Math.sin(me.a)*me.v*.35;tz=me.z+Math.cos(me.a)*me.v*.35;sp=(c.k==='cop'?8.5:7)*(M.lock?1.25:1)}
@@ -4388,8 +4391,7 @@ function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);v
     var uu=c.x-X0,vv=c.z-Z0;if(c.fl===1){uu=Math.max(9,Math.min(32,uu));vv=Math.max(3,Math.min(33,vv))}else if(c.fl===2){uu=Math.max(9.5,Math.min(28.5,uu));vv=Math.max(3,Math.min(35,vv))}else{uu=Math.max(2,Math.min(28.5,uu));vv=Math.max(2,Math.min(29,vv))}c.x=X0+uu;c.z=Z0+vv;
     g.position.set(uu,c.y,vv);g.rotation.y=c.a;if(c.ko||!inside||c.fl!==fl||M.stage<2)return;var pd2=Math.hypot(me.x-c.x,me.z-c.z);
     if(pd2<3){var hx=Math.sin(me.a),hz=Math.cos(me.a),toC=((c.x-me.x)*hx+(c.z-me.z)*hz)/pd2;
-      if(me.v>9&&toC>.5&&!(c.cd>t)){c.ko=t+(c.k==='cop'?3.5:5);c.vy=8;var ka2=Math.atan2(c.x-me.x,c.z-me.z);c.kx=Math.sin(ka2)*12;c.kz=Math.cos(ka2)*12;c.sx=6;c.sz=4;c.cd=t+1;me.v*=.7;comic(c.k==='cop'?'COP DOWN!':'GUARD DOWN!','#ffd23c');try{shock(c.x,c.y+1,c.z,0xffffff,8)}catch(e){}
-        if(c.k==='cop'&&M.backup<4){M.backup++;setTimeout(function(){if(S.mis===M&&M.stage<5){M.add('cop',28,3,B.F3,3);if(fl===3)comic('BACKUP!','#ff3b3b')}},6000)}}
+      var slide=me.drifting||(me.va!=null&&Math.abs(Math.atan2(Math.sin(me.va-me.a),Math.cos(me.va-me.a)))>.3);if(((slide&&Math.abs(me.v)>5)||(me.v>9&&toC>.5))&&!(c.cd>t)){c.ko=1e9;c.out=true;c.vy=8;var ka2=Math.atan2(c.x-me.x,c.z-me.z);c.kx=Math.sin(ka2)*12;c.kz=Math.cos(ka2)*12;c.sx=6;c.sz=4;c.cd=t+1;me.v*=.7;comic(c.k==='cop'?'COP DOWN!':'GUARD DOWN!','#ffd23c');try{shock(c.x,c.y+1,c.z,0xffffff,8)}catch(e){}}
       else if(!(c.cd>t)){c.cd=t+1.6;hxHurt(S,M,c,c.k==='cop'?14:c.k==='ward'?9:6,c.k==='cop'?6:10,c.k==='cop'?13:10);if(!(M.hitT>t)){M.hitT=t+3;comic(c.k==='cop'?'RAMMED BY A COP!':'GUARD RAM!','#ff3b3b')}}
       var ra=Math.atan2(c.x-me.x,c.z-me.z);c.x=me.x+Math.sin(ra)*3.05;c.z=me.z+Math.cos(ra)*3.05}});
   /* gas canisters: arc through the air, then a cloud */
@@ -4401,11 +4403,14 @@ function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);v
   if(pw)B.lasers.forEach(function(l){var lz=l.z0+Math.sin(t*1.3+l.ph)*3.5;l.m.position.z=lz;var low=Math.sin(t*2.2+l.ph)>0;l.m.position.y=B.F3+(low?.6:1.6);if(inside&&fl===3&&low&&Math.abs((me.z-Z0)-lz)<.7&&(me.x-X0)<29.5&&!(M.lzT>t)){M.lzT=t+.8;M.alarm=Math.min(100,M.alarm+15);S.hp-=10;comic('LASER!','#ff3b3b');try{flash('rgba(255,0,0,.3)')}catch(e){}}});
   /* alarm: beacons spin, lockdown brings backup */
   var al=M.alarm>=40;B.beac.forEach(function(b,i){b.children[1].material.opacity=al?.35:0;b.children[0].material.emissiveIntensity=al?2.5:.2;if(al)b.rotation.y+=dt*6});
-  if(M.alarm>=100&&!M.lock){M.lock=true;stBig(S,'LOCKDOWN!','#ff3b3b',1.8);stSay(S,'GHOST','Lockdown! Backup is coming up the ramp. MOVE!',2.6);M.limit-=40;M.add('cop',28,3,B.F3,3);M.add('ward',10,30,0,1)}
+  if(M.alarm>=100&&!M.lock){M.lock=true;stBig(S,'LOCKDOWN!','#ff3b3b',1.8);stSay(S,'GHOST','Lockdown! The guards are faster now. MOVE!',2.6);M.limit-=40}
+  var left=[0,0,0,0];M.carts.forEach(function(c){if(!c.out)left[c.fl]++});M.left=left;
+  B.gates.forEach(function(gt){if(gt.open){if(gt.g.visible){gt.g.position.y-=dt*2;if(gt.g.position.y<gt.y-3)gt.g.visible=false}return}gt.bars.forEach(function(b,i){b.material.emissiveIntensity=1.6+Math.sin(t*9+i)*1.2});
+    if(M.stage>=2&&left[gt.fl]===0){gt.open=true;gt.b.forEach(function(b){var i=ARENA.blocks.indexOf(b);if(i>=0)ARENA.blocks.splice(i,1)});stBig(S,'FLOOR '+(gt.fl+1)+' OPEN!','#3dff8a',1.6);try{shock(B.X0+gt.u,gt.y+1.5,B.Z0+gt.v,0x3dff8a,12)}catch(e){}}});
   /* vault: 5 hard rams (needs a run-up) */
   var V=B.vault;V.wheel.rotation.z+=dt*(V.open?0:.6);
-  if(M.stage===2&&inside&&fl===3){M.stage=3;stSay(S,'GHOST','The vault! Back up and RAM the round door at full speed. 5 big hits!',3.2)}
-  if(M.stage===3&&!V.open&&inside&&fl===3){var du=(me.x-X0)-19,dv=(me.z-Z0)-30.6;if(Math.abs(du)<3.2&&dv>-3.6&&dv<.2){var sp2=Math.max(me.v,M.vsp||0);if(sp2>4&&!(V.cd>t)){V.cd=t+.6;me.v=-6;if(sp2<11){comic('TOO SLOW! RUN-UP!','#ffffff')}else{V.hits++;try{shock(me.x,B.F3+2,me.z+1,0xffd23c,10);debris(me.x,B.F3+2,me.z+1,[0xb8bec8,0xffd23c],14)}catch(e){}comic('VAULT '+V.hits+'/5','#ffd23c');M.alarm=Math.min(100,M.alarm+8);
+  if(M.stage===2&&inside&&fl===3){M.stage=3;stSay(S,'GHOST','Vault floor! Take out the cops, then RAM the round door at full speed. 5 big hits!',3.2)}
+  if(M.stage===3&&!V.open&&inside&&fl===3){var du=(me.x-X0)-19,dv=(me.z-Z0)-30.6;if(Math.abs(du)<3.2&&dv>-3.6&&dv<.2){var sp2=Math.max(me.v,M.vsp||0);if(sp2>4&&!(V.cd>t)){V.cd=t+.6;me.v=-6;if(left[3]>0){comic('TAKE OUT THE COPS FIRST!','#ff3b3b')}else if(sp2<11){comic('TOO SLOW! RUN-UP!','#ffffff')}else{V.hits++;try{shock(me.x,B.F3+2,me.z+1,0xffd23c,10);debris(me.x,B.F3+2,me.z+1,[0xb8bec8,0xffd23c],14)}catch(e){}comic('VAULT '+V.hits+'/5','#ffd23c');M.alarm=Math.min(100,M.alarm+8);
       if(V.hits>=5){V.open=true;stBig(S,'VAULT OPEN!','#ffd23c',1.8);M.alarm=100;var i2=ARENA.blocks.indexOf(B.vdoorB);if(i2>=0)ARENA.blocks.splice(i2,1)}}}}}
   M.vsp=me.v;
   if(V.open){V.piv.rotation.y=Math.max(V.piv.rotation.y-dt*1.6,-1.9);if(M.stage===3&&inside&&fl===3&&(me.z-Z0)>32){M.stage=4;M.loot+=5000;comic('+$5,000 GOLD','#ffd23c');stBig(S,'GOT THE GOLD!','#ffd23c',1.6);stSay(S,'GHOST','Now the big front window. Floor it and JUMP!',3.2);
@@ -4414,7 +4419,7 @@ function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);v
   if(M.stage===5&&stInB(S.base,me.x,me.z,4)){var bonus=Math.round(M.loot/10);S.coins+=bonus;try{window.BSEarnStory&&window.BSEarnStory(bonus)}catch(e){}comic('LOOT +'+bonus+' 🪙','#3dff8a');stMisEnd(S,true);return}
   var fn=['','LOBBY','OFFICES','VAULT'][fl];
   if(M.stage===5)S.target={x:S.base.cx,z:S.base.cz,col:M.m.col,n:'GET THE LOOT TO YOUR BASE · $'+M.loot.toLocaleString()};
-  else if(M.stage>1&&inside)S.target={x:X0+(fl===1?4:fl===2?(pw?P.u:34):19),z:Z0+(fl===1?10:fl===2?(pw?P.v-3:33):(M.stage===4?1:27)),col:M.m.col,n:'FLOOR '+fl+' · '+fn+(fl===2&&pw?' · RAM THE POWER BOX':'')+' · ALARM '+Math.round(M.alarm)+'% · $'+M.loot.toLocaleString()};
+  else if(M.stage>1&&inside){var ng=null,nd=1e9;if(M.stage<4)M.carts.forEach(function(c){if(c.out||c.fl!==fl)return;var d=Math.hypot(c.x-me.x,c.z-me.z);if(d<nd){nd=d;ng=c}});S.target={x:ng?ng.x:X0+(fl===1?4:fl===2?(pw?P.u:34):19),z:ng?ng.z:Z0+(fl===1?10:fl===2?(pw?P.v-3:33):(M.stage===4?1:27)),col:M.m.col,n:'FLOOR '+fl+' · '+fn+(M.left&&M.left[fl]?' · GUARDS LEFT '+M.left[fl]:(fl===2&&pw?' · RAM THE POWER BOX':''))+' · ALARM '+Math.round(M.alarm)+'% · $'+M.loot.toLocaleString()}}
   else if(M.stage>1)S.target={x:B.door[0],z:B.door[1],col:M.m.col,n:'BACK INTO THE BANK!'}}
 function hxBars(on,txt){var b=document.getElementById('hxBars');if(!on){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='hxBars';b.innerHTML='<i></i><i></i><b></b>';document.body.appendChild(b)}b.querySelector('b').textContent=txt||''}
 /* the jump: smash the window, slow motion, BAADDD GUUY */
