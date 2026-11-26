@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="bs-build" content="1795672959">
+<meta name="bs-build" content="1795673674">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5782,7 +5782,7 @@ var NET={opts:{map:'ring',laps:1,mode:'race',teams:0,arena:'fun'},on:false,host:
 var MPUI={box:document.getElementById('mp'),start:document.getElementById('mpStart'),lobby:document.getElementById('mpLobby'),msg:document.getElementById('mpMsg'),
   name:document.getElementById('mpName'),code:document.getElementById('mpCode'),codeShow:document.getElementById('mpCodeShow'),list:document.getElementById('mpList'),
   go:document.getElementById('mpGo'),wait:document.getElementById('mpWait'),charEl:document.getElementById('mpChar')};
-function cleanName(s){return (String(s||'').toUpperCase().replace(/[^A-Z0-9 _-]/g,'').trim().slice(0,12))||'PLAYER'}
+function cleanName(s){return (String(s||'').toUpperCase().replace(/[^A-Z0-9 _#-]/g,'').trim().slice(0,16))||'PLAYER'}
 function cosm(v,max){v=Math.floor(+v||0);return v<0?0:v>max?max:v}
 function meCos(){var M=window.BSMe&&window.BSMe();return M?{ti:M.ti,lv:M.lv(myChar().id),sk:M.sp,kk:M.kk?M.kk(myChar().id):0}:{ti:0,lv:1,sk:0,kk:0}}
 function charById(id){var L=window.BSChars||[];for(var i=0;i<L.length;i++)if(L[i].id===id)return L[i];return L[1]||null}
@@ -8871,7 +8871,7 @@ function jset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var Q=new URLSearchParams(location.search),forced=true||/lobby/i.test(location.hash)||Q.has('lobby')||Q.has('room')||Q.has('pad');
 var MQ=matchMedia('(orientation:landscape) and (max-height:540px) and (pointer:coarse), (orientation:landscape) and (min-width:900px) and (pointer:coarse), (min-width:900px) and (min-aspect-ratio:4/3) and (pointer:fine)');   // phones sideways + iPads/tablets sideways + laptops/PCs
 var closed=false,auto=store('bsl-auto')!=='0';
-function cleanName(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9 _-]/g,'').trim().slice(0,12)}
+function cleanName(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9 _#-]/g,'').trim().slice(0,16)}
 if(Q.get('name')){var nm0=cleanName(Q.get('name'));if(nm0)store('bs-mp-name',nm0)}
 
 // ================= your pad progress (sent by the pad's ONLINE button: #lobby&p=...) =================
@@ -9009,7 +9009,10 @@ var MC={story:['#2a5cff','#0a1440'],race:['#e8392f','#4a0f0c'],battle:['#ff8a1f'
 var ARENAS=[{id:'fun',n:'Tag Funpark'},{id:'city',n:'Tag City'}];
 function mapName(id){for(var i=0;i<MAPS.length;i++)if(MAPS[i].id===id)return MAPS[i].name;return id}
 function modeOf(id){for(var i=0;i<MODES.length;i++)if(MODES[i].id===id)return MODES[i];return MODES[0]}
-function myName(){return store('bs-mp-name')||(PROF&&PROF.nm)||'PLAYER'}
+function myTag(){var t=store('bs-tag');if(!/^[0-9]{4}$/.test(t||'')){t=String(1000+Math.floor(Math.random()*9000));store('bs-tag',t)}return t}
+function myBase(){return String(store('bs-mp-name')||(PROF&&PROF.nm)||'PLAYER').replace(/#.*$/,'').trim().slice(0,11)||'PLAYER'}
+function myName(){return myBase()+'#'+myTag()}
+window.BSMyTagName=myName;
 function toast(t){var e=$('toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove('on')},2400)}
 function vib(n){try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}}
 function esc(s){return String(s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]})}
@@ -9226,7 +9229,7 @@ $('bslInvite').onclick=function(){var n=NETo();if(!n||!n.on)return;var url=locat
  if(navigator.share){navigator.share({title:'BrickSpeed race',text:'Race me on BrickSpeed! Room '+n.code,url:url}).catch(function(){});return}
  try{navigator.clipboard.writeText(txt).then(function(){toast('Invite link copied. Send it to your friends!')},function(){toast('Room code: '+n.code)})}catch(e){toast('Room code: '+n.code)}};
 // settings
-$('bslNameSave').onclick=function(){var v=cleanName($('bslNameIn').value);if(!v){toast('Type a name');return}$('bslNameIn').value=v;store('bs-mp-name',v);var mn=$('mpName');if(mn)mn.value=v;var ln=$('lbName');if(ln)ln.value=v;toast('Name saved: '+v);draw()};
+$('bslNameSave').onclick=function(){var v=cleanName($('bslNameIn').value).replace(/#.*$/,'').trim().slice(0,11);if(!v){toast('Type a name');return}setTimeout(function(){toast('You are '+myName()+' · the #number makes your name unique')},2500);$('bslNameIn').value=v;store('bs-mp-name',v);var mn=$('mpName');if(mn)mn.value=v;var ln=$('lbName');if(ln)ln.value=v;toast('Name saved: '+v);draw()};
 $('bslFs').onclick=function(){var b=this;if(/iPhone|iPod/.test(navigator.userAgent)){toast('iPhone: tap Share → Add to Home Screen, then open BrickSpeed from the icon for full screen');return}try{if(document.fullscreenElement){document.exitFullscreen();b.setAttribute('aria-pressed','false')}else{document.documentElement.requestFullscreen().then(function(){b.setAttribute('aria-pressed','true');try{screen.orientation.lock('landscape').catch(function(){})}catch(e){}}).catch(function(){toast('Full screen is not allowed here. Add the site to your home screen instead.')})}}catch(e){toast('Full screen is not supported here')}};
 $('bslAuto').onclick=function(){auto=!auto;store('bsl-auto',auto?'1':'0');this.setAttribute('aria-pressed',auto?'true':'false')};
 
@@ -9361,7 +9364,7 @@ function garageTheme(md){if(!R3G||R3G.cur===md)return;R3G.cur=md;var T=R3.T,th=G
 // in a room: the other players' cars stand around yours, with their name and READY
 function othersKey(){if(!inRoom())return '';var n=NETo();return n.players.filter(function(p){return p.pid!==n.myPid}).slice(0,5).map(function(p){return p.pid+'|'+p.char+'|'+(p.kk|0)+'|'+(p.sk|0)+'|'+(p.rd?1:0)+'|'+p.name}).join(';')}
 function nameTag(T,p,s){var cv=document.createElement('canvas');cv.width=320;cv.height=96;var x=cv.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
- x.font='italic 900 42px "Saira Extra Condensed",Impact,sans-serif';x.lineWidth=8;x.strokeStyle='rgba(0,0,0,.9)';var nm=String(p.name||'PLAYER').slice(0,12);x.strokeText(nm,160,32);x.fillStyle='#fff';x.fillText(nm,160,32);
+ x.font='italic 900 42px "Saira Extra Condensed",Impact,sans-serif';x.lineWidth=8;x.strokeStyle='rgba(0,0,0,.9)';var nm=String(p.name||'PLAYER').slice(0,16);x.strokeText(nm,160,32);x.fillStyle='#fff';x.fillText(nm,160,32);
  var rt=p.pid==='H'?'👑 HOST':p.rd?'READY ✓':'NOT READY';x.font='900 26px system-ui';x.lineWidth=6;x.strokeText(rt,160,76);x.fillStyle=p.pid==='H'?'#ffd23a':p.rd?'#3dff8a':'#9aa6c8';x.fillText(rt,160,76);
  var sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv),depthTest:false,transparent:true}));sp.renderOrder=9;sp.scale.set(s*.85,s*.85*96/320,1);return sp}
 function othersSet(){if(!R3)return;var mb=B.classList.contains('mapbg')&&!!window.BSLobSetOthers,k=othersKey()+(mb?'|mb':'');if(R3.ok===k)return;R3.ok=k;var T=R3.T,MB=[];
