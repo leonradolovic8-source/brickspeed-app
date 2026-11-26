@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795683852">
+<meta name="bs-build" content="1795684437">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4229,10 +4229,11 @@ function hxText(G,txt,fg,bg,w,h,x,y,z,ry,glow){var t=hxCanvas(512,128,function(g
 function hxCart(G,kind){var g=new T.Group(),col={ward:0xf2f2f2,gas:0x3f8f2a,cop:0x1a2a6c}[kind],acc={ward:0x2a5cff,gas:0xc8ff3c,cop:0xff2030}[kind];
   hxBox(g,1.9,.7,3,hxMat(col,{r:.4}),0,.75,0);hxBox(g,1.7,.9,1.4,hxMat(0x222833,{r:.2,m:.3}),0,1.45,-.2);hxBox(g,1.95,.18,3.05,hxMat(acc,{e:acc,ei:.35}),0,1.05,0);
   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){var w=hxCyl(g,.42,.42,.35,hxMat(0x111111,{r:.9}),q[0]*.98,.42,q[1]*1.05,12);w.rotation.z=Math.PI/2});
-  var bk=hxCyl(g,.18,.18,.28,hxMat(acc,{e:acc,ei:2.2}),0,2.05,-.2,10);g.userData.bk=bk;
-  if(kind==='gas'){[-.5,.5].forEach(function(x){var tk=hxCyl(g,.28,.28,1.1,hxMat(0xc8ff3c,{e:0x557711,ei:.4,m:.4}),x,1.4,1.05,12);tk.rotation.x=Math.PI/2})}
+  var bk=hxCyl(g,.18,.18,.28,hxMat(acc,{e:acc,ei:2.2}),0,2.05,-.2,10);g.userData.bk=bk;bk.userData.keep=1;
+  if(kind!=='cop'&&typeof civGlbUse==='function'){bk.position.y=2.35;try{civGlbUse(g,kind==='gas'?'hatch':'suv')}catch(e){}}
+  if(kind==='gas'){[-.5,.5].forEach(function(x){var tk=hxCyl(g,.28,.28,1.1,hxMat(0xc8ff3c,{e:0x557711,ei:.4,m:.4}),x,2.05,-.9,12);tk.rotation.x=Math.PI/2;tk.userData.keep=1})}
   if(kind==='cop'){hxBox(g,.5,.2,.3,hxMat(0x2a5cff,{e:0x2a5cff,ei:2.2}),-.35,2.08,-.2);hxBox(g,.5,.2,.3,hxMat(0xff2030,{e:0xff2030,ei:2.2}),.35,2.08,-.2)}
-  hxText(g,kind==='cop'?'POLICE':kind==='gas'?'GAS SQUAD':'SECURITY','#ffffff',null,1.8,.45,.96,1.2,0,Math.PI/2,false).rotation.y=Math.PI/2;
+  var lab=hxText(g,kind==='cop'?'POLICE':kind==='gas'?'GAS SQUAD':'SECURITY','#ffffff',kind==='cop'?null:(kind==='gas'?'#3f8f2a':'#2a5cff'),1.8,.45,.96,1.2,0,Math.PI/2,kind!=='cop');lab.userData.keep=1;if(kind!=='cop'){lab.position.set(0,1.98,0);lab.rotation.set(-Math.PI/2,0,0)}
   G.add(g);return g}
 function hxBuild(S){var G=new T.Group(),X=HX.X,W=HX.W,M={G:G,zones:[],regs:[],carts:[],gas:[],lasers:[]};scene.add(G);
   /* materials + textures */
@@ -4244,7 +4245,7 @@ function hxBuild(S){var G=new T.Group(),X=HX.X,W=HX.W,M={G:G,zones:[],regs:[],ca
   /* the three floors: inside-out boxes (BackSide) so the camera always sees in */
   function room(z0,z1,y0,hgt,floorTex,wallTex){var B=new T.Mesh(new T.BoxGeometry(2*W,hgt,z1-z0),[new T.MeshStandardMaterial({map:wallTex,side:T.BackSide,roughness:.8}),new T.MeshStandardMaterial({map:wallTex,side:T.BackSide,roughness:.8}),new T.MeshStandardMaterial({color:0x2a2420,side:T.BackSide}),new T.MeshStandardMaterial({map:floorTex,side:T.BackSide,roughness:.35,metalness:.1}),new T.MeshStandardMaterial({map:wallTex,side:T.BackSide,roughness:.8}),new T.MeshStandardMaterial({map:wallTex,side:T.BackSide,roughness:.8})]);
     B.position.set(X,y0+hgt/2-.02,(z0+z1)/2);B.receiveShadow=true;G.add(B);return B}
-  room(0,34,0,6.6,marble,wallT);room(44,76,HX.F2,6.6,carpet,wallT);room(86,121,HX.F3,7.5,steel,(function(){var t=steel.clone();t.needsUpdate=true;t.repeat.set(6,1);return t})());
+  room(0,34,0,13.6,marble,wallT);room(34,44,0,13.6,marble,wallT);room(76,86,HX.F2,15,carpet,wallT);room(44,76,HX.F2,13.5,carpet,wallT);room(86,121,HX.F3,11,steel,(function(){var t=steel.clone();t.needsUpdate=true;t.repeat.set(6,1);return t})());
   /* ramps + the slabs beside them */
   function ramp(z0,z1,y0,y1){var L=Math.hypot(z1-z0,y1-y0),r=new T.Mesh(new T.BoxGeometry(10,.5,L),hxMat(0x8a8f99,{r:.7}));r.position.set(X,(y0+y1)/2-.25,(z0+z1)/2);r.rotation.x=-Math.atan2(y1-y0,z1-z0);r.receiveShadow=true;G.add(r);
     [-1,1].forEach(function(s){hxBox(G,.4,1.2,L,gold,X+s*5.2,(y0+y1)/2+.4,(z0+z1)/2).rotation.x=r.rotation.x;hxBox(G,W-5,y1,z1-z0,hxMat(0x5b4a3a,{r:.8}),X+s*(5+(W-5)/2),y1/2,(z0+z1)/2)});
@@ -4267,6 +4268,12 @@ function hxBuild(S){var G=new T.Group(),X=HX.X,W=HX.W,M={G:G,zones:[],regs:[],ca
   [[X-W+.9,30],[X+W-.9,30],[X+W-.9,2]].forEach(function(c){hxCyl(G,.5,.4,.9,hxMat(0xb86a3a),c[0],.45,c[1],12);var b=new T.Mesh(new T.SphereGeometry(1,10,8),hxMat(0x2f8a3a,{r:.8}));b.position.set(c[0],1.6,c[1]);G.add(b)});
   for(var a2=0;a2<3;a2++){var atm=new T.Group();hxBox(atm,1.4,2.4,.9,hxMat(0x2b3a5a,{r:.3,m:.4}),0,1.2,0);hxBox(atm,1,.6,.05,hxMat(0x061020,{e:0x3fd0ff,ei:1.4}),0,1.7,-.48);hxText(atm,'ATM','#ffd23c',null,1,.3,0,2.2,-.47,Math.PI,true);atm.position.set(X+W-.6,0,19+a2*3.2);atm.rotation.y=Math.PI/2;G.add(atm)}
   [[X,10],[X,24]].forEach(function(c){var ch=new T.Group();hxCyl(ch,.04,.04,1,gold,0,6.1,0,6);for(var i2=0;i2<8;i2++){var a3=i2/8*Math.PI*2,b2=new T.Mesh(new T.SphereGeometry(.22,8,6),hxMat(0xfff3c0,{e:0xffd890,ei:2.2}));b2.position.set(Math.cos(a3)*1.1,5.45,Math.sin(a3)*1.1);ch.add(b2)}hxCyl(ch,1.2,.4,.3,gold,0,5.6,0,16);ch.position.set(c[0],0,c[1]);G.add(ch)});
+  /* red carpet to the ramp, logo mosaic, paintings, cameras */
+  hxBox(G,4,.04,24,hxMat(0xb01a28,{r:.9}),X,.03,21);[-2.1,2.1].forEach(function(dx){hxBox(G,.12,.05,24,gold,X+dx,.04,21)});
+  var mo=hxText(G,'BB','#ffd23c','#1a2a6c',5,5,X,.06,14,0,false);mo.rotation.x=-Math.PI/2;
+  [[X-W+.08,12,Math.PI/2],[X-W+.08,26,Math.PI/2],[X+W-.08,10,-Math.PI/2]].forEach(function(c,i){var art=hxCanvas(256,192,function(g,w,h){var gr=g.createLinearGradient(0,0,w,h);gr.addColorStop(0,['#ff8a1f','#2a7bff','#7a5cff'][i]);gr.addColorStop(1,['#7a1030','#0a2a5c','#2a0a50'][i]);g.fillStyle=gr;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.75)';g.beginPath();g.arc(w*.6,h*.4,h*.22,0,7);g.fill();g.fillStyle='rgba(0,0,0,.35)';g.fillRect(0,h*.7,w,h*.3)});art.wrapS=art.wrapT=T.ClampToEdgeWrapping;
+    var pm=new T.Mesh(new T.PlaneGeometry(4,3),new T.MeshStandardMaterial({map:art,roughness:.6}));pm.position.set(c[0]+(c[2]>0?.06:-.06),3.4,c[1]);pm.rotation.y=c[2];G.add(pm);hxBox(G,.08,3.4,4.4,gold,c[0],3.4,c[1])});
+  [[X-W+.4,1],[X+W-.4,1],[X-W+.4,33],[X+W-.4,33]].forEach(function(c){hxBox(G,.5,.35,.8,hxMat(0xdddddd),c[0],6,c[1]);var led=hxBox(G,.1,.1,.05,hxMat(0xff2030,{e:0xff2030,ei:3}),c[0],6.05,c[1]+(c[1]<10?.42:-.42));led.castShadow=false});
   var L1=new T.PointLight(0xffe2b0,2.6,46,2);L1.position.set(X,5.5,12);G.add(L1);var L1b=new T.PointLight(0xffe2b0,2,40,2);L1b.position.set(X,5.5,27);G.add(L1b);
   /* ===== FLOOR 2 · OFFICES ===== */
   var y2=HX.F2;hxText(G,'FLOOR 2 · OFFICES','#ffffff',null,8,1.2,X,y2+5.7,75.8,Math.PI,true);
@@ -4276,6 +4283,11 @@ function hxBuild(S){var G=new T.Group(),X=HX.X,W=HX.W,M={G:G,zones:[],regs:[],ca
   var dep=hxCanvas(256,128,function(g){g.fillStyle='#6b5a2a';g.fillRect(0,0,256,128);for(var y=0;y<128;y+=16)for(var x=0;x<256;x+=21){g.fillStyle='#d9b24a';g.fillRect(x+2,y+2,17,12);g.fillStyle='#3a2a10';g.fillRect(x+15,y+7,3,3)}});dep.wrapS=dep.wrapT=T.ClampToEdgeWrapping;
   var dw=new T.Mesh(new T.PlaneGeometry(14,4.5),new T.MeshStandardMaterial({map:dep,roughness:.4,metalness:.6}));dw.position.set(X+W-.05,y2+2.6,62);dw.rotation.y=-Math.PI/2;G.add(dw);
   hxCyl(G,.35,.35,1.4,hxMat(0x9fd8ff,{op:.6}),X+W-1,y2+.7,48,12);
+  /* coffee corner, sofa, wall clock, posters */
+  hxBox(G,1.2,1.6,.8,hxMat(0x2a2a2a,{r:.3,m:.5}),X+W-1,y2+.8,70);hxBox(G,.6,.3,.05,hxMat(0x061020,{e:0xff8a1f,ei:1.2}),X+W-1,y2+1.3,69.58);
+  hxBox(G,4,.8,1.6,hxMat(0x1a6a8a,{r:.8}),X-W+1.2,y2+.4,72);hxBox(G,.4,1.1,1.6,hxMat(0x1a6a8a,{r:.8}),X-W+.4,y2+.95,72);
+  var clk2=hxCyl(G,1,1,.15,hxMat(0xffffff,{e:0xfff3c0,ei:.3}),X,y2+5,44.15,24);clk2.rotation.x=Math.PI/2;hxBox(G,.08,.8,.05,hxMat(0x111111),X,y2+5.3,44.25);
+  hxText(G,'EMPLOYEE OF THE MONTH','#ffd23c','#1a1a24',5,1,X-9,y2+4.2,44.12,0,true);hxText(G,'NO CARS INDOORS!','#ffffff','#c81e2a',5,1,X+9,y2+4.2,44.12,0,true);
   var L2=new T.PointLight(0xd8f0ff,1.4,40,2);L2.position.set(X,y2+5.5,60);G.add(L2);
   /* ===== FLOOR 3 · VAULT ===== */
   var y3=HX.F3;hxText(G,'FLOOR 3 · VAULT','#ff3b3b',null,8,1.2,X,y3+6.4,86.6,0,true);
@@ -4290,6 +4302,11 @@ function hxBuild(S){var G=new T.Group(),X=HX.X,W=HX.W,M={G:G,zones:[],regs:[],ca
   /* the big window on the right wall of floor 3 */
   var win=new T.Mesh(new T.PlaneGeometry(13,5.5),hxMat(0xbfe8ff,{op:.4,e:0x3fd0ff,ei:.35,side:T.DoubleSide}));win.position.set(X+W-.15,y3+3,101.5);win.rotation.y=-Math.PI/2;G.add(win);M.win=win;
   [-1,1].forEach(function(s){hxBox(G,.4,5.9,.4,gold,X+W-.2,y3+3,101.5+s*6.6)});hxBox(G,.4,.4,13.6,gold,X+W-.2,y3+5.9,101.5);hxBox(G,.4,.4,13.6,gold,X+W-.2,y3+.1,101.5);
+  /* hazard stripes, warning signs, cash carts */
+  var hz=hxCanvas(128,32,function(g){for(var i=-1;i<9;i++){g.fillStyle=i%2?'#ffd23c':'#111';g.beginPath();g.moveTo(i*16,32);g.lineTo(i*16+16,0);g.lineTo(i*16+32,0);g.lineTo(i*16+16,32);g.fill()}});hz.repeat.set(10,1);
+  var hzm=new T.Mesh(new T.PlaneGeometry(30,1.4),new T.MeshStandardMaterial({map:hz,roughness:.7}));hzm.rotation.x=-Math.PI/2;hzm.position.set(X,y3+.05,113);G.add(hzm);
+  hxText(G,'AUTHORIZED ONLY','#ffffff','#c81e2a',6,1.2,X-11,y3+4.5,120.9,Math.PI,true);hxText(G,'⚠ LASERS ACTIVE','#111','#ffd23c',6,1.2,X+11,y3+4.5,120.9,Math.PI,true);
+  [[X-15,92],[X+15,116],[X-15,116]].forEach(function(c){hxBox(G,2.2,.9,1.4,hxMat(0x8c939e,{m:.6,r:.3}),c[0],y3+.75,c[1]);for(var cs=0;cs<4;cs++)hxBox(G,.9,.3,.5,hxMat(0x3dbf5a,{r:.7}),c[0]-.5+(cs%2),y3+1.35+Math.floor(cs/2)*.3,c[1])});
   var L3=new T.PointLight(0xff9090,1.5,40,2);L3.position.set(X,y3+6,104);G.add(L3);
   /* guards */
   [[X-6,8,0],[X+6,20,1],[X,28,2]].forEach(function(c,i){var g=hxCart(G,'ward');M.carts.push({g:g,k:'ward',x:c[0],z:c[1],y:0,a:0,ax:c[0],az:c[1],ph:i*2,fl:1})});
@@ -4304,7 +4321,7 @@ function hxFade(cb){var d=document.createElement('div');d.style.cssText='positio
 function heistBegin(S,M){M.stage=1;M.loot=0;M.alarm=0;M.limit=330;S.target={x:S.bank.door[0],z:S.bank.door[1],col:M.m.col,n:'GET INTO THE BRICK BANK'}}
 function hxBars(on,txt){var b=document.getElementById('hxBars');if(!on){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='hxBars';b.innerHTML='<i></i><i></i><b></b>';document.body.appendChild(b)}b.querySelector('b').textContent=txt||''}
 function heistTick(S,M,dt){var X=HX.X,H=M.hx,me0=me;
-  if(M.stage===1){if(Math.hypot(me.x-S.bank.door[0],me.z-S.bank.door[1])<9){M.stage=2;S.wanted=0;hxFade(function(){M.hx=hxBuild(S);me.noLim=true;stPut(me,X,4,0,0);me.y=0;M.py=0;stSay(S,'GHOST','We are in. Three floors up to the vault. Smash the registers for extra cash!',3.4)})}return}
+  if(M.stage===1){if(Math.hypot(me.x-S.bank.door[0],me.z-S.bank.door[1])<9){M.stage=2;S.wanted=0;hxFade(function(){M.hx=hxBuild(S);me.noLim=true;stPut(me,X,9,0,0);me.y=0;M.py=0;stSay(S,'GHOST','We are in. Three floors up to the vault. Smash the registers for extra cash!',3.4)})}return}
   if(!H)return;var y=me.y||0,fl=y>HX.F3-1.5?3:y>HX.F2-1.5?2:1;
   /* keep the car inside the building + off the slab faces when coming from below */
   var py=M.py==null?y:M.py;
