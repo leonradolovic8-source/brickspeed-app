@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795678004">
+<meta name="bs-build" content="1795683601">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -3144,9 +3144,9 @@ function buildLava(m,G){
    follow the GPS line to your BASE, and then do jobs for BLAZE, DRIFTER and HUNTER for coins.
    Health bar, wanted stars (1-5, more stars = more police = more coins), BUSTED when they pin you or your health runs out. */
 var STY={blocks:null};
-function storySave(p){if(race&&race.m2&&race.m2.kind==='story'&&race.m2.clock!=null)p.clock=+race.m2.clock.toFixed(2);try{localStorage.setItem('bsStory',JSON.stringify(p))}catch(e){}}
+function storySave(p){if(race&&race.m2&&race.m2.kind==='story'&&race.m2.clock!=null)p.clock=+race.m2.clock.toFixed(2);try{localStorage.setItem(window.BSStoryKey||'bsStory',JSON.stringify(p))}catch(e){}}
 window.addEventListener('pagehide',function(){try{if(race.m2&&race.m2.kind==='story'&&race.m2.prog&&race.m2.prog.escaped)storySave(race.m2.prog)}catch(e){}});document.addEventListener('visibilitychange',function(){if(document.hidden)try{if(race.m2&&race.m2.kind==='story'&&race.m2.prog&&race.m2.prog.escaped)storySave(race.m2.prog)}catch(e){}});
-function storyLoad(){try{return JSON.parse(localStorage.getItem('bsStory')||'{}')||{}}catch(e){return {}}}
+function storyLoad(){try{return JSON.parse(localStorage.getItem(window.BSStoryKey||'bsStory')||'{}')||{}}catch(e){return {}}}
 function stBlock(i,j){var A=ARENA,hr=A.R/2,x0=A.c[i]+hr,x1=A.c[i+1]-hr,z0=A.c[j]+hr,z1=A.c[j+1]-hr;return {x0:x0,x1:x1,z0:z0,z1:z1,cx:(x0+x1)/2,cz:(z0+z1)/2}}
 function stInB(b,x,z,pad){pad=pad||0;return x>b.x0-pad&&x<b.x1+pad&&z>b.z0-pad&&z<b.z1+pad}
 /* clear a park block (lawn, fountain, trees) so we can build on it */
@@ -10006,5 +10006,14 @@ setInterval(function(){var B=document.body.classList;if(B.contains('racing'))tut
 })();
 </script>
 <div style="position:fixed;left:50%;bottom:max(2px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;background:rgba(255,59,92,.75);color:#fff;font:800 8px/1 system-ui;letter-spacing:.14em;padding:2px 7px;border-radius:99px;pointer-events:none">TEST VERSION</div>
+<script>
+/* TESTER ONLY: jump straight into Story Part 3 on a separate test save (your real story save is not touched) */
+(function(){var b=document.createElement('button');b.type='button';b.textContent='🧪 TRY PART 3';b.style.cssText='position:fixed;left:max(10px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));z-index:99998;padding:9px 14px;border-radius:14px;border:2px solid #ffd23c;background:linear-gradient(90deg,#3a1a10,#2a1450);color:#ffd23c;font:900 13px system-ui;letter-spacing:.06em;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+ document.body.appendChild(b);setInterval(function(){b.style.display=document.body.classList.contains('bsl-on')&&!document.body.classList.contains('racing')&&!window.BSRacing?'block':'none'},500);
+ b.onclick=function(){var all=['blaze','techno','drifter','hunter','ghost','bomber','rewind','final','vans','tail','fuel','drift','defuse','glitch'];window.BSStoryKey='bsStoryP3test';
+  try{localStorage.setItem('bsStoryP3test',JSON.stringify({escaped:true,part1:true,part2:true,p2i:true,p3i:false,done:all,clock:21.5,coins:500}))}catch(e){}
+  try{Object.assign(window.BSRaceOpts,{mode:'story'})}catch(e){}var p=document.getElementById('bslPlay');if(p)p.click();
+  var seen=false,iv=setInterval(function(){if(window.BSRacing)seen=true;else if(seen){window.BSStoryKey=null;clearInterval(iv)}},1000)}})();
+</script>
 </body>
 </html>
