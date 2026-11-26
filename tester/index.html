@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795705813">
+<meta name="bs-build" content="1795706862">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -4302,7 +4302,7 @@ function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f
   slab(f2,F2,7.5,W,0,D,carpet);slab(f2,F2,0,7.5,0,7,carpet);slab(f2,F2,0,7.5,32,D,carpet);
   hxBox(f2,.4,1.2,19,gold,7.7,F2+.6,22.5);hxBox(f2,7.9,1.2,.4,gold,3.95,F2+.6,6.8);
   B.occ.push(rampMesh(f2,31,37,32,7,F2,F3));hxText(f2,'▲ FLOOR 3','#ffd23c',null,4,1,34,F2+.06,34,Math.PI,true).rotation.x=-Math.PI/2;
-  B.occ.push(hxBox(f2,.3,6.6,25,new T.MeshStandardMaterial({map:inner,roughness:.7}),30.3,F2+3.3,19.5));hxBox(f2,.3,.3,25,gold,30.3,F2+7.05,19.5);
+  B.rampWall=hxBox(f2,.3,6.6,25,new T.MeshStandardMaterial({map:inner,roughness:.7}),30.3,F2+3.3,19.5);B.occ.push(B.rampWall);hxBox(f2,.3,.3,25,gold,30.3,F2+7.05,19.5);
   for(var r2=0;r2<3;r2++)for(var c3=0;c3<2;c3++){var dx=c3?24:14,dz=10+r2*8;hxBox(f2,4,.15,2,wood,dx,F2+1.1,dz);hxBox(f2,1.2,.8,.1,hxMat(0x0a0a12,{e:0x2a7bff,ei:1.1}),dx,F2+1.65,dz-.6);hxBox(f2,.8,.9,.8,hxMat(0x222833),dx,F2+.45,dz+1.4);hxBox(f2,.12,1.6,4,glass,dx+2.6,F2+.8,dz)}
   for(var fc=0;fc<5;fc++)hxBox(f2,1.2,2,1,hxMat(0x7c8594,{r:.4,m:.4}),10+fc*1.4,F2+1,D-.8);
   var dep=hxCanvas(256,128,function(g){g.fillStyle='#6b5a2a';g.fillRect(0,0,256,128);for(var y=0;y<128;y+=16)for(var x=0;x<256;x+=21){g.fillStyle='#d9b24a';g.fillRect(x+2,y+2,17,12);g.fillStyle='#3a2a10';g.fillRect(x+15,y+7,3,3)}});dep.wrapS=dep.wrapT=T.ClampToEdgeWrapping;
@@ -4312,7 +4312,7 @@ function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f
   var L2=new T.PointLight(0xd8f0ff,1.8,40,2);L2.position.set(19,F2+5.5,19);f2.add(L2);
   /* ===== FLOOR 3 · VAULT (hole over the east ramp) ===== */
   slab(f3,F3,0,30.5,0,D,steel);slab(f3,F3,30.5,W,0,7,steel);slab(f3,F3,30.5,W,32,D,steel);hxBox(f3,.4,1.2,25,gold,30.3,F3+.6,19.5);hxBox(f3,7.5,1.2,.4,gold,34.25,F3+.6,32.2);
-  var vr=function(){return hxMat(0x8c939e,{m:.6,r:.35})};[[.6,6,7,13.3,F3+3,34.5],[.6,6,7,24.7,F3+3,34.5],[3.5,6,.4,14.75,F3+3,30.8],[3.5,6,.4,23.25,F3+3,30.8],[12,.6,7.6,19,F3+6.3,34.4]].forEach(function(q){B.occ.push(hxBox(f3,q[0],q[1],q[2],vr(),q[3],q[4],q[5]))});
+  var vr=function(){return hxMat(0x8c939e,{m:.6,r:.35})};[[.6,6,7,13.3,F3+3,34.5],[.6,6,7,24.7,F3+3,34.5],[3.5,6,.4,14.75,F3+3,30.8],[3.5,6,.4,23.25,F3+3,30.8],[12,.6,7.6,19,F3+6.3,34.4]].forEach(function(q){var m=hxBox(f3,q[0],q[1],q[2],vr(),q[3],q[4],q[5]);B.occ.push(m);(B.vaultW=B.vaultW||[]).push(m)});
   var vd=new T.Group(),door=hxCyl(vd,2.6,2.6,.7,hxMat(0xb8bec8,{r:.25,m:.85}),0,0,0,32);door.rotation.x=Math.PI/2;var ring=new T.Mesh(new T.TorusGeometry(2.7,.25,8,32),gold);vd.add(ring);
   var wheel=new T.Group();for(var sp=0;sp<3;sp++){var spk=hxBox(wheel,2.4,.22,.22,gold,0,0,0);spk.rotation.z=sp*Math.PI/3}wheel.position.z=-.5;vd.add(wheel);
   var piv=new T.Group();piv.position.set(16.5,F3+2.8,30.4);vd.position.set(2.5,0,0);piv.add(vd);f3.add(piv);B.vault={piv:piv,wheel:wheel,hits:0,open:false};piv.traverse(function(o){if(o.isMesh){o.material=o.material.clone();B.occ.push(o)}});
@@ -4327,18 +4327,26 @@ function hxBankLook(B,S){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,sh=B.shell,f1=B.fl[0],f
 function hxOcc(B){if(!B.occ)return;var cam=null;try{cam=activeCam()}catch(e){}if(!cam)return;var P=new T.Vector3(me.x,(me.y||0)+1,me.z),C=cam.position,dir=P.clone().sub(C),L=dir.length();if(L<.1)return;dir.divideScalar(L);
   var rc=B.rc||(B.rc=new T.Raycaster());rc.set(C,dir);rc.far=L-.6;var hit=new Set();if(B.inside)rc.intersectObjects(B.occ,false).forEach(function(h){hit.add(h.object)});
   B.occ.forEach(function(m){var o=m.userData.o0==null?(m.userData.o0=m.material.transparent?m.material.opacity:1):m.userData.o0,want=hit.has(m)?Math.min(.18,o):o,cur=m.material.opacity;if(Math.abs(cur-want)<.01)return;m.material.transparent=true;m.material.opacity=cur+(want-cur)*.25;m.material.depthWrite=m.material.opacity>.95})}
-/* keep the chase camera inside the bank while you are inside, so no outer wall ever fills the screen */
-function hxCamFix(c){var B=HB;if(!B||!B.inside||!me||!c||(race.m2&&race.m2.cut))return;try{if(c===introCam)return}catch(e){}
-  var f=B.floor||0,fy=[0,B.F2,B.F3][f],m=.9,u=Math.max(m,Math.min(B.W-m,c.position.x-B.X0)),v=Math.max(m,Math.min(B.D-m,c.position.z-B.Z0)),
-    hole=(f===0&&u<7.6&&v>7&&v<32)||(f===1&&u>30.4&&v>7&&v<32),ceil=(hole?[13.4,20.4,20.4]:[6.3,13.3,20.4])[f],
-    Hd=new T.Vector3(me.x,(me.y||0)+1.3,me.z),P=new T.Vector3(B.X0+u,Math.max(fy+1.1,Math.min(ceil,c.position.y)),B.Z0+v),d=P.clone().sub(Hd),L=d.length();
-  if(L>.3){d.divideScalar(L);var rc=B.rc||(B.rc=new T.Raycaster());rc.set(Hd,d);rc.far=L;if(!B.solid){B.solid=B.occ.slice();B.low.forEach(function(g){g.traverse(function(o){if(o.isMesh)B.solid.push(o)})})}
-    var h=rc.intersectObjects(B.solid,false)[0];if(h&&h.distance<L){P.copy(Hd).addScaledVector(d,Math.max(1.4,h.distance-.4))}}
-  c.position.copy(P);c.lookAt(Hd.x,Hd.y-.4,Hd.z)}
+/* if the camera ends up in / behind a wall while you are inside, draw only your room on black */
+function hxRender(sc,c,r0){var B=HB;if(!B||!B.inside||!me||!c||(race.m2&&race.m2.cut))return r0(sc,c);try{if(c===introCam)return r0(sc,c)}catch(e){}
+  var f=B.floor||0,fy=[0,B.F2,B.F3][f],ceil=fy+(f===2?6.8:6.6),u=c.position.x-B.X0,v=c.position.z-B.Z0,y=c.position.y,e=.35,
+    out={w:u<e,e:u>B.W-e,f:v<e,b:v>B.D-e,up:y>ceil-.2,dn:y<fy-.1};
+  var mu=me.x-B.X0,mv=me.z-B.Z0,inV=function(a,b){return a>13&&a<25&&b>31},div=[];
+  if(f===1&&B.rampWall&&((u<30.3)!==(mu<30.3)))div.push(B.rampWall);
+  if(f===2&&B.vaultW&&inV(u,v)!==inV(mu,mv)){div=div.concat(B.vaultW);div.push(B.vault.piv)}
+  if(!(out.w||out.e||out.f||out.b||out.up||out.dn||div.length))return r0(sc,c);
+  var hid=[];function hide(o){if(o.visible){o.visible=false;hid.push(o)}}
+  var path=[];for(var p=B.G.parent;p;p=p.parent)path.push(p);(function walk(n){n.children.forEach(function(o){if(o===B.G||o===me.model||o.isLight||o.isCamera)return;if(path.indexOf(o)>=0){walk(o);return}hide(o)})})(sc);
+  div.forEach(function(m){hide(m)});hide(B.shell);B.fl.forEach(function(g,i){if(i!==f)hide(g)});
+  if(!B.side){B.side=1;B.low.forEach(function(L){L.children.forEach(function(m){var p=m.position;m.userData.sd=p.x<1?'w':p.x>B.W-1?'e':p.z<1?'f':p.z>B.D-1?'b':''})})}
+  B.low[f].children.forEach(function(m){if(m.userData.sd&&out[m.userData.sd])hide(m)});
+  if(B.G.children)B.G.children.forEach(function(o){if(o.userData&&o.userData.cart!=null&&o.userData.cart!==f)hide(o)});
+  var bg=sc.background,fog=sc.fog;sc.background=B.black||(B.black=new T.Color(0));sc.fog=null;
+  try{return r0(sc,c)}finally{sc.background=bg;sc.fog=fog;hid.forEach(function(o){o.visible=true})}}
 function hxWarm(B){try{var vis=B.fl.map(function(f){return f.visible}),lv=B.low.map(function(f){return f.visible});B.fl.forEach(function(f){f.visible=true});B.low.forEach(function(f){f.visible=true});(typeof renderer!=='undefined'&&renderer.compile)&&renderer.compile(scene,activeCam());B.fl.forEach(function(f,i){f.visible=vis[i]});B.low.forEach(function(f,i){f.visible=lv[i]})}catch(e){}}
 /* dollhouse camera: inside you see the current floor with low walls, the shell and floors above disappear */
 function hxView(B){if(!B||!me)return;var u=me.x-B.X0,v=me.z-B.Z0,inside=u>-.3&&u<B.W+.3&&v>-.3&&v<B.D+.3,y=me.y||0,f=y>B.F3-1.5?2:y>B.F2-1.5?1:0;
-  if(inside){me.stkT=0;me.stuckN=0}if(!B.warm){B.warm=1;B.shell.visible=true;for(var i=0;i<3;i++){B.fl[i].visible=true;B.low[i].visible=true}B.G.traverse(function(o){if(o.isMesh&&(o.geometry&&o.geometry.parameters&&(o.geometry.parameters.width>6||o.geometry.parameters.depth>6)))o.castShadow=false})}B.inside=inside;B.floor=f;if(typeof renderer!=='undefined'&&renderer&&!renderer.__hx){renderer.__hx=1;var r0=renderer.render.bind(renderer);renderer.render=function(sc,c){try{hxCamFix(c)}catch(e){}return r0(sc,c)}}}
+  if(inside){me.stkT=0;me.stuckN=0}if(!B.warm){B.warm=1;B.shell.visible=true;for(var i=0;i<3;i++){B.fl[i].visible=true;B.low[i].visible=true}B.G.traverse(function(o){if(o.isMesh&&(o.geometry&&o.geometry.parameters&&(o.geometry.parameters.width>6||o.geometry.parameters.depth>6)))o.castShadow=false})}B.inside=inside;B.floor=f;if(typeof renderer!=='undefined'&&renderer&&!renderer.__hx){renderer.__hx=1;var r0=renderer.render.bind(renderer);renderer.render=function(sc,c){try{return hxRender(sc,c,r0)}catch(e){return r0(sc,c)}}}}
 /* ---------- the mission ---------- */
 function hxClean(S,M){var B=S.bank&&S.bank.hb;if(!B)return;(M.carts||[]).forEach(function(c){if(c.g.parent)c.g.parent.remove(c.g)});(M.gas||[]).forEach(function(g){if(g.m.parent)g.m.parent.remove(g.m)});
   var ov=document.getElementById('hxGas');if(ov)ov.remove();window.BSTimeK=1;hxBars(false);
@@ -4374,7 +4382,7 @@ function hxMore(B){var W=B.W,D=B.D,F2=B.F2,F3=B.F3,f1=B.fl[0],f2=B.fl[1],f3=B.fl
     gt.lab=hxText(g,'CLEAR THE FLOOR','#ffffff','#c81e2a',Math.min(gt.w-.6,5),.7,0,2.55,-.25,Math.PI,true);g.position.set(gt.u,gt.y,gt.v);G.add(g);gt.g=g});
   pb.position.set(4,F2,D-1.2);f2.add(pb);B.pbox={g:pb,led:led,u:4,v:D-1.2,cut:false}}
 function heistBegin(S,M){var B=S.bank.hb;hxClean(S,{});M.stage=1;M.loot=0;M.alarm=0;M.limit=260;M.carts=[];M.gas=[];M.nades=[];M.kx=M.kz=0;M.backup=0;S.target={x:B.door[0],z:B.door[1],col:M.m.col,n:'GET INTO THE BRICK BANK'};
-  M.add=function(kind,u,v,y,fl){var g=hxCart(B.G,kind);var c={g:g,k:kind,x:B.X0+u,z:B.Z0+v,y:y,a:Math.PI,ax:B.X0+u,az:B.Z0+v,ph:Math.random()*6,fl:fl,cd:0,gt:t+2+Math.random()*2};g.position.set(u,y,v);M.carts.push(c);return c};
+  M.add=function(kind,u,v,y,fl){var g=hxCart(B.G,kind);g.userData.cart=fl-1;var c={g:g,k:kind,x:B.X0+u,z:B.Z0+v,y:y,a:Math.PI,ax:B.X0+u,az:B.Z0+v,ph:Math.random()*6,fl:fl,cd:0,gt:t+2+Math.random()*2};g.position.set(u,y,v);M.carts.push(c);return c};
   M.add('ward',13,16,0,1);M.add('ward',26,16,0,1);M.add('ward',19,27,0,1);M.add('gas',14,12,B.F2,2);M.add('gas',25,20,B.F2,2);M.add('gas',18,30,B.F2,2);M.add('cop',8,22,B.F3,3);M.add('cop',24,12,B.F3,3);M.add('cop',16,6,B.F3,3)}
 function hxHurt(S,M,c,dmg,al,push){var a=Math.atan2(me.x-c.x,me.z-c.z);M.kx=Math.sin(a)*push;M.kz=Math.cos(a)*push;me.v*=.25;S.hp-=dmg;M.alarm=Math.min(100,M.alarm+al);try{shock(me.x,(me.y||0)+1,me.z,c.k==='cop'?0xff2030:0xffffff,7);flash('rgba(255,40,40,.25)')}catch(e){}}
 function heistTick(S,M,dt){var B=S.bank.hb,X0=B.X0,Z0=B.Z0,y=me.y||0;hxView(B);var inside=B.inside,fl=(B.floor||0)+1,pw=!B.pbox.cut;
