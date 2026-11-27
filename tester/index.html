@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795787629">
+<meta name="bs-build" content="1795788413">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5919,7 +5919,7 @@ function f1Core(k,z){return Math.abs(f1D(k,z))<=z.h-z.e}
 function f1RoadLat(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e);return E[k]+.8+((z.fl||z.mid)-.8)*u}
 /* physics on the pit side: outer wall further out, and the divider between the track and the pit road */
 function f1Wall(c,k,lat){var z=F1Z;if(!z||curMap!=='ring'||!f1InZ(k,z)||lat<=0){c.f1lat=null;return 0}
-  if(f1Core(k,z)){var a=E[k]+4.4,b=E[k]+z.rd0-.05,pl=c.f1lat==null?lat:c.f1lat;
+  if(Math.abs(f1D(k,z))<=z.h-z.e-Math.round(8/DS)){var a=E[k]+4.4,b=E[k]+z.rd0-.05,pl=c.f1lat==null?lat:c.f1lat;
     if(lat>a&&lat<b){var to=pl<(a+b)/2?a:b,ps=to-lat;c.x+=NX[k]*ps;c.z+=NZ[k]*ps;c.v*=.95;c.hit=.4;lat=to}}
   c.f1lat=lat;return E[k]+z.ow-.9}
 function f1Lane(c,k,lat){return !!F1Z&&curMap==='ring'&&f1InZ(k,F1Z)&&lat>E[k]+.4}
@@ -5960,14 +5960,14 @@ function f1BotLane(c,kL,want){if(!(c.wantPit||c.inPit)||!F1Z)return want;var z=F
 function f1Crew(c,on){if(c.crew){c.crew.forEach(function(m){scene.remove(m)});c.crew=null}if(!on)return;var cols=[0xe3322a,0xffd23c,0x1d4fd8,0xe8ecf3];c.crew=[[-1.6,-1.2],[1.6,-1.2],[-1.6,1.2],[1.6,1.2]].map(function(q,i){var g=new T.Group(),b=new T.Mesh(new T.BoxGeometry(.6,.7,.36),new T.MeshStandardMaterial({color:cols[i]}));b.position.y=.75;g.add(b);var h=new T.Mesh(new T.CylinderGeometry(.2,.2,.32,10),new T.MeshStandardMaterial({color:0xffd23c}));h.position.y=1.28;g.add(h);var l=new T.Mesh(new T.BoxGeometry(.5,.45,.3),new T.MeshStandardMaterial({color:0x222833}));l.position.y=.22;g.add(l);
   var ca=Math.cos(c.a),sa=Math.sin(c.a);g.position.set(c.x+q[0]*ca+q[1]*sa,0,c.z-q[0]*sa+q[1]*ca);g.lookAt(c.x,0,c.z);scene.add(g);return g})}
 function f1Finish(c){if(!F1)return;var miss=Math.max(0,F1.req-(c.stops||0));if(miss){c.time+=miss*25;c.pen=miss*25;if(c.me)toast3('PENALTY +'+miss*25+' s','You skipped '+miss+' required pit stop'+(miss>1?'s':''))}race.finish.sort(function(a,b){return a.time-b.time})}
-function f1Hud(on){f1Layout(on);var h=document.getElementById('f1Hud');if(!on){if(h)h.remove();var g0=document.getElementById('f1Gauge');if(g0)g0.remove();try{f1PitEnd(true)}catch(e){}return}if(!h){h=document.createElement('div');h.id='f1Hud';h.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(max(10px,env(safe-area-inset-top)) + 96px);z-index:72;pointer-events:none;font:800 13px system-ui;letter-spacing:.06em;color:#fff;background:rgba(10,14,30,.72);border:2px solid rgba(255,255,255,.25);border-radius:12px;padding:6px 12px;text-align:center;white-space:nowrap';document.body.appendChild(h)}}
+function f1Hud(on){f1Layout(on);var h=document.getElementById('f1Hud');if(!on){if(h)h.remove();var g0=document.getElementById('f1Gauge');if(g0)g0.remove();try{f1PitEnd(true)}catch(e){}return}if(!h){h=document.createElement('div');h.id='f1Hud';h.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(max(6px,env(safe-area-inset-top)) + 42px);z-index:72;pointer-events:none;font:800 10px system-ui;letter-spacing:.06em;color:#fff;background:rgba(10,14,30,.6);border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:3px 9px;text-align:center;white-space:nowrap';document.body.appendChild(h)}}
 function f1Tick(){if(!F1||!race.on||race.phase==='done'){f1Hud(false);f1Sign(0);return}f1Hud(true);var h=document.getElementById('f1Hud');if(!h)return;var tyre=Math.round(f1Wear(me)*100),tc=tyre>55?'#3dff8a':tyre>25?'#ffd23c':'#ff4b4b',st=me.stops||0,bc='#'+new T.Color(F1Z.boxes[me.box||0].col).getHexString();
   try{f1Gauge(tyre)}catch(e){console.warn('f1Gauge',e.message)}var txt='PIT STOPS <b style="color:'+(st>=F1.req?'#3dff8a':'#ffd23c')+'">'+st+'/'+F1.req+'</b> · YOUR BOX <b style="color:'+bc+'">■</b>';
   var cl=f1Call(me),fl=Math.floor(t*3)%2;f1Sign(cl);if(cl===3&&me.f1cl!==3){toast3('📢 PIT NEXT LAP','One more lap, then box · stop in your coloured box');me.f1cl=3}
   if(cl!==me.f1cl){if(cl===1){toast3('📢 BOX BOX BOX','Pit THIS lap · stop in your '+'coloured box · skip it = 50% speed');try{comic('BOX BOX!','#ffd23c')}catch(e){}}if(cl===2){toast3('⚠ MISSED PIT','50% speed until you pit');try{comic('PIT NOW!','#ff4b4b')}catch(e){}}me.f1cl=cl}
-  if(cl===3)txt='<div style="font-size:18px;color:#7fd2ff">📢 PIT NEXT LAP · 1 MORE LAP</div>'+txt;
-  if(cl===1)txt='<div style="font-size:22px;color:'+(fl?'#ffd23c':'#fff')+'">📢 BOX BOX · PIT THIS LAP</div>'+txt;
-  if(cl===2)txt='<div style="font-size:22px;color:'+(fl?'#ff4b4b':'#fff')+'">⚠ MISSED PIT · SPEED 50% · PIT NOW</div>'+txt;
+  if(cl===3)txt='<div style="font-size:12px;color:#7fd2ff">📢 PIT NEXT LAP · 1 MORE LAP</div>'+txt;
+  if(cl===1)txt='<div style="font-size:13px;color:'+(fl?'#ffd23c':'#fff')+'">📢 BOX BOX · PIT THIS LAP</div>'+txt;
+  if(cl===2)txt='<div style="font-size:13px;color:'+(fl?'#ff4b4b':'#fff')+'">⚠ MISSED PIT · SPEED 50% · PIT NOW</div>'+txt;
   try{f1PitTick()}catch(e){}if(me.pitUntil)txt='🔧 PIT STOP · <b style="color:#ffd23c">'+Math.max(0,me.pitUntil-t).toFixed(1)+' s</b>';else if(me.inPit)txt='🚧 PIT ROAD · LIMIT 40 km/h · STOP IN THE <b style="color:'+bc+'">■</b> BOX';h.innerHTML=txt}
 /* ---- build the pit road: asphalt, entry/exit, divider + outer wall, coloured boxes, garages, signs ---- */
 function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(1,Math.round(x/DS))};if(!F1MATS)F1MATS=[];if(!F1WANT)F1WANT=[];F1NAMES=[];
@@ -5983,7 +5983,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   /* asphalt, lines, the brick divider and (only on the ramps) the outer wall */
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
     if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.03,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,0)}
-    else{var wq=rl-E[k]+2.6,a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
+    else{var wq=Math.max(rl-E[k]+2.6,f1Rib(k,z)[0]+f1Rib(k,z)[1]+.8-(-.2)),a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
     {
       }
     }
@@ -6008,10 +6008,10 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
       [[-1],[1]].forEach(function(q){var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(l0<E[k]+.7||l1<E[k1]+.7)return;addKerb(k,k1,l0,l1,ci)})}
     /* the pit wall between the track and the pit road (along the core) and the outer wall on the entry/exit */
     var b16=Math.max(1,Math.round(1.6/DS)),cc=0;
-    for(var d2=-z.h;d2<=z.h;d2+=b16){var k2=(z.kc+d2+N)%N,core=Math.abs(d2)<=z.h-z.e;cc++;
+    for(var d2=-z.h;d2<=z.h;d2+=b16){var k2=(z.kc+d2+N)%N,core=Math.abs(d2)<=z.h-z.e;cc++;if(core&&Math.abs(d2)>z.h-z.e-Math.round(8/DS))continue;
       [0,1].forEach(function(row){var kk=(k2+(row?Math.round(.8/DS):0))%N,lat=core?E[kk]+5.2:E[kk]+z.ow,p=pt(kk,lat);addBrick(p[0],p[2]+.25+row*.5,p[1],ANG[kk],WC[(cc+row*3)%WC.length],row===1)})}
     /* close the outer wall back onto the track wall at both ends of the pit zone */
-    [-1,1].forEach(function(sd){var ke=(z.kc+sd*z.h+N)%N,ex=pt(ke,0);for(var l=E[ke]+5.2;l<=E[ke]+z.ow+.1;l+=1.6){var p=pt(ke,l);[0,1].forEach(function(row){addBrick(p[0],p[2]+.25+row*.5,p[1],ANG[ke]+Math.PI/2,WC[(Math.round(l)+row)%WC.length],row===1)})}});
+    [-1,1].forEach(function(sd){var ke=(z.kc+sd*z.h+N)%N,ex=pt(ke,0);for(var l=E[ke]+2*f1Rib(ke,z)[1]+.4;l<=E[ke]+z.ow+.1;l+=1.6){var p=pt(ke,l);[0,1].forEach(function(row){addBrick(p[0],p[2]+.25+row*.5,p[1],ANG[ke]+Math.PI/2,WC[(Math.round(l)+row)%WC.length],row===1)})}});
     var mk=function(geo,list){var im=new T.InstancedMesh(geo,new T.MeshStandardMaterial({color:0xffffff,roughness:.32}),list.length),mm=new T.Matrix4(),q=new T.Quaternion(),one=new T.Vector3(1,1,1),c=new T.Color();
       list.forEach(function(e,i){q.setFromEuler(new T.Euler(0,e[3]||0,0));mm.compose(new T.Vector3(e[0],e[1],e[2]),q,one);im.setMatrixAt(i,mm);im.setColorAt(i,c.set(e[e.length-1]))});im.castShadow=im.receiveShadow=true;im.frustumCulled=false;G.add(im)};
     mk(new T.BoxGeometry(.8,.2,1.0),kerbs);mk(new T.BoxGeometry(.8,.5,1.58),bricks);mk(typeof studGeo!=='undefined'?studGeo:new T.CylinderGeometry(.16,.16,.12,10),studs.map(function(s2){return [s2[0],s2[1],s2[2],0,s2[3]]}))})();
@@ -6067,14 +6067,14 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     [[7,4.6,6,0],[6,3.4,5,4.6],[5,3,4,8],[3.8,2.6,3,11]].forEach(function(q,j){BX(tw,wallMat,q[0],q[1],q[2],0,q[3]+q[1]/2,0);BX(tw,glass,q[0]+.05,q[1]*.45,q[2]+.05,0,q[3]+q[1]*.6,0);BX(tw,dark,q[0]+1,.25,q[2]+1,0,q[3]+q[1],0)});
     [-1,1].forEach(function(sd){var fp=new T.Mesh(new T.CylinderGeometry(.06,.06,3,6),M_.steel);fp.position.set(sd*1.2,15.1,0);tw.add(fp);BX(tw,sd<0?bR:bB,1.1,.7,.04,sd*1.2+.55,16.2,0)});
     tw.position.set(P[kt].x+NX[kt]*lt,(H[kt]||0),P[kt].z+NZ[kt]*lt);tw.rotation.y=Math.atan2(NX[kt],NZ[kt]);G.add(tw);
-    var kp=(z.kc-z.h+z.e+m2(4)+N)%N,lpp=E[kp]+5.2,py=new T.Group(),pc=document.createElement('canvas');pc.width=64;pc.height=512;var g2=pc.getContext('2d');g2.fillStyle='#0b0c10';g2.fillRect(0,0,64,512);g2.font='900 46px Arial';g2.textAlign='center';for(var r=0;r<8;r++){g2.fillStyle=r<3?'#ffd23c':'#fff';g2.fillText(String((r*7+3)%12+1),32,52+r*62)}
+    var kp=(z.boxes[0].k-m2(z.sp/2+4)+N)%N,lpp=E[kp]+z.ow+1.5,py=new T.Group(),pc=document.createElement('canvas');pc.width=64;pc.height=512;var g2=pc.getContext('2d');g2.fillStyle='#0b0c10';g2.fillRect(0,0,64,512);g2.font='900 46px Arial';g2.textAlign='center';for(var r=0;r<8;r++){g2.fillStyle=r<3?'#ffd23c':'#fff';g2.fillText(String((r*7+3)%12+1),32,52+r*62)}
     BX(py,dark,1.4,12,1.4,0,6,0);var pf=new T.Mesh(new T.PlaneGeometry(1.2,11.4),new T.MeshBasicMaterial({map:new T.CanvasTexture(pc)}));pf.position.set(0,6.1,-.72);pf.rotation.y=Math.PI;py.add(pf);var pf2=pf.clone();pf2.position.z=.72;pf2.rotation.y=0;py.add(pf2);BX(py,bB,1.8,.5,1.8,0,12.25,0);
     py.position.set(P[kp].x+NX[kp]*lpp,(H[kp]||0),P[kp].z+NZ[kp]*lpp);py.rotation.y=ANG[kp];G.add(py)})();
   /* road signs, facing the cars that drive towards them */
   var plate=function(k,lat,w,h,draw){var tx=cvs(256,Math.round(256*h/w),draw),g=new T.Group(),po=new T.Mesh(new T.CylinderGeometry(.09,.09,2.2+h,8),SM(0xc9d0dc));po.position.y=(2.2+h)/2;g.add(po);
     var f=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tx,side:T.DoubleSide}));f.position.y=2.2+h/2;f.rotation.y=Math.PI;g.add(f);var base=new T.Mesh(new T.BoxGeometry(.8,.4,.8),bW);base.position.y=.2;g.add(base);put(g,k,lat,0);return g};
   var arrowSign=function(txt,bg){return function(c){c.fillStyle=bg;c.fillRect(0,0,256,64);c.strokeStyle='#fff';c.lineWidth=5;c.strokeRect(3,3,250,58);c.fillStyle='#fff';c.font='900 34px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,128,35)}};
-  var kIn=(z.kc-z.h+N)%N,kOut=(z.kc+z.h)%N;plate(kIn,E[kIn]+z.ow+.8,2.6,.65,arrowSign('← PIT IN','#e3322a'));plate((kOut-m2(6)+N)%N,E[kOut]+5.2,2.6,.65,arrowSign('PIT OUT →','#1fa83a'));
+  var kIn=(z.kc-z.h+N)%N,kOut=(z.kc+z.h)%N;plate(kIn,E[kIn]+z.ow+.8,2.6,.65,arrowSign('← PIT IN','#e3322a'));plate((kOut-m2(6)+N)%N,E[kOut]+2*f1Rib(kOut,z)[1]+1.4,2.6,.65,arrowSign('PIT OUT →','#1fa83a'));
   var kq=(z.kc-z.h+z.e-m2(2)+N)%N;plate(kq,E[kq]+z.rd1+1.2,1.3,1.3,function(c){c.fillStyle='#fff';c.fillRect(0,0,256,256);c.strokeStyle='#c9d0dc';c.lineWidth=8;c.strokeRect(4,4,248,248);c.lineWidth=26;c.strokeStyle='#e3322a';c.beginPath();c.arc(128,128,96,0,7);c.stroke();c.fillStyle='#111';c.font='900 100px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('40',128,136)});
   /* the BOX BOX gantry over the track before the pit entry: LED board with orange lamp blocks */
   var kG=(z.kc-z.h-m2(30)+N)%N,gc=document.createElement('canvas');gc.width=640;gc.height=128;var gtx=new T.CanvasTexture(gc),gm2=new T.MeshBasicMaterial({map:gtx,side:T.DoubleSide});
@@ -6172,7 +6172,7 @@ function f1Layout(on){if(!document.getElementById('f1LayCss')){var st=document.c
   document.body.classList.toggle('f1on',!!on)}
 
 /* centre + half width of the pit road ribbon at point k (narrow at the ends, full width along the boxes) */
-function f1Rib(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e),cf=(z.rd0+.6+z.rd1-.6)/2,hw=(z.rd1-z.rd0-1.2)/2;return [E[k]+.8+(cf-.8)*u,1.3+(hw-1.3)*u]}
+function f1Rib(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e),cf=(z.rd0+.6+z.rd1-.6)/2,hw=(z.rd1-z.rd0-1.2)/2;var c0=hw-.6;return [E[k]+c0+(cf-c0)*u,hw]}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
