@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795785839">
+<meta name="bs-build" content="1795786610">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5972,7 +5972,7 @@ function f1Tick(){if(!F1||!race.on||race.phase==='done'){f1Hud(false);f1Sign(0);
 /* ---- build the pit road: asphalt, entry/exit, divider + outer wall, coloured boxes, garages, signs ---- */
 function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(1,Math.round(x/DS))};if(!F1MATS)F1MATS=[];if(!F1WANT)F1WANT=[];F1NAMES=[];
   var n0=G.children.length,SM=function(c,o){var p={color:c,roughness:.42};for(var q in o)p[q]=o[q];return new T.MeshStandardMaterial(p)},
-    asp=new T.MeshStandardMaterial({map:f1AspTx(),roughness:.38,metalness:0,envMapIntensity:.8}),kR=new T.MeshStandardMaterial({color:0xe3322a,roughness:.4}),kB=new T.MeshStandardMaterial({color:0x1d4fd8,roughness:.4}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),bW=SM(0xeef1f6),bB=SM(0x1d4fd8),bR=SM(0xe3322a),dark=SM(0x101a33);
+    asp=new T.MeshStandardMaterial({map:f1AspTx(),roughness:.38,metalness:0,envMapIntensity:.8}),kR=new T.MeshStandardMaterial({color:0xe3322a,roughness:.4}),kB=new T.MeshStandardMaterial({color:0x1d4fd8,roughness:.4}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),bW=SM(0xeef1f6),bB=SM(0x1d4fd8),bR=SM(0xe3322a),dark=SM(0x101a33),concM=SM(0xf1f3f6,{roughness:.6}),grassM=SM(0x3c8f3a,{roughness:.9}),yel=new T.MeshBasicMaterial({color:0xffd23c});
   var put=function(m,k,lat,y,rotExtra){m.position.set(P[k].x+NX[k]*lat,(H[k]||0)+y,P[k].z+NZ[k]*lat);m.rotation.y=ANG[k]+(rotExtra||0);G.add(m);return m};
   var cvs=function(w,h,fn){var cv=document.createElement('canvas');cv.width=w;cv.height=h;fn(cv.getContext('2d'));var tx=new T.CanvasTexture(cv);return tx};
   /* shared textures: white brick wall + roll-up door slats */
@@ -5982,19 +5982,20 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   var stud=new T.CylinderGeometry(.17,.17,.14,10);
   /* asphalt, lines, the brick divider and (only on the ramps) the outer wall */
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
-    if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.2,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,.06)}
-    else{var wq=rl-E[k]+2.6,a2=new T.Mesh(new T.BoxGeometry(wq,.2,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,.06)}
-    if(core){var km=(Math.floor((d+z.h)/2)%2)?kR:kB;[[z.rd0+.3,.6],[z.rd1-.3,.6]].forEach(function(q){var kb=new T.Mesh(new T.BoxGeometry(q[1],.05,DS+.02),km);put(kb,k,E[k]+q[0],.18)});
+    if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.03,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,0)}
+    else{var wq=rl-E[k]+2.6,a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
+    if(core){var km=(Math.floor((d+z.h)/2)%2)?kR:kB;[[z.rd0+.3,.6],[z.rd1-.3,.6]].forEach(function(q){var kb=new T.Mesh(new T.BoxGeometry(q[1],.05,DS+.02),km);put(kb,k,E[k]+q[0],.02)});
       }
-    else if(d%2===0){var pr=f1Rib(k,z),km2=(Math.floor((d+z.h)/2)%2)?kR:kB;[pr[0]-pr[1]-.25,pr[0]+pr[1]+.25].forEach(function(o){if(o<E[k]+.7)return;var kb2=new T.Mesh(new T.BoxGeometry(.5,.05,DS*2+.02),km2);put(kb2,k,o,.18)})}
-    if(core&&(d+z.h)%3===0){var mm=[bB,bW,bR,bW][Math.floor((d+z.h)/3)%4],dv=new T.Mesh(new T.BoxGeometry(1.1,1,DS*3+.02),mm);put(dv,k,E[k]+5.2,.5);
-      [-.42,.42].forEach(function(o){var s=new T.Mesh(stud,mm);s.position.set(0,.57,o*DS*1.2);dv.add(s)})}
+    else if(d%2===0){var pr=f1Rib(k,z),km2=(Math.floor((d+z.h)/2)%2)?kR:kB;[pr[0]-pr[1]-.25,pr[0]+pr[1]+.25].forEach(function(o){if(o<E[k]+.7)return;var kb2=new T.Mesh(new T.BoxGeometry(.5,.05,DS*2+.02),km2);put(kb2,k,o,.02)})}
+    if(core){var gr=new T.Mesh(new T.BoxGeometry(3.3,.05,DS+.04),grassM);put(gr,k,E[k]+2.55,.01)}
+    if(core&&(d+z.h)%3===0){var dv=new T.Mesh(new T.BoxGeometry(.9,1.05,DS*3+.02),concM);put(dv,k,E[k]+5.2,.52);var cap=new T.Mesh(new T.CylinderGeometry(.45,.45,DS*3+.02,10,1,false,0,Math.PI),concM);cap.rotation.x=Math.PI/2;cap.rotation.z=Math.PI/2;cap.position.y=.52;dv.add(cap);
+      var stp=new T.Mesh(new T.BoxGeometry(.92,.22,DS*3+.03),(Math.floor((d+z.h)/3)%2)?bB:bR);stp.position.y=.12;dv.add(stp)}
     if(!core&&(d+z.h)%3===0){var ow=new T.Mesh(new T.BoxGeometry(.8,1.4,DS*3+.02),(Math.floor((d+z.h)/3)%2)?bB:bW);put(ow,k,E[k]+z.ow,.7)}}
   /* one garage per box: white brick front, coloured roll-up door, lamp, name board, blue/white brick roof trim */
   var wallMat=new T.MeshStandardMaterial({color:0xffffff,map:brickTx,roughness:.5});
   /* the pit road itself: a ribbon with the same asphalt + white lines as the race track, just narrower, following the lane in and out */
   (function(){var n=2*z.h+1,pos=new Float32Array(n*6),uv=new Float32Array(n*4),idx=[],acc=0,prev=null;
-    for(var i=0;i<n;i++){var d=i-z.h,k=(z.kc+d+N)%N,pr=f1Rib(k,z),c=pr[0],hw=pr[1],y=(H[k]||0)+.19,cx=P[k].x+NX[k]*c,cz=P[k].z+NZ[k]*c;if(prev)acc+=Math.hypot(cx-prev[0],cz-prev[1]);prev=[cx,cz];
+    for(var i=0;i<n;i++){var d=i-z.h,k=(z.kc+d+N)%N,pr=f1Rib(k,z),c=pr[0],hw=pr[1],y=(H[k]||0)+.022,cx=P[k].x+NX[k]*c,cz=P[k].z+NZ[k]*c;if(prev)acc+=Math.hypot(cx-prev[0],cz-prev[1]);prev=[cx,cz];
       pos.set([P[k].x+NX[k]*(c+hw),y,P[k].z+NZ[k]*(c+hw),P[k].x+NX[k]*(c-hw),y,P[k].z+NZ[k]*(c-hw)],i*6);uv.set([1,acc/12,0,acc/12],i*4);if(i<n-1){var a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}}
     var geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('uv',new T.BufferAttribute(uv,2));geo.setIndex(idx);geo.computeVertexNormals();
     if(geo.attributes.normal.getY(0)<0){geo.setIndex(idx.slice().reverse());geo.computeVertexNormals()}var rb=new T.Mesh(geo,(typeof M!=='undefined'&&M.road)||asp);rb.receiveShadow=true;G.add(rb)})();
@@ -6005,7 +6006,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   var BX=function(g,m,w,h,d,x,y,zz){var o=new T.Mesh(G_.box,m);o.scale.set(w,h,d);o.position.set(x,y,zz);g.add(o);return o};
   var crewMan=function(){var g=new T.Group();BX(g,M_.crewB,.5,.5,.3,0,.25,0);BX(g,M_.crewB,.62,.7,.38,0,.85,0);BX(g,M_.crewY,.66,.18,.4,0,1.05,0);var h=new T.Mesh(new T.CylinderGeometry(.22,.22,.34,12),M_.crewY);h.position.y=1.42;g.add(h);var v=BX(g,M_.black,.36,.12,.05,0,1.44,-.2);return g};
   z.boxes.forEach(function(b,i){var k=b.k,lat=E[k]+z.mid,mats=[],L=4.6,Wd=3.6,col=b.col,w=z.sp,H4=4.2,D=5;
-    [[0,L/2,Wd,.26],[0,-L/2,Wd,.26],[Wd/2,0,.26,L],[-Wd/2,0,.26,L]].forEach(function(q){var mt=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.1});mats.push(mt);var s=new T.Mesh(new T.BoxGeometry(q[2],.03,q[3]),mt);var g=new T.Group();g.add(s);s.position.set(q[0],0,q[1]);put(g,k,lat,.215)});
+    [[0,L/2,Wd,.26],[0,-L/2,Wd,.26],[Wd/2,0,.26,L],[-Wd/2,0,.26,L]].forEach(function(q){var mt=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.1});mats.push(mt);var s=new T.Mesh(new T.BoxGeometry(q[2],.03,q[3]),mt);var g=new T.Group();g.add(s);s.position.set(q[0],0,q[1]);put(g,k,lat,.04)});
     var back=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.12,roughness:.7});mats.push(back);
     var frame=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5,roughness:.4});mats.push(frame);
     var gar=new T.Group();
@@ -6026,8 +6027,33 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     var nc=document.createElement('canvas');nc.width=320;nc.height=96;var ntx=new T.CanvasTexture(nc);F1NAMES[i]={c:nc,tx:ntx};f1BoxName(i,'');
     var nb=new T.Mesh(new T.PlaneGeometry(w-.5,(w-.5)*.3),new T.MeshBasicMaterial({map:ntx}));nb.position.set(0,H4+.3,-.02);nb.rotation.y=Math.PI;gar.add(nb);
     /* a crew member waiting next to the box */
-    var cm=crewMan();cm.position.set(w/2-.9,.24,-1.4);cm.rotation.y=Math.PI*.85;gar.add(cm);
+    var cm=crewMan();cm.position.set(w/2-.9,.03,-1.4);cm.rotation.y=Math.PI*.85;gar.add(cm);
+    /* pit wall stand for this team (on the concrete wall across the lane) */
+    var canopy=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.3,roughness:.45});mats.push(canopy);var zw=-(z.ow-.5-5.2);
+    var ps=new T.Group();ps.position.set(0,0,zw);gar.add(ps);BX(ps,M_.steel,.1,1.9,.1,-.8,1.95,0);BX(ps,M_.steel,.1,1.9,.1,.8,1.95,0);BX(ps,M_.grey,2,.12,1.2,0,1.25,0);BX(ps,canopy,2.6,.12,1.6,0,2.9,0);
+    [-.5,.5].forEach(function(x){BX(ps,M_.black,.8,.5,.06,x,1.75,.32);BX(ps,M_.light,.7,.4,.02,x,1.75,.36)});
+    /* fuel rig + tyre sets + lollipop board */
+    var rig=new T.Mesh(new T.CylinderGeometry(.35,.4,1.7,12),M_.steel);rig.position.set(w/2-.75,.88,-.55);gar.add(rig);BX(gar,canopy,.74,.25,.74,w/2-.75,1.35,-.55);
+    var hose=new T.Mesh(new T.TorusGeometry(.45,.06,6,14,Math.PI),M_.black);hose.position.set(w/2-.75,1.6,-1);hose.rotation.y=Math.PI/2;gar.add(hose);
+    for(var ts=0;ts<2;ts++)for(var th=0;th<3;th++){var tt=new T.Mesh(G_.tyre,M_.tyre);tt.position.set(-(w/2-.75),.18+th*.31,-.55-ts*.95);gar.add(tt);var cv2=new T.Mesh(new T.CylinderGeometry(.43,.43,.08,14),canopy);cv2.position.set(-(w/2-.75),.34+th*.31,-.55-ts*.95);gar.add(cv2)}
+    var lp=new T.Group();lp.position.set(-w/2+.5,0,-(z.ow-.5-z.bl0)+.2);gar.add(lp);var lpo=new T.Mesh(new T.CylinderGeometry(.04,.04,2.2,6),M_.black);lpo.position.y=1.1;lp.add(lpo);
+    var lb2=new T.Mesh(new T.CylinderGeometry(.42,.42,.05,20),canopy);lb2.rotation.x=Math.PI/2;lb2.position.y=2.3;lp.add(lb2);
+    /* fans on the roof terrace */
+    BX(gar,M_.steel,w,.06,.06,0,H4+2,-.05);BX(gar,M_.steel,w,.05,.05,0,H4+1.6,-.05);
+    for(var f=0;f<4;f++){var fc=[0xe3322a,0x1d4fd8,0xffd23c,0x2ecc40,0xffffff,0xff7b00][(i*4+f)%6],fx=-w/2+.6+f*(w-1.2)/3;BX(gar,SM(fc),.42,.6,.32,fx,H4+1.45,.5+(f%2)*.5);BX(gar,M_.crewY,.3,.3,.3,fx,H4+1.95,.5+(f%2)*.5)}
     var gl=E[k]+z.ow-.5;gar.position.set(P[k].x+NX[k]*gl,(H[k]||0),P[k].z+NZ[k]*gl);gar.rotation.y=Math.atan2(NX[k],NZ[k]);G.add(gar);F1MATS[i]=mats;if(F1WANT[i]!=null)f1BoxColor(i,F1WANT[i])});
+  /* pit lane speed limit lines across the lane where the limit starts and ends */
+  [z.kc-(z.h-z.e),z.kc+(z.h-z.e)].forEach(function(kk){var k=(kk+N)%N;for(var q=0;q<8;q++){var sq=new T.Mesh(new T.BoxGeometry((z.rd1-z.rd0-1.2)/8,.02,.5),q%2?wl:SM(0x111111));put(sq,k,E[k]+z.rd0+.6+(q+.5)*(z.rd1-z.rd0-1.2)/8,.035)}});
+  /* yellow blend lines: the pit entry/exit lane edge painted on the main track */
+  for(var d3=-z.h-m2(22);d3<=z.h+m2(22);d3+=2){var dd3=Math.abs(d3);if(dd3<z.h-z.e)continue;var k3=(z.kc+d3+N)%N,o3=dd3>z.h?E[k3]-(dd3-z.h)*DS*.12:f1Rib(k3,z)[0]-f1Rib(k3,z)[1]-.6;if(o3<E[k3]-2.6)continue;var yl=new T.Mesh(new T.BoxGeometry(.2,.02,DS*2+.02),yel);put(yl,k3,o3,.03)}
+  /* control tower at the far end of the garages + scoring pylon at the start */
+  (function(){var kb=z.boxes[z.boxes.length-1].k,kt=(kb+m2(z.sp/2+5.5))%N,lt=E[kt]+z.ow+2.2,tw=new T.Group(),glass=new T.MeshStandardMaterial({color:0x7fd2ff,emissive:0x2aa8ff,emissiveIntensity:.6,roughness:.1});
+    [[7,4.6,6,0],[6,3.4,5,4.6],[5,3,4,8],[3.8,2.6,3,11]].forEach(function(q,j){BX(tw,wallMat,q[0],q[1],q[2],0,q[3]+q[1]/2,0);BX(tw,glass,q[0]+.05,q[1]*.45,q[2]+.05,0,q[3]+q[1]*.6,0);BX(tw,dark,q[0]+1,.25,q[2]+1,0,q[3]+q[1],0)});
+    [-1,1].forEach(function(sd){var fp=new T.Mesh(new T.CylinderGeometry(.06,.06,3,6),M_.steel);fp.position.set(sd*1.2,15.1,0);tw.add(fp);BX(tw,sd<0?bR:bB,1.1,.7,.04,sd*1.2+.55,16.2,0)});
+    tw.position.set(P[kt].x+NX[kt]*lt,(H[kt]||0),P[kt].z+NZ[kt]*lt);tw.rotation.y=Math.atan2(NX[kt],NZ[kt]);G.add(tw);
+    var kp=(z.kc-z.h+z.e+m2(4)+N)%N,lpp=E[kp]+5.2,py=new T.Group(),pc=document.createElement('canvas');pc.width=64;pc.height=512;var g2=pc.getContext('2d');g2.fillStyle='#0b0c10';g2.fillRect(0,0,64,512);g2.font='900 46px Arial';g2.textAlign='center';for(var r=0;r<8;r++){g2.fillStyle=r<3?'#ffd23c':'#fff';g2.fillText(String((r*7+3)%12+1),32,52+r*62)}
+    BX(py,dark,1.4,12,1.4,0,6,0);var pf=new T.Mesh(new T.PlaneGeometry(1.2,11.4),new T.MeshBasicMaterial({map:new T.CanvasTexture(pc)}));pf.position.set(0,6.1,-.72);pf.rotation.y=Math.PI;py.add(pf);var pf2=pf.clone();pf2.position.z=.72;pf2.rotation.y=0;py.add(pf2);BX(py,bB,1.8,.5,1.8,0,12.25,0);
+    py.position.set(P[kp].x+NX[kp]*lpp,(H[kp]||0),P[kp].z+NZ[kp]*lpp);py.rotation.y=ANG[kp];G.add(py)})();
   /* road signs, facing the cars that drive towards them */
   var plate=function(k,lat,w,h,draw){var tx=cvs(256,Math.round(256*h/w),draw),g=new T.Group(),po=new T.Mesh(new T.CylinderGeometry(.09,.09,2.2+h,8),SM(0xc9d0dc));po.position.y=(2.2+h)/2;g.add(po);
     var f=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tx,side:T.DoubleSide}));f.position.y=2.2+h/2;f.rotation.y=Math.PI;g.add(f);var base=new T.Mesh(new T.BoxGeometry(.8,.4,.8),bW);base.position.y=.2;g.add(base);put(g,k,lat,0);return g};
