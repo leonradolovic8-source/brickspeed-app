@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795786610">
+<meta name="bs-build" content="1795787629">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5984,13 +5984,11 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
     if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.03,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,0)}
     else{var wq=rl-E[k]+2.6,a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
-    if(core){var km=(Math.floor((d+z.h)/2)%2)?kR:kB;[[z.rd0+.3,.6],[z.rd1-.3,.6]].forEach(function(q){var kb=new T.Mesh(new T.BoxGeometry(q[1],.05,DS+.02),km);put(kb,k,E[k]+q[0],.02)});
+    {
       }
-    else if(d%2===0){var pr=f1Rib(k,z),km2=(Math.floor((d+z.h)/2)%2)?kR:kB;[pr[0]-pr[1]-.25,pr[0]+pr[1]+.25].forEach(function(o){if(o<E[k]+.7)return;var kb2=new T.Mesh(new T.BoxGeometry(.5,.05,DS*2+.02),km2);put(kb2,k,o,.02)})}
+    }
     if(core){var gr=new T.Mesh(new T.BoxGeometry(3.3,.05,DS+.04),grassM);put(gr,k,E[k]+2.55,.01)}
-    if(core&&(d+z.h)%3===0){var dv=new T.Mesh(new T.BoxGeometry(.9,1.05,DS*3+.02),concM);put(dv,k,E[k]+5.2,.52);var cap=new T.Mesh(new T.CylinderGeometry(.45,.45,DS*3+.02,10,1,false,0,Math.PI),concM);cap.rotation.x=Math.PI/2;cap.rotation.z=Math.PI/2;cap.position.y=.52;dv.add(cap);
-      var stp=new T.Mesh(new T.BoxGeometry(.92,.22,DS*3+.03),(Math.floor((d+z.h)/3)%2)?bB:bR);stp.position.y=.12;dv.add(stp)}
-    if(!core&&(d+z.h)%3===0){var ow=new T.Mesh(new T.BoxGeometry(.8,1.4,DS*3+.02),(Math.floor((d+z.h)/3)%2)?bB:bW);put(ow,k,E[k]+z.ow,.7)}}
+    /* (brick pit wall + kerbs are built below as instanced bricks, like the track's own) */
   /* one garage per box: white brick front, coloured roll-up door, lamp, name board, blue/white brick roof trim */
   var wallMat=new T.MeshStandardMaterial({color:0xffffff,map:brickTx,roughness:.5});
   /* the pit road itself: a ribbon with the same asphalt + white lines as the race track, just narrower, following the lane in and out */
@@ -5999,6 +5997,24 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
       pos.set([P[k].x+NX[k]*(c+hw),y,P[k].z+NZ[k]*(c+hw),P[k].x+NX[k]*(c-hw),y,P[k].z+NZ[k]*(c-hw)],i*6);uv.set([1,acc/12,0,acc/12],i*4);if(i<n-1){var a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}}
     var geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('uv',new T.BufferAttribute(uv,2));geo.setIndex(idx);geo.computeVertexNormals();
     if(geo.attributes.normal.getY(0)<0){geo.setIndex(idx.slice().reverse());geo.computeVertexNormals()}var rb=new T.Mesh(geo,(typeof M!=='undefined'&&M.road)||asp);rb.receiveShadow=true;G.add(rb)})();
+  /* REAL bricks: kerbs along both edges of the pit road and a two-row brick wall (same pieces as the race track) */
+  (function(){var MP=(typeof MAPS!=='undefined'&&MAPS[curMap])||{},CB=MP.curb||[0xe3322a,0xe8ecf3],WC=MP.walls||[0x1d4fd8,0x101a33,0x1d4fd8,0x101a33,0xe8ecf3,0x101a33];
+    var kerbs=[],bricks=[],studs=[],pt=function(k,lat){return [P[k].x+NX[k]*lat,P[k].z+NZ[k]*lat,H[k]||0]};
+    var addKerb=function(k0,k1,lat0,lat1,ci){var a=pt(k0,lat0),b=pt(k1,lat1),x=(a[0]+b[0])/2,zz=(a[1]+b[1])/2,an=Math.atan2(b[0]-a[0],b[1]-a[1]);kerbs.push([x,a[2]+.1,zz,an,CB[ci%2]]);
+      [-.2,.2].forEach(function(o){studs.push([x+Math.cos(an)*o,a[2]+.25,zz-Math.sin(an)*o,CB[ci%2]])})};
+    var addBrick=function(x,y,zz,an,c,top){bricks.push([x,y,zz,an,c]);if(top)for(var sx=-1;sx<=1;sx+=2)for(var sz=0;sz<4;sz++){var lz=-.6+sz*.4,lx=sx*.2;studs.push([x+Math.cos(an)*lx+Math.sin(an)*lz,y+.3,zz-Math.sin(an)*lx+Math.cos(an)*lz,c])}};
+    var st=Math.max(1,Math.round(1/DS)),ci=0;
+    for(var d=-z.h;d<z.h;d+=st){var k=(z.kc+d+N)%N,k1=(z.kc+d+st+N)%N,r0=f1Rib(k,z),r1=f1Rib(k1,z);ci++;
+      [[-1],[1]].forEach(function(q){var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(l0<E[k]+.7||l1<E[k1]+.7)return;addKerb(k,k1,l0,l1,ci)})}
+    /* the pit wall between the track and the pit road (along the core) and the outer wall on the entry/exit */
+    var b16=Math.max(1,Math.round(1.6/DS)),cc=0;
+    for(var d2=-z.h;d2<=z.h;d2+=b16){var k2=(z.kc+d2+N)%N,core=Math.abs(d2)<=z.h-z.e;cc++;
+      [0,1].forEach(function(row){var kk=(k2+(row?Math.round(.8/DS):0))%N,lat=core?E[kk]+5.2:E[kk]+z.ow,p=pt(kk,lat);addBrick(p[0],p[2]+.25+row*.5,p[1],ANG[kk],WC[(cc+row*3)%WC.length],row===1)})}
+    /* close the outer wall back onto the track wall at both ends of the pit zone */
+    [-1,1].forEach(function(sd){var ke=(z.kc+sd*z.h+N)%N,ex=pt(ke,0);for(var l=E[ke]+5.2;l<=E[ke]+z.ow+.1;l+=1.6){var p=pt(ke,l);[0,1].forEach(function(row){addBrick(p[0],p[2]+.25+row*.5,p[1],ANG[ke]+Math.PI/2,WC[(Math.round(l)+row)%WC.length],row===1)})}});
+    var mk=function(geo,list){var im=new T.InstancedMesh(geo,new T.MeshStandardMaterial({color:0xffffff,roughness:.32}),list.length),mm=new T.Matrix4(),q=new T.Quaternion(),one=new T.Vector3(1,1,1),c=new T.Color();
+      list.forEach(function(e,i){q.setFromEuler(new T.Euler(0,e[3]||0,0));mm.compose(new T.Vector3(e[0],e[1],e[2]),q,one);im.setMatrixAt(i,mm);im.setColorAt(i,c.set(e[e.length-1]))});im.castShadow=im.receiveShadow=true;im.frustumCulled=false;G.add(im)};
+    mk(new T.BoxGeometry(.8,.2,1.0),kerbs);mk(new T.BoxGeometry(.8,.5,1.58),bricks);mk(typeof studGeo!=='undefined'?studGeo:new T.CylinderGeometry(.16,.16,.12,10),studs.map(function(s2){return [s2[0],s2[1],s2[2],0,s2[3]]}))})();
   /* shared bits for the open garages */
   var G_={tyre:new T.CylinderGeometry(.42,.42,.3,16),rim:new T.CylinderGeometry(.2,.2,.32,10),box:new T.BoxGeometry(1,1,1)},
     M_={tyre:SM(0x15161a,{roughness:.8}),rim:SM(0xb9c0cc,{metalness:.6,roughness:.3}),floor:SM(0x7d8594,{roughness:.3}),grey:SM(0x6b7383),light:new T.MeshBasicMaterial({color:0xfffbe8}),
@@ -6030,7 +6046,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     var cm=crewMan();cm.position.set(w/2-.9,.03,-1.4);cm.rotation.y=Math.PI*.85;gar.add(cm);
     /* pit wall stand for this team (on the concrete wall across the lane) */
     var canopy=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.3,roughness:.45});mats.push(canopy);var zw=-(z.ow-.5-5.2);
-    var ps=new T.Group();ps.position.set(0,0,zw);gar.add(ps);BX(ps,M_.steel,.1,1.9,.1,-.8,1.95,0);BX(ps,M_.steel,.1,1.9,.1,.8,1.95,0);BX(ps,M_.grey,2,.12,1.2,0,1.25,0);BX(ps,canopy,2.6,.12,1.6,0,2.9,0);
+    var ps=new T.Group();ps.position.set(0,0,zw);gar.add(ps);var fpole=new T.Mesh(new T.CylinderGeometry(.04,.04,1.6,6),M_.steel);fpole.position.set(.9,2,.3);ps.add(fpole);BX(ps,canopy,.6,.4,.03,.6,2.6,.3);BX(ps,M_.grey,2,.12,1.2,0,1.25,0);BX(ps,canopy,2,.1,.08,0,1.32,-.6);
     [-.5,.5].forEach(function(x){BX(ps,M_.black,.8,.5,.06,x,1.75,.32);BX(ps,M_.light,.7,.4,.02,x,1.75,.36)});
     /* fuel rig + tyre sets + lollipop board */
     var rig=new T.Mesh(new T.CylinderGeometry(.35,.4,1.7,12),M_.steel);rig.position.set(w/2-.75,.88,-.55);gar.add(rig);BX(gar,canopy,.74,.25,.74,w/2-.75,1.35,-.55);
