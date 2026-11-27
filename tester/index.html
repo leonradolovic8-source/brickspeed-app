@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795790168">
+<meta name="bs-build" content="1795791029">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -1167,7 +1167,7 @@ function buildTrack(id){
   /* curbs + walls as instanced bricks along both edges */
   (function(){
     var F1ZC=null;try{F1ZC=curMap==='ring'?f1Zone():null}catch(e){}
-    var list=[];along(1,function(k){return E[k]+.4},function(x,z,a,k,side,c){if(BEAM[k]>.05)return;if(F1ZC&&side>0&&f1InZ(k,F1ZC)&&!f1Core(k,F1ZC))return;list.push([x,z,a,c%2===0,H[k]+side*(E[k]+.4)*SL[k],GR[k],SL[k]])});
+    var list=[];along(1,function(k){return E[k]+.4},function(x,z,a,k,side,c){if(BEAM[k]>.05)return;if(F1ZC&&side>0&&f1InZ(k,F1ZC)){var rr=f1Rib(k,F1ZC);if(rr[0]-rr[1]<E[k]+2.2)return}list.push([x,z,a,c%2===0,H[k]+side*(E[k]+.4)*SL[k],GR[k],SL[k]])});
     /* curbs on the fork island edges */
     if(forkK>=0)for(var fs=-forkHL;fs<=forkHL;fs+=2){var fk2=(forkK+fs+N)%N;if(ISL[fk2]<.7)continue;
       for(var sd=-1;sd<=1;sd+=2){var io=ISL[fk2]-.4;list.push([P[fk2].x+NX[fk2]*io*sd,P[fk2].z+NZ[fk2]*io*sd,ANG[fk2],(fs/2|0)%2===0,.1,0,0])}}
@@ -5984,7 +5984,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   /* asphalt, lines, the brick divider and (only on the ramps) the outer wall */
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
     if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.03,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,0)}
-    else{var wq=Math.max(rl-E[k]+2.6,f1Rib(k,z)[0]+f1Rib(k,z)[1]+.8-(-.2)),a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
+    else if(0){var wq=Math.max(rl-E[k]+2.6,f1Rib(k,z)[0]+f1Rib(k,z)[1]+.8-(-.2)),a2=new T.Mesh(new T.BoxGeometry(wq,.03,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,0)}
     {
       }
     }
@@ -6006,7 +6006,10 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     var addBrick=function(x,y,zz,an,c,top){bricks.push([x,y,zz,an,c]);if(top)for(var sx=-1;sx<=1;sx+=2)for(var sz=0;sz<4;sz++){var lz=-.6+sz*.4,lx=sx*.2;studs.push([x+Math.cos(an)*lx+Math.sin(an)*lz,y+.3,zz-Math.sin(an)*lx+Math.cos(an)*lz,c])}};
     var st=Math.max(1,Math.round(1/DS)),ci=0;
     for(var d=-z.h;d<z.h;d+=st){var k=(z.kc+d+N)%N,k1=(z.kc+d+st+N)%N,r0=f1Rib(k,z),r1=f1Rib(k1,z);ci++;
-      [[-1],[1]].forEach(function(q){if(q[0]<0&&Math.abs(d)>z.h-z.e-Math.round(8/DS))return;var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(l0<E[k]+1.2||l1<E[k1]+1.2)return;addKerb(k,k1,l0,l1,ci)})}
+      [[-1],[1]].forEach(function(q){var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(q[0]<0?(l0<E[k]+2.2||l1<E[k1]+2.2):(l0<E[k]+.6||l1<E[k1]+.6))return;addKerb(k,k1,l0,l1,ci)})}
+    var tips=[];for(var d4=-z.h;d4<z.h;d4++){var k4=(z.kc+d4+N)%N,r4=f1Rib(k4,z),gap=r4[0]-r4[1]-E[k4];if(gap>=2.2){var g4=new T.Mesh(new T.BoxGeometry(gap-1.4,.04,DS+.05),grassM);put(g4,k4,E[k4]+.7+(gap-1.4)/2,.015);if(!tips.length||tips[tips.length-1][1]!==d4-1)tips.push([d4,d4]);else tips[tips.length-1][1]=d4}}
+    tips.forEach(function(tp){[[tp[0],-1],[tp[1],1]].forEach(function(e){if(Math.abs(e[0])>=z.h-1)return;var k5=(z.kc+e[0]+N)%N,r5=f1Rib(k5,z),cl=(E[k5]+.4+r5[0]-r5[1]-.4)/2,rad=Math.max(.5,(r5[0]-r5[1]-.4-(E[k5]+.4))/2),c5=pt(k5,cl),fx=Math.sin(ANG[k5])*e[1],fz=Math.cos(ANG[k5])*e[1],sx=NX[k5],sz=NZ[k5];
+      for(var j=0;j<=6;j++){var th=-Math.PI/2+j*Math.PI/6,x=c5[0]+(fx*Math.cos(th)+sx*Math.sin(th))*rad,z5=c5[1]+(fz*Math.cos(th)+sz*Math.sin(th))*rad,an=Math.atan2(fx*-Math.sin(th)+sx*Math.cos(th),fz*-Math.sin(th)+sz*Math.cos(th));kerbs.push([x,c5[2]+.1,z5,an,CB[j%2]]);[-.2,.2].forEach(function(o){studs.push([x+Math.cos(an)*o,c5[2]+.25,z5-Math.sin(an)*o,CB[j%2]])})}})});
     /* the pit wall between the track and the pit road (along the core) and the outer wall on the entry/exit */
     var b16=Math.max(1,Math.round(1.6/DS)),cc=0;
     for(var d2=-z.h-Math.round(3/DS);d2<=z.h+Math.round(3/DS);d2+=b16){var k2=(z.kc+d2+N)%N,core=Math.abs(d2)<=z.h-z.e;cc++;if(core&&Math.abs(d2)>z.h-z.e-Math.round(8/DS))continue;
