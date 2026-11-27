@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795760800">
+<meta name="bs-build" content="1795761630">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -2297,7 +2297,7 @@ function sceneryAdd(){var m=MAPS[curMap];if(!m||m.arena||!trackGroup)return;
     place(tyre,spots(40,4,7,6),.9,1.1);
     scBackdrop(G,function(c,W,H){c.clearRect(0,0,W,H);for(var x=0;x<W;){var w=30+Math.random()*70,h=40+Math.random()*150;c.fillStyle='#0b1430';c.fillRect(x,H-h,w,h);
       for(var wy=H-h+8;wy<H-6;wy+=10)for(var wx=x+5;wx<x+w-6;wx+=9)if(Math.random()<.35){c.fillStyle=Math.random()<.5?'rgba(255,214,120,.9)':'rgba(140,190,255,.8)';c.fillRect(wx,wy,4,5)}x+=w+2+Math.random()*10}},62);
-    scParticles(G,160,1.4,0xbfd2ff,420,140,0,0,true)}
+    try{ringPlus(G,R,spots,place,cx,cz)}catch(e){console.warn('ringPlus',e)}scParticles(G,160,1.4,0xbfd2ff,420,140,0,0,true)}
   else if(curMap==='sunset'){ /* desert: red rock buttes, cacti, palms, a huge sun */
     place(scButte(R),spots(12,24,75,34),.8,1.4,0,true);place(scCactus(),spots(55,5,40,5),.8,1.3);place(scPalm(),spots(16,6,22,10),.9,1.2,0,true);
     place(scMerge([[new T.DodecahedronGeometry(1.2,0),0xb85a32,scM(0,.6,0,0,0,0,1,.7,1)]]),spots(60,4,60,3),.6,1.8);
@@ -5824,6 +5824,70 @@ function chronoCheck(lt,lapStart){if(race.mp||race.m2||race.mode!=='race'||curMa
   o.innerHTML='<style>@keyframes chIn{from{opacity:0}}@keyframes chSpin{to{transform:rotate(360deg)}}@keyframes chPop{0%{transform:scale(2.2);opacity:0}100%{transform:none;opacity:1}}</style><div style="text-align:center;animation:chPop .6s cubic-bezier(.2,1.4,.4,1) both"><div style="width:120px;height:120px;margin:0 auto 14px;border-radius:50%;border:8px solid #ffd23c;background:#1a0b3a;position:relative;box-shadow:0 0 50px #a46bff"><i style="position:absolute;left:50%;top:14px;width:6px;height:46px;margin-left:-3px;background:#ffd23c;border-radius:3px;transform-origin:50% 92%;animation:chSpin 1s linear infinite"></i></div><div style="font:900 italic clamp(30px,6vw,64px)/1 Impact,sans-serif;color:#ffd23c;-webkit-text-stroke:2px #1a0033;text-shadow:0 0 30px #a46bff">SECRET DRIVER UNLOCKED!</div><div style="margin-top:8px;font:900 italic clamp(40px,9vw,96px)/1 Impact,sans-serif;color:#fff;text-shadow:0 0 24px #a46bff,4px 4px 0 #5a2aa8">CHRONO</div><div style="margin-top:8px;font:800 16px system-ui;color:#e6d8ff">Lap '+lt.toFixed(2)+' s · SLOW TIME: the whole world at 1/4 speed</div></div>';
   document.body.appendChild(o);try{flash('rgba(164,107,255,.6)');navigator.vibrate&&navigator.vibrate([80,40,80,40,300])}catch(e){}setTimeout(function(){o.style.transition='opacity .6s';o.style.opacity='0';setTimeout(function(){o.remove()},700)},4200)}
 function chronoFx(d){var o=document.getElementById('chFx');if(!o){o=document.createElement('div');o.id='chFx';o.style.cssText='position:fixed;inset:0;z-index:66;pointer-events:none;background:radial-gradient(ellipse at center,rgba(164,107,255,0) 40%,rgba(90,42,168,.5));-webkit-backdrop-filter:saturate(.35) hue-rotate(-20deg);backdrop-filter:saturate(.35) hue-rotate(-20deg);transition:opacity .4s';document.body.appendChild(o)}o.style.opacity='1';clearTimeout(o.tm);o.tm=setTimeout(function(){o.style.opacity='0'},d*1000)}
+
+/* ===== BRICK RING extras: floodlight towers, start gantry with lights, pit garages, ad boards,
+   a jumbotron, a circling blimp, giant brick sculptures, flags and fireworks over the stadium ===== */
+function ringTex(w,h,fn){var cv=document.createElement('canvas');cv.width=w;cv.height=h;var c=cv.getContext('2d');fn(c,w,h);var t=new T.CanvasTexture(cv);if('colorSpace' in t)t.colorSpace=T.SRGBColorSpace;else t.encoding=T.sRGBEncoding;t.userData={cv:cv,c:c};return t}
+function ringNear(x,z){var b=0,bd=1e18;for(var i=0;i<N;i+=3){var d=(P[i].x-x)*(P[i].x-x)+(P[i].z-z)*(P[i].z-z);if(d<bd){bd=d;b=i}}return b}
+function ringPlus(G,R,spots,place,cx,cz){var M=function(c,o){o=o||{};var m=new T.MeshStandardMaterial({color:c,roughness:o.r==null?.6:o.r,metalness:o.m||0});if(o.e!=null){m.emissive=new T.Color(o.e);m.emissiveIntensity=o.ei||1}return m},
+    grey=M(0x8a93a6,{m:.5,r:.4}),dark=M(0x101a33),white=M(0xe8ecf3),lamp=M(0xffffff,{e:0xfff4d8,ei:2.4}),red=M(0x400000,{e:0xff2020,ei:.3}),anim={flags:[],lights:[],fw:[],t0:performance.now()};
+  /* floodlight towers that light the track */
+  var cone=new T.MeshBasicMaterial({color:0xfff2cc,transparent:true,opacity:.07,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide});
+  spots(10,12,22,30).forEach(function(s){var g=new T.Group(),k=ringNear(s[0],s[1]);
+    var pole=new T.Mesh(new T.CylinderGeometry(.35,.6,26,8),grey);pole.position.y=13;g.add(pole);
+    for(var i=0;i<6;i++){var r=new T.Mesh(new T.BoxGeometry(1.4,.12,.12),grey);r.position.set(0,4+i*3.8,0);g.add(r)}
+    var head=new T.Group();head.position.y=26.5;var fr=new T.Mesh(new T.BoxGeometry(6,3.4,.6),dark);head.add(fr);for(var a=0;a<3;a++)for(var b=0;b<2;b++){var l=new T.Mesh(new T.BoxGeometry(1.5,1.2,.2),lamp);l.position.set(-1.9+a*1.9,-.75+b*1.5,.35);head.add(l)}
+    var cn=new T.Mesh(new T.ConeGeometry(9,30,18,1,true),cone);cn.rotation.x=-Math.PI/2;cn.position.z=15;head.add(cn);head.rotation.x=.55;g.add(head);
+    g.position.set(s[0],0,s[1]);g.rotation.y=Math.atan2(P[k].x-s[0],P[k].z-s[1]);G.add(g)});
+  /* start / finish gantry: BRICK RING sign and five start lights */
+  var k0=0,nx=NX[k0],nz=NZ[k0],half=E[k0]+1.6,gn=new T.Group();
+  [-1,1].forEach(function(sd){var pl=new T.Mesh(new T.BoxGeometry(1,8,1),dark);pl.position.set(P[k0].x+nx*half*sd,4,P[k0].z+nz*half*sd);gn.add(pl);var st=new T.Mesh(new T.BoxGeometry(1.2,8,.12),white);st.position.copy(pl.position);st.position.y=4;gn.add(st)});
+  var bt=ringTex(1024,128,function(c,W,H){c.fillStyle='#101a33';c.fillRect(0,0,W,H);for(var i=0;i<32;i++){c.fillStyle=i%2?'#fff':'#111';c.fillRect(i*32,0,32,16);c.fillStyle=i%2?'#111':'#fff';c.fillRect(i*32,H-16,32,16)}c.fillStyle='#ffd23c';c.font='900 italic 74px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('BRICK RING',W/2,H/2+3)});
+  var beam=new T.Mesh(new T.BoxGeometry(2*half+1,1.8,.8),[dark,dark,dark,dark,new T.MeshBasicMaterial({map:bt}),new T.MeshBasicMaterial({map:bt})]);beam.position.set(P[k0].x,8.2,P[k0].z);beam.rotation.y=Math.atan2(nx,nz)+Math.PI/2;gn.add(beam);
+  for(var i=0;i<5;i++){var lt=new T.Mesh(new T.SphereGeometry(.35,10,8),red.clone());var off=(i-2)*1.2;lt.position.set(P[k0].x+nx*off,6.9,P[k0].z+nz*off);gn.add(lt);anim.lights.push(lt)}
+  G.add(gn);
+  /* pit garages along the first straight */
+  var st=scStraights(40);if(st.length){var pit=new T.Group(),cols=[0xe3322a,0x1d4fd8,0x2ecc40,0xffb020,0x7a5cff,0x00b4ff];
+    var body=new T.Mesh(new T.BoxGeometry(36,6,9),M(0xd8dde6));body.position.set(0,3,-4.5);pit.add(body);var roof=new T.Mesh(new T.BoxGeometry(37,.6,10),dark);roof.position.set(0,6.3,-4.5);pit.add(roof);
+    cols.forEach(function(c,i){var door=new T.Mesh(new T.BoxGeometry(5,4.2,.2),M(c,{e:c,ei:.15}));door.position.set(-15+i*6,2.2,.05);pit.add(door);var lt2=new T.Mesh(new T.BoxGeometry(4,.2,.3),lamp);lt2.position.set(-15+i*6,4.6,.2);pit.add(lt2)});
+    var pt=ringTex(512,96,function(c,W,H){c.fillStyle='#e3322a';c.fillRect(0,0,W,H);c.fillStyle='#fff';c.font='900 italic 62px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('PIT LANE',W/2,H/2+3)});
+    var ps=new T.Mesh(new T.PlaneGeometry(12,2.2),new T.MeshBasicMaterial({map:pt}));ps.position.set(0,7.8,.2);pit.add(ps);scBeside(G,pit,st[0],1,10)}
+  /* advertising boards hugging the walls */
+  var ads=[['BRICKSPEED','#1d4fd8','#fff'],['GO FAST!','#e3322a','#fff'],['STUD OIL','#ffd23c','#101a33'],['TURBO BRICKS','#2ecc40','#fff'],['NIGHT RACE','#101a33','#ffd23c'],['SNAP-ON TYRES','#7a5cff','#fff']].map(function(a){return scBanner(a[0],a[1],a[2])});
+  scStraights(14).slice(0,16).forEach(function(k,i){var b=new T.Mesh(new T.BoxGeometry(8,1.1,.25),[dark,dark,dark,dark,new T.MeshBasicMaterial({map:ads[i%ads.length]}),new T.MeshBasicMaterial({map:ads[(i+2)%ads.length]})]);b.position.y=.75;var g=new T.Group();g.add(b);scBeside(G,g,k,i%2?1:-1,2.2)});
+  /* jumbotron in the infield */
+  var jt=ringTex(512,288,function(){});var jg=new T.Group(),scr=new T.Mesh(new T.PlaneGeometry(16,9),new T.MeshBasicMaterial({map:jt,toneMapped:false}));scr.position.y=12;jg.add(scr);var bk=new T.Mesh(new T.BoxGeometry(17,10,.8),dark);bk.position.set(0,12,-.45);jg.add(bk);
+  [-6,6].forEach(function(x){var lg=new T.Mesh(new T.BoxGeometry(.8,8,.8),grey);lg.position.set(x,4,-.4);jg.add(lg)});
+  var js=spots(1,0,0,1)[0]||[cx,cz];jg.position.set(js[0]!=null?js[0]:cx,0,js[1]!=null?js[1]:cz);var kj=ringNear(jg.position.x,jg.position.z);jg.rotation.y=Math.atan2(P[kj].x-jg.position.x,P[kj].z-jg.position.z);G.add(jg);anim.jt=jt;
+  /* giant brick sculptures */
+  var brick=function(c){var parts=[[new T.BoxGeometry(4,2.4,2),c,scM(0,1.2,0)]];for(var a=0;a<4;a++)for(var b=0;b<2;b++)parts.push([new T.CylinderGeometry(.34,.34,.4,12),c,scM(-1.5+a,2.6,-.5+b)]);return scMerge(parts)};
+  [0xe3322a,0xffd23c,0x1d4fd8,0x2ecc40].forEach(function(c){place(brick(c),spots(3,14,50,12),1.2,2.2,0,true)});
+  /* flags on poles */
+  var fm=[0xe3322a,0x1d4fd8,0xffd23c,0xffffff];spots(14,4,9,10).forEach(function(s,i){var g=new T.Group(),p=new T.Mesh(new T.CylinderGeometry(.08,.08,7,6),grey);p.position.y=3.5;g.add(p);var f=new T.Mesh(new T.PlaneGeometry(2.4,1.4,8,1),new T.MeshStandardMaterial({color:fm[i%4],side:T.DoubleSide}));f.position.set(1.2,6.2,0);g.add(f);g.position.set(s[0],0,s[1]);g.rotation.y=R()*6.28;G.add(g);anim.flags.push({m:f,ph:R()*6,p0:f.geometry.attributes.position.array.slice()})});
+  /* blimp */
+  var bl=new T.Group(),bt2=ringTex(512,128,function(c,W,H){c.fillStyle='#e8ecf3';c.fillRect(0,0,W,H);c.fillStyle='#1d4fd8';c.font='900 italic 70px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('BRICKSPEED',W/2,H/2+4)});
+  var env=new T.Mesh(new T.SphereGeometry(4,24,16),M(0xe8ecf3,{r:.4}));env.scale.set(3.4,1,1);bl.add(env);[-1,1].forEach(function(sd){var lab=new T.Mesh(new T.PlaneGeometry(18,4.4),new T.MeshBasicMaterial({map:bt2,transparent:true}));lab.position.set(0,0,sd*4.05);lab.rotation.y=sd>0?0:Math.PI;bl.add(lab)});
+  var gon=new T.Mesh(new T.BoxGeometry(3,1.2,1.4),dark);gon.position.y=-4.4;bl.add(gon);[[0,1.6,0],[0,-1.6,0],[0,0,1.6],[0,0,-1.6]].forEach(function(q){var fn=new T.Mesh(new T.BoxGeometry(2.4,q[1]?2.2:.2,q[2]?2.2:.2),M(0xe3322a));fn.position.set(-12.6,q[1],q[2]);bl.add(fn)});
+  var blk=new T.Mesh(new T.SphereGeometry(.3,8,6),M(0xff2020,{e:0xff2020,ei:2}));blk.position.set(0,-5.2,0);bl.add(blk);G.add(bl);anim.bl=bl;anim.blk=blk;
+  /* fireworks */
+  var FWN=70,fwm=new T.PointsMaterial({size:1.6,vertexColors:true,transparent:true,depthWrite:false,blending:T.AdditiveBlending});
+  var burst=function(){var g=new T.BufferGeometry(),pos=new Float32Array(FWN*3),col=new Float32Array(FWN*3),v=[],c=new T.Color().setHSL(Math.random(),1,.6);for(var i=0;i<FWN;i++){var a=Math.random()*6.28,b=Math.acos(2*Math.random()-1),sp=10+Math.random()*6;v.push([Math.sin(b)*Math.cos(a)*sp,Math.cos(b)*sp,Math.sin(b)*Math.sin(a)*sp]);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+    g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('color',new T.BufferAttribute(col,3));var p=new T.Points(g,fwm.clone());var a2=Math.random()*6.28,r2=90+Math.random()*80;p.position.set(cx+Math.cos(a2)*r2,40+Math.random()*25,cz+Math.sin(a2)*r2);G.add(p);anim.fw.push({p:p,v:v,t:0})};
+  var last=performance.now(),nextFw=2;
+  (function tick(){if(!G.parent)return;var now=performance.now(),dt=Math.min(.1,(now-last)/1000),tt=(now-anim.t0)/1000;last=now;
+    /* start lights: red one by one, then all off (loop) */
+    var ph=tt%6;anim.lights.forEach(function(l,i){l.material.emissiveIntensity=ph<5&&ph>i*.8?2.6:.15});
+    anim.flags.forEach(function(f){var a=f.m.geometry.attributes.position.array;for(var i=0;i<a.length;i+=3){var x=f.p0[i];a[i+2]=Math.sin(tt*5+f.ph+x*2)*.22*(x+1.2)/2.4}f.m.geometry.attributes.position.needsUpdate=true});
+    var ba=tt*.05;anim.bl.position.set(cx+Math.cos(ba)*150,58+Math.sin(tt*.3)*2,cz+Math.sin(ba)*150);anim.bl.rotation.y=-ba;anim.blk.material.emissiveIntensity=Math.sin(tt*4)>0?2.5:.1;
+    if(!anim.jtT||tt-anim.jtT>.12){anim.jtT=tt;var c=anim.jt.userData.c,W=512,H=288;c.fillStyle='#061026';c.fillRect(0,0,W,H);c.strokeStyle='rgba(60,120,255,.25)';for(var y=0;y<H;y+=6){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
+      var mode=Math.floor(tt/5)%3;c.textAlign='center';c.textBaseline='middle';
+      if(mode===0){c.fillStyle='#ffd23c';c.font='900 italic 84px Arial';c.fillText('BRICK RING',W/2+Math.sin(tt*2)*8,H/2-20);c.fillStyle='#fff';c.font='800 30px Arial';c.fillText('NIGHT GRAND PRIX',W/2,H/2+50)}
+      else if(mode===1){c.fillStyle='#3dff8a';c.font='900 italic 64px Arial';c.fillText('BEAT 24.00 s',W/2,H/2-24);c.fillStyle='#be78ff';c.font='800 30px Arial';c.fillText('…SOMEONE IS WATCHING ⏱',W/2,H/2+44)}
+      else{var tx=W-((tt*160)%(W+700));c.fillStyle='#ff4fa3';c.font='900 italic 70px Arial';c.textAlign='left';c.fillText('GO GO GO!  BRICKSPEED!',tx,H/2)}
+      anim.jt.needsUpdate=true}
+    nextFw-=dt;if(nextFw<=0){nextFw=2.5+Math.random()*4;burst()}
+    anim.fw=anim.fw.filter(function(f){f.t+=dt;var a=f.p.geometry.attributes.position.array;for(var i=0;i<FWN;i++){a[i*3]=f.v[i][0]*f.t;a[i*3+1]=f.v[i][1]*f.t-4.9*f.t*f.t;a[i*3+2]=f.v[i][2]*f.t}f.p.geometry.attributes.position.needsUpdate=true;f.p.material.opacity=Math.max(0,1-f.t/2.2);if(f.t>2.2){G.remove(f.p);f.p.geometry.dispose();return false}return true});
+    requestAnimationFrame(tick)})()}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
