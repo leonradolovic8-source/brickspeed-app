@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795730156">
+<meta name="bs-build" content="1795760800">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -8772,6 +8772,7 @@ body.mapbg #bsl .bsl-app::before{content:"";position:fixed;inset:0;z-index:-1;po
 .bfinv .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:linear-gradient(90deg,#3dffb0,#00d4ff);transform-origin:left;animation:bfinvBar 5s linear forwards}
 @keyframes bfinvBar{to{transform:scaleX(0)}}
 
+#bslOnC{display:none!important}
 </style>
 <div id="bsBoot" aria-label="Loading BrickSpeed"><div class="bg"></div><div class="sh"></div>
  <div class="in"><div class="lg" id="bsBootLg"><span class="b">B</span><span class="t">BRICK<em>SPEED</em></span></div>
@@ -8813,7 +8814,7 @@ body.mapbg #bsl .bsl-app::before{content:"";position:fixed;inset:0;z-index:-1;po
    <span class="bsl-chip off" id="bslRoomChip"><span class="dot"></span><span id="bslRoomT">OFFLINE</span></span>
    <span class="bsl-sp"></span>
    <button class="bsl-cur bsl-onc" id="bslOnC" type="button" aria-label="Online coins"><i></i><span id="bslOnN">0</span><small>ONLINE</small></button>
-   <button class="bsl-cur" id="bslCoins" type="button" aria-label="Pad coins"><i></i><span id="bslCoinN">0</span><em id="bslCoinP"></em><small>PAD</small></button>
+   <button class="bsl-cur" id="bslCoins" type="button" aria-label="Coins"><i></i><span id="bslCoinN">0</span><em id="bslCoinP"></em><small>COINS</small></button>
    <button class="bsl-cur bsl-gift" id="bslInbox" type="button" hidden aria-label="Gift inbox">🎁<span id="bslInboxN">0</span></button>
    <span class="bsl-cur" id="bslGems" aria-label="Gems"><i class="g"></i><span id="bslGemN">0</span></span>
    <button class="bsl-chip" id="bslNameB" type="button" aria-label="Your name"><span class="bsl-ttl"><span id="bslNameT">PLAYER</span><em class="tt" id="bslTitleT">ROOKIE</em></span></button>
@@ -9392,6 +9393,7 @@ var ST_GLOW=[{id:'cyan',n:'CYAN',c:'#29e0ff',p:200},{id:'pink',n:'PINK',c:'#ff2f
 var ST_TRAIL=[{id:'sparks',n:'SPARKS',c:'#ffd27a',p:250},{id:'fire',n:'FIRE',c:'#ff5a1a',p:300},{id:'smoke',n:'DRIFT SMOKE',c:'#b8bcc4',p:200},{id:'rainbow',n:'RAINBOW',c:'linear-gradient(90deg,#f33,#fc0,#3f6,#29f,#c3f)',p:350}];
 function storeData(){var d=jget('bs-store')||{};d.up=d.up||{};d.own=d.own||{};return d}
 window.BSStore=function(){return storeData()};
+function coinsAll(){var w=0;try{w=wallet()}catch(e){}var p=PROF?PROF.t:0,n=$('bslCoinN');if(n)n.textContent=(p+w).toLocaleString();var b=$('bslCoins');if(b)b.title='Pad '+p.toLocaleString()+' + online '+w.toLocaleString();try{$('bslOnN').textContent=w.toLocaleString()}catch(e){}}
 function wallet(){var E=earn(),w=E.cur.t+(storeData().test||0);(E.gq||[]).forEach(function(b){w+=b.t});return w}
 function spend(n){var E=earn();if(wallet()<n)return false;var sd0=storeData();if(sd0.test){var tk0=Math.min(sd0.test,n);sd0.test-=tk0;n-=tk0;jset('bs-store',sd0)}if(!n){draw();return true}var take=Math.min(E.cur.t,n);E.cur.t-=take;n-=take;var q=E.gq||[];for(var i=q.length-1;i>=0&&n>0;i--){var tk=Math.min(q[i].t,n);q[i].t-=tk;n-=tk}E.gq=q.filter(function(b){return b.t>0||b.x>0});saveEarn(E);draw();return true}
 var ST_CHP={Base:500};function chPrice(c){return c.only?1200:(c.set==='Base'?500:800)}
@@ -9470,7 +9472,7 @@ function draw(){var c=cur(),o=gameOpts(),md=o.mode||'race',n=NETo();if(!c)return
  $('bslPlateN').textContent=c.name;$('bslPlateA').textContent=c.ab+' · '+(c.a2||'').toUpperCase();$('bslPlateLv').textContent='LV '+level(c.id);
  $('bslVMode').textContent=modeOf(md).n.toUpperCase()+' · '+(md==='tag'?(o.arena==='city'?'TAG CITY':'TAG FUNPARK'):md==='bomb'?'BOMB RANGE':md==='koth'?'SNOW PEAK':md==='potato'?'THE FIELD':md==='lava'?'LAVA FLOOR':md==='story'?'BRICK TOWN':mapName(o.map).toUpperCase()+(md==='race'?' · '+o.laps+' LAP'+(o.laps>1?'S':''):''))+(+o.teams&&md!=='race'&&md!=='battle'?' · TEAMS':'');try{var mt=$('bslTMode'),mp=mt.querySelector('.mpic');if(!mp){mp=document.createElement('span');mp.className='mpic';mt.insertBefore(mp,mt.firstChild)}var im=mImg(md);mp.style.setProperty('--mimg',im?'url('+im+')':'none')}catch(e){}
  var sp=PROF?PROF.sp:0;$('bslVPaint').textContent=sp?PAINTS[sp].n:'NO GLOW';$('bslPaintSw').style.setProperty('--pc',pc);
- var P=pending();$('bslCoinN').textContent=((PROF?PROF.t:0)).toLocaleString();try{$('bslOnN').textContent=wallet().toLocaleString()}catch(e){}$('bslCoinP').textContent=P.t?'+'+P.t:'';$('bslGemN').textContent=PROF?PROF.g:0;
+ var P=pending();coinsAll();$('bslCoinP').textContent='';$('bslGemN').textContent=PROF?PROF.g:0;
  $('bslVSync').textContent=!PROF?(P.t?P.t+' COINS SAVED ON THIS PHONE':'CONNECT YOUR PAD'):P.t||P.x?'+'+P.t+' COINS TO SEND':'ALL SENT ✓';
  $('bslNameT').textContent=myName();$('bslTitleT').textContent=TITLES[PROF?PROF.ti:0];$('bslStageName').textContent=myName();
  var chip=$('bslRoomChip'),pb=$('bslPlay');
@@ -9991,7 +9993,7 @@ function opOpen(mode){var o=opKeyGet(),act=!!(o&&OP_PUB&&o.pub===OP_PUB),el=docu
         function(){b.disabled=false;out.textContent='Could not sign. Is this the operator device?'})}});}
 /* open: 7 taps on the BRICKSPEED logo (operator), the 🎁 button or Settings → Gift code (inbox) */
 (function(){var n=0,t0=0;document.addEventListener('click',function(e){if(!e.target.closest)return;if(e.target.closest('#bslGift')||e.target.closest('#bslInbox')){opOpen('inbox');return}if(e.target.closest('#bslOpB')){opOpen();return}if(!e.target.closest('.bsl-logo'))return;var now=Date.now();if(now-t0>2500)n=0;t0=now;n++;if(n>=7){n=0;opOpen()}},true)})();
-setInterval(function(){try{var e=document.getElementById('bslOnN');if(e)e.textContent=wallet().toLocaleString()}catch(x){}},2000);
+setInterval(function(){try{coinsAll()}catch(x){}},2000);
 
 function osGo(sec){osShow();var n=0;(function f(){var b=document.querySelector('#osTabs button[data-s="'+sec+'"]');if(b){b.click();return}if(++n<20)setTimeout(f,100)})()}
 
@@ -10178,8 +10180,8 @@ function osCrazy(os,rr,done){var rg=$('osRig'),jm=$('osJmp'),n=0,steps=4+rr*3,li
   if(n<steps)setTimeout(step,Math.max(170,380-k*200));else setTimeout(function(){os.classList.remove('crazy');done()},260)})()}
 function osLidOff(){var rg=$('osRig');rg.classList.add('opened');rg.style.setProperty('--lid','122deg');var jm=$('osJmp');jm.classList.remove('hop','boom','jhop','jspin');void jm.offsetWidth;jm.classList.add('boom')}
 function osRoll(r){var A=window.OSA,d=storeData(),pool=A.CH.map(function(c,i){return i}).filter(function(i){return A.CH[i][2]==r&&!osOwnedIdx(i)&&i<12}),roll=Math.random(),icPool=OS_ICONS.filter(function(ic){return !(d.icons||{})[ic.id]&&ic.r<=r});
- if(pool.length&&roll<.55)return {k:'char',i:pool[(Math.random()*pool.length)|0],rr:r};
- if(icPool.length&&roll<.8){var ic=icPool[(Math.random()*icPool.length)|0];return {k:'icon',ic:ic,rr:Math.max(1,ic.r||1)}}
+ if(pool.length&&roll<.15)return {k:'char',i:pool[(Math.random()*pool.length)|0],rr:r};
+ if(icPool.length&&roll<.5){var ic=icPool[(Math.random()*icPool.length)|0];return {k:'icon',ic:ic,rr:Math.max(1,ic.r||1)}}
  return {k:'pp',rr:0}}
 /* teasers while you tap: a rarity guess (sometimes one step low, then "NO WAIT…"), then what kind of prize */
 function osPlan(p,need){var RN=['POWER','RARE','SUPER RARE','EPIC','LEGENDARY'],EM=['⚡','😏','😮','🤯','😱'],kind={char:'A CAR!?!🚗',icon:'AN ICON?!🖼️',pp:'POWER POINTS?!⚡'}[p.k],H=[],rnd=function(a,b){return a+Math.floor(Math.random()*(b-a+1))};
