@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795776760">
+<meta name="bs-build" content="1795778033">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5903,12 +5903,12 @@ function f1Zone(){var st=scStraights(40);if(!st.length)return null;var kc=st[0],
   while(f<N/3&&ok(kc+f+1))f++;while(b<N/3&&ok(kc-b-1))b++;kc=(kc+((f-b)>>1)+N)%N;var half=(f+b)/2*DS;
   var NB=12,SP=Math.max(5,Math.min(6.2,(half-5)*2/12));while(NB>6&&NB*SP/2+3>half-2)NB--;
   var core=NB*SP/2+3;
-  return {map:curMap,n:N,kc:kc,h:m(core+18),e:m(18),rd0:6.2,rd1:10.4,mid:8.3,ow:11.2,sp:SP,boxes:pal.slice(0,NB).map(function(col,i){return {k:(kc+Math.round((i-(NB-1)/2)*SP/DS)+N+N)%N,col:col}})}}
+  return {map:curMap,n:N,kc:kc,h:m(core+18),e:m(18),rd0:6.2,rd1:13.6,fl:7.9,bl0:9.6,mid:11.6,ow:14.4,sp:SP,boxes:pal.slice(0,NB).map(function(col,i){return {k:(kc+Math.round((i-(NB-1)/2)*SP/DS)+N+N)%N,col:col}})}}
 function f1D(k,z){return ((k-z.kc+N+N/2)%N)-N/2}
 function f1InZ(k,z){return Math.abs(f1D(k,z))<=z.h}
 function f1Core(k,z){return Math.abs(f1D(k,z))<=z.h-z.e}
 /* lateral offset of the pit road at point k: ramps from the track edge out to the road in the entry and exit parts */
-function f1RoadLat(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e);return E[k]+.8+(z.mid-.8)*u}
+function f1RoadLat(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e);return E[k]+.8+((z.fl||z.mid)-.8)*u}
 /* physics on the pit side: outer wall further out, and the divider between the track and the pit road */
 function f1Wall(c,k,lat){var z=F1Z;if(!z||curMap!=='ring'||!f1InZ(k,z)||lat<=0){c.f1lat=null;return 0}
   if(f1Core(k,z)){var a=E[k]+4.4,b=E[k]+z.rd0-.05,pl=c.f1lat==null?lat:c.f1lat;
@@ -5936,7 +5936,7 @@ function f1Car(c,dt,lat,k){if(!F1||!race.on)return;var z=F1.z;if(c.me)try{f1Tick
   var onR=race.phase==='go'&&f1OnRoad(k,lat);c.inPit=onR;
   if(onR&&c.v>8.5)c.v=8.5;
   if(c.pitUntil){if(t<c.pitUntil){c.v=0;if(c.fx)c.fx.stop=t+.1}else{c.pitUntil=0;c.tyreL=0;c.stops++;c.wantPit=false;if(c.me){toast3('PIT STOP DONE','Fresh tyres · stops '+c.stops+'/'+F1.req);try{comic('GO GO GO!','#3dff8a')}catch(e){}}f1Crew(c,false)}return}
-  var bx=z.boxes[c.box||0],db=f1D(k,z)-f1D(bx.k,z),inBox=onR&&f1Core(k,z)&&Math.abs(db)*DS<3.4&&lat>E[k]+z.rd0-.6;
+  var bx=z.boxes[c.box||0],db=f1D(k,z)-f1D(bx.k,z),inBox=onR&&f1Core(k,z)&&Math.abs(db)*DS<3.4&&lat>E[k]+(z.bl0||z.rd0)-.9;
   /* in your box: the car brakes by itself and parks in the middle of the outline */
   if(inBox&&!c.pitDone&&(c.me||c.wantPit)){c.v=Math.max(0,Math.abs(c.v)-26*dt)*(c.v<0?-1:1);if(c.fx&&Math.abs(c.v)<2.6)c.fx.stop=t+.15;var tl=E[k]+z.mid,pl=lat+(tl-lat)*Math.min(1,dt*4),dl=pl-lat;c.x+=NX[k]*dl;c.z+=NZ[k]*dl;if(Math.abs(c.v)<2.6)c.v=0}
   if(inBox&&Math.abs(c.v)<2.6&&!c.pitDone&&(c.me||c.wantPit)){c.pitDone=true;c.pitUntil=t+(c.me?F1.pt:4+Math.random()*.6);f1Crew(c,true);if(c.me)toast3('PIT STOP',F1.pt.toFixed(1)+' s · new tyres')}
@@ -5946,7 +5946,7 @@ function f1Car(c,dt,lat,k){if(!F1||!race.on)return;var z=F1.z;if(c.me)try{f1Tick
   if(!c.me&&!c.remote){var due=c.pitPlan&&c.pitPlan[c.stops]!=null&&(c.lap||0)>=c.pitPlan[c.stops]&&(c.lap||0)<=race.laps;c.wantPit=due;
     if(due&&onR&&f1Core(k,z)){var ahead=-db*DS;if(ahead>=-1)c.v=Math.min(c.v,Math.max(0,ahead*.9))}}}
 /* bots heading for the pit: aim for the pit road lane instead of the racing line */
-function f1BotLane(c,kL,want){if(!(c.wantPit||c.inPit)||!F1Z)return want;var z=F1Z,d=f1D(kL,z);if(c.wantPit&&d<-z.h&&d>-z.h-Math.round(90/DS))return E[kL]-1.2;if(d<-z.h||d>z.h)return want;return f1RoadLat(kL,z)}
+function f1BotLane(c,kL,want){if(!(c.wantPit||c.inPit)||!F1Z)return want;var z=F1Z,d=f1D(kL,z);if(c.wantPit&&d<-z.h&&d>-z.h-Math.round(90/DS))return E[kL]-1.2;if(d<-z.h||d>z.h)return want;if(c.wantPit&&!c.pitDone&&f1Core(kL,z)){var bx=z.boxes[c.box||0];if(Math.abs(d-f1D(bx.k,z))*DS<14)return E[kL]+z.mid}return f1RoadLat(kL,z)}
 /* the pit crew: four little helpers pop up around the car while it is in the box */
 function f1Crew(c,on){if(c.crew){c.crew.forEach(function(m){scene.remove(m)});c.crew=null}if(!on)return;var cols=[0xe3322a,0xffd23c,0x1d4fd8,0xe8ecf3];c.crew=[[-1.6,-1.2],[1.6,-1.2],[-1.6,1.2],[1.6,1.2]].map(function(q,i){var g=new T.Group(),b=new T.Mesh(new T.BoxGeometry(.6,.7,.36),new T.MeshStandardMaterial({color:cols[i]}));b.position.y=.75;g.add(b);var h=new T.Mesh(new T.CylinderGeometry(.2,.2,.32,10),new T.MeshStandardMaterial({color:0xffd23c}));h.position.y=1.28;g.add(h);var l=new T.Mesh(new T.BoxGeometry(.5,.45,.3),new T.MeshStandardMaterial({color:0x222833}));l.position.y=.22;g.add(l);
   var ca=Math.cos(c.a),sa=Math.sin(c.a);g.position.set(c.x+q[0]*ca+q[1]*sa,0,c.z-q[0]*sa+q[1]*ca);g.lookAt(c.x,0,c.z);scene.add(g);return g})}
@@ -5963,7 +5963,7 @@ function f1Tick(){if(!F1||!race.on||race.phase==='done'){f1Hud(false);f1Sign(0);
 /* ---- build the pit road: asphalt, entry/exit, divider + outer wall, coloured boxes, garages, signs ---- */
 function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(1,Math.round(x/DS))};if(!F1MATS)F1MATS=[];if(!F1WANT)F1WANT=[];F1NAMES=[];
   var n0=G.children.length,SM=function(c,o){var p={color:c,roughness:.42};for(var q in o)p[q]=o[q];return new T.MeshStandardMaterial(p)},
-    asp=new T.MeshStandardMaterial({map:f1AspTx(),roughness:.62,metalness:0,envMapIntensity:.55}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),bW=SM(0xeef1f6),bB=SM(0x1d4fd8),bR=SM(0xe3322a),dark=SM(0x101a33);
+    asp=new T.MeshStandardMaterial({map:f1AspTx(),roughness:.38,metalness:0,envMapIntensity:.8}),kR=new T.MeshStandardMaterial({color:0xe3322a,roughness:.4}),kB=new T.MeshStandardMaterial({color:0x1d4fd8,roughness:.4}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),bW=SM(0xeef1f6),bB=SM(0x1d4fd8),bR=SM(0xe3322a),dark=SM(0x101a33);
   var put=function(m,k,lat,y,rotExtra){m.position.set(P[k].x+NX[k]*lat,(H[k]||0)+y,P[k].z+NZ[k]*lat);m.rotation.y=ANG[k]+(rotExtra||0);G.add(m);return m};
   var cvs=function(w,h,fn){var cv=document.createElement('canvas');cv.width=w;cv.height=h;fn(cv.getContext('2d'));var tx=new T.CanvasTexture(cv);return tx};
   /* shared textures: white brick wall + roll-up door slats */
@@ -5975,7 +5975,9 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
     if(core){var a=new T.Mesh(new T.BoxGeometry(z.ow-.2,.2,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]-.2+(z.ow-.2)/2,.06)}
     else{var wq=rl-E[k]+2.6,a2=new T.Mesh(new T.BoxGeometry(wq,.2,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]-.2+wq/2,.06)}
-    if(core&&d%2===0){var l=new T.Mesh(new T.BoxGeometry(.18,.02,DS*.9),wl);put(l,k,E[k]+z.rd0-.1,.17)}
+    if(core){var km=(Math.floor((d+z.h)/2)%2)?kR:kB;[[z.rd0+.3,.6],[z.rd1-.3,.6]].forEach(function(q){var kb=new T.Mesh(new T.BoxGeometry(q[1],.05,DS+.02),km);put(kb,k,E[k]+q[0],.18)});
+      if((d+z.h)%6<3){var l=new T.Mesh(new T.BoxGeometry(.18,.02,DS+.02),wl);put(l,k,E[k]+z.bl0,.17)}}
+    else if(d%2===0){var rl2=f1RoadLat(k,z),km2=(Math.floor((d+z.h)/2)%2)?kR:kB;[rl2-1.9,rl2+1.9].forEach(function(o){if(o<E[k]+.7)return;var kb2=new T.Mesh(new T.BoxGeometry(.5,.05,DS*2+.02),km2);put(kb2,k,E[k]+0+(o-E[k]),.18)})}
     if(core&&(d+z.h)%3===0){var mm=[bB,bW,bR,bW][Math.floor((d+z.h)/3)%4],dv=new T.Mesh(new T.BoxGeometry(1.1,1,DS*3+.02),mm);put(dv,k,E[k]+5.2,.5);
       [-.42,.42].forEach(function(o){var s=new T.Mesh(stud,mm);s.position.set(0,.57,o*DS*1.2);dv.add(s)})}
     if(!core&&(d+z.h)%3===0){var ow=new T.Mesh(new T.BoxGeometry(.8,1.4,DS*3+.02),(Math.floor((d+z.h)/3)%2)?bB:bW);put(ow,k,E[k]+z.ow,.7)}}
@@ -6048,9 +6050,9 @@ function f1Sign(st,force){var S=F1SIGN;if(!S)return;var fl=st?Math.floor(t*3)%2:
 function f1NameOf(c){var n='';try{if(c.me)n=(window.BSMyTagName?window.BSMyTagName():'')||(localStorage.getItem('bs-mp-name')||'')||'YOU';else if(c.human)n=(c.d&&c.d.name)||'PLAYER';else n='BOT'}catch(e){n=c.me?'YOU':'BOT'}return String(n).split('#')[0]||'BOT'}
 
 /* the same asphalt as the race track (noise, no centre line) so the pit lane looks like part of the circuit */
-function f1AspTx(){if(f1AspTx.t)return f1AspTx.t;var cv=document.createElement('canvas');cv.width=cv.height=256;var g=cv.getContext('2d');g.fillStyle='#1a1d24';g.fillRect(0,0,256,256);
-  for(var i=0;i<7000;i++){var v=14+Math.floor(Math.random()*38);g.fillStyle='rgba('+v+','+(v+2)+','+(v+6)+','+(.25+Math.random()*.45)+')';g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*1.4,1+Math.random()*1.4)}
-  var tx=new T.CanvasTexture(cv);tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(3,.15);try{tx.colorSpace=T.SRGBColorSpace}catch(e){}f1AspTx.t=tx;return tx}
+function f1AspTx(){if(f1AspTx.t)return f1AspTx.t;var cv=document.createElement('canvas');cv.width=cv.height=128;var g=cv.getContext('2d');g.fillStyle='#262a32';g.fillRect(0,0,128,128);
+  for(var i=0;i<900;i++){var v=34+Math.floor(Math.random()*10);g.fillStyle='rgba('+v+','+(v+3)+','+(v+8)+',.35)';g.fillRect(Math.random()*128,Math.random()*128,1,1)}
+  var tx=new T.CanvasTexture(cv);tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.repeat.set(4,.2);try{tx.colorSpace=T.SRGBColorSpace}catch(e){}f1AspTx.t=tx;return tx}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
