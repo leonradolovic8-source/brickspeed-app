@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795782683">
+<meta name="bs-build" content="1795784282">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -2625,7 +2625,7 @@ function mainDrive(c,dt){
   var lat=nearest(c),k=c.k;
   if(BEAM[k]>.5&&!c.falling){var lk=Math.min(1,dt*8);c.x-=NX[k]*lat*lk;c.z-=NZ[k]*lat*lk;lat*=1-lk;c.a+=wrap(ANG[k]-c.a)*Math.min(1,dt*4)}
   var ab=Math.abs(lat),r=RAISE[k];
-  c.off=ab>E[k]+.8&&r<.5&&!f1Lane(c,k,lat);try{f1Car(c,dt,lat,k)}catch(e){}
+  c.off=ab>E[k]+.8&&r<.5&&!f1Lane(c,k,lat);try{f1Car(c,dt,lat,k)}catch(e){}try{wrongWay(c,dt,k)}catch(e){}
   var flying=c.flyUntil>t;
   if(!c.air&&!flying){if(c.off)c.v-=c.v*dt*.9;c.v=Math.max(0,c.v-GR[k]*9*dt)}               /* baseplate is slow; uphill slows, downhill pulls */
   var ns=null;
@@ -5823,7 +5823,7 @@ function botAbil(c,dt){if(!c.bch||!botRaceOn()||c.finished||c.left)return;
 /* ===== CHRONO: secret driver. Unlock = one clean lap of Brick Ring in 24.00 s or less (solo Race) ===== */
 var CHRONO_T=24;
 function chronoOwned(){try{var d=JSON.parse(localStorage.getItem('bs-store')||'{}');return !!(d.chars&&d.chars.chrono)}catch(e){return false}}
-function chronoCheck(lt,lapStart){if(race.mp||race.m2||race.mode!=='race'||curMap!=='ring')return;
+function chronoCheck(lt,lapStart){if(race.mp||race.m2||race.mode!=='race'||curMap!=='ring')return;if(lt<10)return;   /* impossible lap = something went wrong, never counts */
   if(race.dirtyT!=null&&race.dirtyT>=lapStart)return;
   if(lt>CHRONO_T){if(!chronoOwned()&&lt<CHRONO_T+3)toast3('SO CLOSE…','Lap '+lt.toFixed(2)+' s · a secret wakes up under '+CHRONO_T+' s');return}
   if(chronoOwned())return;
@@ -5832,6 +5832,10 @@ function chronoCheck(lt,lapStart){if(race.mp||race.m2||race.mode!=='race'||curMa
   o.innerHTML='<style>@keyframes chIn{from{opacity:0}}@keyframes chSpin{to{transform:rotate(360deg)}}@keyframes chPop{0%{transform:scale(2.2);opacity:0}100%{transform:none;opacity:1}}</style><div style="text-align:center;animation:chPop .6s cubic-bezier(.2,1.4,.4,1) both"><div style="width:120px;height:120px;margin:0 auto 14px;border-radius:50%;border:8px solid #ffd23c;background:#1a0b3a;position:relative;box-shadow:0 0 50px #a46bff"><i style="position:absolute;left:50%;top:14px;width:6px;height:46px;margin-left:-3px;background:#ffd23c;border-radius:3px;transform-origin:50% 92%;animation:chSpin 1s linear infinite"></i></div><div style="font:900 italic clamp(30px,6vw,64px)/1 Impact,sans-serif;color:#ffd23c;-webkit-text-stroke:2px #1a0033;text-shadow:0 0 30px #a46bff">SECRET DRIVER UNLOCKED!</div><div style="margin-top:8px;font:900 italic clamp(40px,9vw,96px)/1 Impact,sans-serif;color:#fff;text-shadow:0 0 24px #a46bff,4px 4px 0 #5a2aa8">CHRONO</div><div style="margin-top:8px;font:800 16px system-ui;color:#e6d8ff">Lap '+lt.toFixed(2)+' s · SLOW TIME: the whole world at 1/4 speed</div></div>';
   document.body.appendChild(o);try{flash('rgba(164,107,255,.6)');navigator.vibrate&&navigator.vibrate([80,40,80,40,300])}catch(e){}setTimeout(function(){o.style.transition='opacity .6s';o.style.opacity='0';setTimeout(function(){o.remove()},700)},4200)}
 function chronoFx(d){var o=document.getElementById('chFx');if(!o){o=document.createElement('div');o.id='chFx';o.style.cssText='position:fixed;inset:0;z-index:66;pointer-events:none;background:radial-gradient(ellipse at center,rgba(164,107,255,0) 40%,rgba(90,42,168,.5));-webkit-backdrop-filter:saturate(.35) hue-rotate(-20deg);backdrop-filter:saturate(.35) hue-rotate(-20deg);transition:opacity .4s';document.body.appendChild(o)}o.style.opacity='1';clearTimeout(o.tm);o.tm=setTimeout(function(){o.style.opacity='0'},d*1000)}
+
+/* no driving the wrong way in races: moving backwards along the track is capped at walking pace */
+function wrongWay(c,dt,k){if(!race.on||race.phase!=='go'||ARENA||race.m2||c.remote)return;var fw=c.v*Math.cos(c.a-ANG[k]);
+  if(fw<-1){var cap=3.5;if(Math.abs(c.v)>cap)c.v=cap*(c.v<0?-1:1);if(c.me){c.wwT=(c.wwT||0)+dt;if(c.wwT>.8&&!(c.wwMsg>t)){c.wwMsg=t+2.5;try{comic('WRONG WAY!','#ff3b3b')}catch(e){}}}}else if(c.me)c.wwT=0}
 
 /* ===== BRICK RING extras: floodlight towers, start gantry with lights, pit garages, ad boards,
    a jumbotron, a circling blimp, giant brick sculptures, flags and fireworks over the stadium ===== */
@@ -5955,7 +5959,7 @@ function f1BotLane(c,kL,want){if(!(c.wantPit||c.inPit)||!F1Z)return want;var z=F
 function f1Crew(c,on){if(c.crew){c.crew.forEach(function(m){scene.remove(m)});c.crew=null}if(!on)return;var cols=[0xe3322a,0xffd23c,0x1d4fd8,0xe8ecf3];c.crew=[[-1.6,-1.2],[1.6,-1.2],[-1.6,1.2],[1.6,1.2]].map(function(q,i){var g=new T.Group(),b=new T.Mesh(new T.BoxGeometry(.6,.7,.36),new T.MeshStandardMaterial({color:cols[i]}));b.position.y=.75;g.add(b);var h=new T.Mesh(new T.CylinderGeometry(.2,.2,.32,10),new T.MeshStandardMaterial({color:0xffd23c}));h.position.y=1.28;g.add(h);var l=new T.Mesh(new T.BoxGeometry(.5,.45,.3),new T.MeshStandardMaterial({color:0x222833}));l.position.y=.22;g.add(l);
   var ca=Math.cos(c.a),sa=Math.sin(c.a);g.position.set(c.x+q[0]*ca+q[1]*sa,0,c.z-q[0]*sa+q[1]*ca);g.lookAt(c.x,0,c.z);scene.add(g);return g})}
 function f1Finish(c){if(!F1)return;var miss=Math.max(0,F1.req-(c.stops||0));if(miss){c.time+=miss*25;c.pen=miss*25;if(c.me)toast3('PENALTY +'+miss*25+' s','You skipped '+miss+' required pit stop'+(miss>1?'s':''))}race.finish.sort(function(a,b){return a.time-b.time})}
-function f1Hud(on){var h=document.getElementById('f1Hud');if(!on){if(h)h.remove();var g0=document.getElementById('f1Gauge');if(g0)g0.remove();try{f1PitEnd(true)}catch(e){}return}if(!h){h=document.createElement('div');h.id='f1Hud';h.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(max(10px,env(safe-area-inset-top)) + 96px);z-index:72;pointer-events:none;font:800 13px system-ui;letter-spacing:.06em;color:#fff;background:rgba(10,14,30,.72);border:2px solid rgba(255,255,255,.25);border-radius:12px;padding:6px 12px;text-align:center;white-space:nowrap';document.body.appendChild(h)}}
+function f1Hud(on){f1Layout(on);var h=document.getElementById('f1Hud');if(!on){if(h)h.remove();var g0=document.getElementById('f1Gauge');if(g0)g0.remove();try{f1PitEnd(true)}catch(e){}return}if(!h){h=document.createElement('div');h.id='f1Hud';h.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(max(10px,env(safe-area-inset-top)) + 96px);z-index:72;pointer-events:none;font:800 13px system-ui;letter-spacing:.06em;color:#fff;background:rgba(10,14,30,.72);border:2px solid rgba(255,255,255,.25);border-radius:12px;padding:6px 12px;text-align:center;white-space:nowrap';document.body.appendChild(h)}}
 function f1Tick(){if(!F1||!race.on||race.phase==='done'){f1Hud(false);f1Sign(0);return}f1Hud(true);var h=document.getElementById('f1Hud');if(!h)return;var tyre=Math.round(f1Wear(me)*100),tc=tyre>55?'#3dff8a':tyre>25?'#ffd23c':'#ff4b4b',st=me.stops||0,bc='#'+new T.Color(F1Z.boxes[me.box||0].col).getHexString();
   try{f1Gauge(tyre)}catch(e){console.warn('f1Gauge',e.message)}var txt='PIT STOPS <b style="color:'+(st>=F1.req?'#3dff8a':'#ffd23c')+'">'+st+'/'+F1.req+'</b> · YOUR BOX <b style="color:'+bc+'">■</b>';
   var cl=f1Call(me),fl=Math.floor(t*3)%2;f1Sign(cl);if(cl===3&&me.f1cl!==3){toast3('📢 PIT NEXT LAP','One more lap, then box · stop in your coloured box');me.f1cl=3}
@@ -6060,7 +6064,7 @@ function f1AspTx(){if(f1AspTx.t)return f1AspTx.t;var cv=document.createElement('
 
 /* ===== durability gauge (top right): tyre life as a red-blue-green dial ===== */
 function f1Gauge(p){var g=document.getElementById('f1Gauge');if(!g){g=document.createElement('div');g.id='f1Gauge';
-  g.style.cssText='position:fixed;right:max(16px,env(safe-area-inset-right));top:calc(max(10px,env(safe-area-inset-top)) + 104px);z-index:72;pointer-events:none;width:132px;padding:8px 10px 7px;background:rgba(10,14,30,.74);border:2px solid rgba(255,255,255,.22);border-radius:14px;text-align:center;font:800 11px system-ui;letter-spacing:.1em;color:#cfd8ee';
+  g.style.cssText='position:fixed;right:max(16px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));z-index:72;pointer-events:none;width:132px;padding:8px 10px 7px;background:rgba(10,14,30,.74);border:2px solid rgba(255,255,255,.22);border-radius:14px;text-align:center;font:800 11px system-ui;letter-spacing:.1em;color:#cfd8ee';
   g.innerHTML='<svg viewBox="0 0 120 68" width="112" height="64"><path d="M12 60 A48 48 0 0 1 34 19.6" stroke="#ff3b30" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M41 15.4 A48 48 0 0 1 79 15.4" stroke="#2f6bff" stroke-width="11" fill="none"/><path d="M86 19.6 A48 48 0 0 1 108 60" stroke="#2ecc71" stroke-width="11" fill="none" stroke-linecap="round"/><g id="f1Ndl"><line x1="60" y1="60" x2="60" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/></g><circle cx="60" cy="60" r="6" fill="#fff"/></svg><div id="f1GV" style="font:900 20px system-ui;color:#fff;letter-spacing:0;margin-top:-4px"></div><div>DURABILITY</div><div id="f1Up" style="margin-top:4px;font:800 10px system-ui;letter-spacing:.04em;color:#ffd23c"></div>';document.body.appendChild(g)}
   var n=document.getElementById('f1Ndl');if(n)n.setAttribute('transform','rotate('+(-90+180*p/100)+' 60 60)');var v=document.getElementById('f1GV');if(v){v.textContent=p+'%';v.style.color=p>55?'#3dff8a':p>25?'#ffd23c':'#ff4b4b'}
   var u=document.getElementById('f1Up');if(u){var a=[];if(me.f1eng)a.push('⚙️'+me.f1eng);if(me.f1grip)a.push('🛞'+me.f1grip);if(me.f1boost)a.push('🔥'+me.f1boost);u.textContent=a.join('  ')}}
@@ -6081,15 +6085,15 @@ function f1PitStart(until){f1PitEnd(true);var o=document.createElement('div');o.
   [].forEach.call(o.querySelectorAll('button[data-u]'),function(b){b.onclick=function(e){e.stopPropagation();F1PIT.sel=b.getAttribute('data-u');document.getElementById('f1PitPick').style.display='none';document.getElementById('f1PitGame').style.display='block';f1PitNew();f1PitDraw()}});
   var cv=document.getElementById('f1PitCv'),pt=function(e){var r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]};
   ['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ev){o.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation()},{passive:false})});
-  cv.addEventListener('pointerdown',function(e){var P2=F1PIT&&F1PIT.path;if(!P2)return;var b=f1PitAt(F1PIT.s),q=pt(e);if(Math.hypot(q[0]-b[0],q[1]-b[1])<46){F1PIT.drag=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}}});
-  cv.addEventListener('pointermove',function(e){if(!F1PIT||!F1PIT.drag)return;var q=pt(e),pr=f1PitProj(q);if(pr[1]>34){F1PIT.drag=false;F1PIT.s=0;F1PIT.miss=t;f1PitDraw();return}
-    if(pr[0]>F1PIT.s-40&&pr[0]<F1PIT.s+70)F1PIT.s=Math.max(F1PIT.s,pr[0]);if(F1PIT.s>=F1PIT.path.L-8){F1PIT.done++;F1PIT.drag=false;try{vib&&vib(25)}catch(x){}try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}document.getElementById('f1PitN').textContent=F1PIT.done;F1PIT.flash=t;f1PitNew()}f1PitDraw()});
+  cv.addEventListener('pointerdown',function(e){var P2=F1PIT&&F1PIT.path;if(!P2)return;var b=f1PitAt(F1PIT.s),q=pt(e);if(Math.hypot(q[0]-b[0],q[1]-b[1])<80){F1PIT.drag=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}}});
+  cv.addEventListener('pointermove',function(e){if(!F1PIT||!F1PIT.drag)return;var q=pt(e),pr=f1PitProj(q);if(pr[1]>58){F1PIT.drag=false;F1PIT.s=0;F1PIT.miss=t;f1PitDraw();return}
+    if(pr[0]>F1PIT.s-60&&pr[0]<F1PIT.s+110)F1PIT.s=Math.max(F1PIT.s,pr[0]);if(F1PIT.s>=F1PIT.path.L-16){F1PIT.done++;F1PIT.drag=false;try{vib&&vib(25)}catch(x){}try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}document.getElementById('f1PitN').textContent=F1PIT.done;F1PIT.flash=t;f1PitNew()}f1PitDraw()});
   cv.addEventListener('pointerup',function(){if(F1PIT)F1PIT.drag=false})}
 /* a new trail: straight, slope, zigzag or wave (the ball starts at one end) */
 function f1PitNew(){var W=520,H=280,ty=(F1PIT.done+((Math.random()*4)|0))%4,p=[];
   if(ty===0)p=[[440,140],[80,140]];
   else if(ty===1)p=[[420,60],[300,110],[200,170],[90,240]];
-  else if(ty===2)p=[[440,50],[90,50],[420,140],[110,140],[430,230],[100,230]];
+  else if(ty===2)p=[[440,55],[90,55],[420,140],[110,140],[430,225],[100,225]];
   else for(var i=0;i<=24;i++)p.push([450-i*15,140+Math.sin(i/24*Math.PI*3)*80]);
   if(Math.random()<.5)p=p.map(function(q){return [W-q[0],q[1]]});
   var seg=[],L=0;for(var j=1;j<p.length;j++){var l=Math.hypot(p[j][0]-p[j-1][0],p[j][1]-p[j-1][1]);seg.push(l);L+=l}F1PIT.path={p:p,seg:seg,L:L};F1PIT.s=0}
@@ -6097,13 +6101,13 @@ function f1PitAt(s){var P2=F1PIT.path,p=P2.p;for(var j=0;j<P2.seg.length;j++){if
 function f1PitProj(q){var P2=F1PIT.path,p=P2.p,best=[0,1e9],acc=0;for(var j=0;j<P2.seg.length;j++){var ax=p[j][0],ay=p[j][1],bx=p[j+1][0]-ax,by=p[j+1][1]-ay,l2=bx*bx+by*by||1,u=Math.max(0,Math.min(1,((q[0]-ax)*bx+(q[1]-ay)*by)/l2)),d=Math.hypot(ax+bx*u-q[0],ay+by*u-q[1]);
     if(d<best[1]||(Math.abs(d-best[1])<6&&Math.abs(acc+u*P2.seg[j]-F1PIT.s)<Math.abs(best[0]-F1PIT.s)))best=[acc+u*P2.seg[j],d];acc+=P2.seg[j]}return best}
 function f1PitDraw(){var cv=document.getElementById('f1PitCv');if(!cv||!F1PIT||!F1PIT.path)return;var c=cv.getContext('2d'),p=F1PIT.path.p;c.clearRect(0,0,cv.width,cv.height);
-  c.lineCap=c.lineJoin='round';c.strokeStyle='#2a3560';c.lineWidth=34;c.beginPath();p.forEach(function(q,i){i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke();
+  c.lineCap=c.lineJoin='round';c.strokeStyle='#2a3560';c.lineWidth=64;c.beginPath();p.forEach(function(q,i){i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke();
   c.setLineDash([4,14]);c.strokeStyle='#8fa6e0';c.lineWidth=4;c.stroke();c.setLineDash([]);
   /* finished part */
-  var s=F1PIT.s,acc=0;c.strokeStyle='#3dff8a';c.lineWidth=12;c.beginPath();c.moveTo(p[0][0],p[0][1]);for(var j=0;j<F1PIT.path.seg.length;j++){var l=F1PIT.path.seg[j];if(acc+l<=s){c.lineTo(p[j+1][0],p[j+1][1]);acc+=l}else{var u=(s-acc)/l;c.lineTo(p[j][0]+(p[j+1][0]-p[j][0])*u,p[j][1]+(p[j+1][1]-p[j][1])*u);break}}c.stroke();
-  var e=p[p.length-1];c.fillStyle='#ffd23c';c.beginPath();c.arc(e[0],e[1],14,0,7);c.fill();c.fillStyle='#111';c.font='900 14px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('🏁',e[0],e[1]+1);
-  var b=f1PitAt(s);c.fillStyle=F1PIT.drag?'#3dff8a':'#fff';c.strokeStyle='#0b0f1e';c.lineWidth=4;c.beginPath();c.arc(b[0],b[1],22,0,7);c.fill();c.stroke();
-  if(!F1PIT.drag&&s<1){c.fillStyle='rgba(255,255,255,.85)';c.font='800 13px system-ui';c.fillText('HOLD & DRAG',b[0],b[1]-36)}
+  var s=F1PIT.s,acc=0;c.strokeStyle='#3dff8a';c.lineWidth=22;c.beginPath();c.moveTo(p[0][0],p[0][1]);for(var j=0;j<F1PIT.path.seg.length;j++){var l=F1PIT.path.seg[j];if(acc+l<=s){c.lineTo(p[j+1][0],p[j+1][1]);acc+=l}else{var u=(s-acc)/l;c.lineTo(p[j][0]+(p[j+1][0]-p[j][0])*u,p[j][1]+(p[j+1][1]-p[j][1])*u);break}}c.stroke();
+  var e=p[p.length-1];c.fillStyle='#ffd23c';c.beginPath();c.arc(e[0],e[1],22,0,7);c.fill();c.fillStyle='#111';c.font='900 14px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('🏁',e[0],e[1]+1);
+  var b=f1PitAt(s);c.fillStyle=F1PIT.drag?'#3dff8a':'#fff';c.strokeStyle='#0b0f1e';c.lineWidth=4;c.beginPath();c.arc(b[0],b[1],34,0,7);c.fill();c.stroke();
+  if(!F1PIT.drag&&s<1){c.fillStyle='rgba(255,255,255,.85)';c.font='800 13px system-ui';c.fillText('HOLD & DRAG',b[0],b[1]-48)}
   if(F1PIT.miss&&t-F1PIT.miss<.6){c.fillStyle='#ff4b4b';c.font='900 20px system-ui';c.fillText('OFF THE TRAIL!',cv.width/2,24)}}
 /* called every frame from the HUD while the stop is running */
 function f1PitTick(){if(!F1PIT)return;var left=Math.max(0,F1PIT.until-t),tt=document.getElementById('f1PitT'),bar=document.getElementById('f1PitBar');if(tt)tt.textContent=left.toFixed(1)+' s';if(bar)bar.style.width=(100*left/Math.max(.1,F1.pt))+'%';if(F1PIT.miss)f1PitDraw()}
@@ -6112,6 +6116,11 @@ function f1PitEnd(silent){var o=document.getElementById('f1Pit');if(o)o.remove()
   var lv=Math.min(4,P2.done),u=F1UPG.filter(function(x){return x.id===P2.sel})[0];me['f1'+P2.sel]=Math.max(me['f1'+P2.sel]||0,lv);
   if(P2.sel==='boost'&&lv>0){try{tank=1;tankLock=false}catch(e){}}
   toast3(lv?u.i+' '+u.n+' LV '+lv+(lv>=4?' · MAX!':''):'NO UPGRADE',lv?P2.done+' task'+(P2.done>1?'s':'')+' done · '+u.d:'Trace a trail before the timer runs out');try{if(lv>=4)comic('MAX POWER!','#ffd23c')}catch(e){}}
+
+/* REAL RACE layout: durability dial takes the top-right corner, the lap timer moves to the bottom left */
+function f1Layout(on){if(!document.getElementById('f1LayCss')){var st=document.createElement('style');st.id='f1LayCss';
+  st.textContent='body.f1on .lapbox{position:fixed!important;left:max(14px,env(safe-area-inset-left))!important;right:auto!important;top:auto!important;bottom:max(12px,env(safe-area-inset-bottom))!important;transform:scale(.78);transform-origin:bottom left;z-index:71;margin:0!important}';document.head.appendChild(st)}
+  document.body.classList.toggle('f1on',!!on)}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
@@ -6476,7 +6485,7 @@ function raceUpdate(dt){
         if(me.lap<=race.laps){flashEl.textContent='Lap '+me.lap+'/'+race.laps+' · '+fmt(lt);flashEl.classList.remove('on');void flashEl.offsetWidth;flashEl.classList.add('on')}}
       race.lapT=t;
     }
-    race.myLap=me.lap;
+    race.myLap=Math.max(race.myLap,me.lap);   /* going back over the line and forward again is not a lap */
   }
   cars.forEach(function(c){if(!c.remote&&!c.finished&&c.lap>=race.laps+1){c.finished=true;c.time=t-race.startT;race.finish.push(c);try{f1Finish(c)}catch(e){}if(c.me){race.phase='done';setTimeout(showResult,900);toast3('FINISH!',fmt(c.time))}}});
 }
