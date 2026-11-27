@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795788837">
+<meta name="bs-build" content="1795790168">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5912,7 +5912,7 @@ function f1Zone(){var st=scStraights(40);if(!st.length)return null;var kc=st[0],
   while(f<N/3&&ok(kc+f+1))f++;while(b<N/3&&ok(kc-b-1))b++;kc=(kc+((f-b)>>1)+N)%N;var half=(f+b)/2*DS;
   var NB=12,SP=Math.max(5,Math.min(6.2,(half-5)*2/12));while(NB>6&&NB*SP/2+3>half-2)NB--;
   var core=NB*SP/2+3;
-  return {map:curMap,n:N,kc:kc,h:m(core+18),e:m(18),rd0:6.2,rd1:13.6,fl:7.9,bl0:9.6,mid:11.6,ow:14.4,sp:SP,boxes:pal.slice(0,NB).map(function(col,i){return {k:(kc+Math.round((i-(NB-1)/2)*SP/DS)+N+N)%N,col:col}})}}
+  return {map:curMap,n:N,kc:kc,h:m(core+34),e:m(34),rd0:6.2,rd1:13.6,fl:7.9,bl0:9.6,mid:11.6,ow:14.4,sp:SP,boxes:pal.slice(0,NB).map(function(col,i){return {k:(kc+Math.round((i-(NB-1)/2)*SP/DS)+N+N)%N,col:col}})}}
 function f1D(k,z){return ((k-z.kc+N+N/2)%N)-N/2}
 function f1InZ(k,z){return Math.abs(f1D(k,z))<=z.h}
 function f1Core(k,z){return Math.abs(f1D(k,z))<=z.h-z.e}
@@ -5924,7 +5924,7 @@ function f1Wall(c,k,lat){var z=F1Z;if(!z||curMap!=='ring'||!f1InZ(k,z)||lat<=0){
     if(lat>a&&lat<b){var to=pl<(a+b)/2?a:b,ps=to-lat;c.x+=NX[k]*ps;c.z+=NZ[k]*ps;c.v*=.95;c.hit=.4;lat=to}}
   c.f1lat=lat;return E[k]+z.ow-.9}
 function f1Lane(c,k,lat){return !!F1Z&&curMap==='ring'&&f1InZ(k,F1Z)&&lat>E[k]+.4}
-function f1OnRoad(k,lat){var z=F1Z;return !!z&&f1InZ(k,z)&&lat>(f1Core(k,z)?E[k]+z.rd0-.3:E[k]+2.4)}
+function f1OnRoad(k,lat){var z=F1Z;return !!z&&f1InZ(k,z)&&lat>(f1Core(k,z)?E[k]+z.rd0-.3:Math.max(E[k]+2.4,f1Rib(k,z)[0]-.5))}
 function f1Z(){if(!(F1Z&&F1Z.map===curMap&&F1Z.n===N))F1Z=curMap==='ring'?f1Zone():null;return F1Z}
 function f1Init(o){F1=null;f1Z();try{(F1Z?F1Z.boxes:[]).forEach(function(b,i){f1BoxName(i,'')})}catch(e){}window.BSF1=null;cars.forEach(function(c){c.pitUntil=0;c.inPit=false;f1Crew(c,false)});
   if(race.mode!=='race'||curMap!=='ring'||!o||!o.real||!F1Z)return;
@@ -5988,14 +5988,14 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     {
       }
     }
-    if(core){var gr=new T.Mesh(new T.BoxGeometry(3.3,.05,DS+.04),grassM);put(gr,k,E[k]+2.55,.01)}
+    if(Math.abs(d)<=z.h-z.e-Math.round(8/DS)){var gr=new T.Mesh(new T.BoxGeometry(3.3,.05,DS+.04),grassM);put(gr,k,E[k]+2.55,.01)}
     /* (brick pit wall + kerbs are built below as instanced bricks, like the track's own) */
   /* one garage per box: white brick front, coloured roll-up door, lamp, name board, blue/white brick roof trim */
   var wallMat=new T.MeshStandardMaterial({color:0xffffff,map:brickTx,roughness:.5});
   /* the pit road itself: a ribbon with the same asphalt + white lines as the race track, just narrower, following the lane in and out */
   (function(){var n=2*z.h+1,pos=new Float32Array(n*6),uv=new Float32Array(n*4),idx=[],acc=0,prev=null;
-    for(var i=0;i<n;i++){var d=i-z.h,k=(z.kc+d+N)%N,pr=f1Rib(k,z),c=pr[0],hw=pr[1],y=(H[k]||0)+.022,cx=P[k].x+NX[k]*c,cz=P[k].z+NZ[k]*c;if(prev)acc+=Math.hypot(cx-prev[0],cz-prev[1]);prev=[cx,cz];
-      pos.set([P[k].x+NX[k]*(c+hw),y,P[k].z+NZ[k]*(c+hw),P[k].x+NX[k]*(c-hw),y,P[k].z+NZ[k]*(c-hw)],i*6);uv.set([1,acc/12,0,acc/12],i*4);if(i<n-1){var a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}}
+    for(var i=0;i<n;i++){var d=i-z.h,k=(z.kc+d+N)%N,pr=f1Rib(k,z),c=pr[0],hw=pr[1],lf=Math.max(c-hw,E[k]+.45),y=(H[k]||0)+.022,cx=P[k].x+NX[k]*c,cz=P[k].z+NZ[k]*c;if(prev)acc+=Math.hypot(cx-prev[0],cz-prev[1]);prev=[cx,cz];
+      if(lf>c+hw-.02)lf=c+hw-.02;pos.set([P[k].x+NX[k]*(c+hw),y,P[k].z+NZ[k]*(c+hw),P[k].x+NX[k]*lf,y,P[k].z+NZ[k]*lf],i*6);uv.set([1,acc/12,(lf-(c-hw))/(2*hw),acc/12],i*4);if(i<n-1){var a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}}
     var geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('uv',new T.BufferAttribute(uv,2));geo.setIndex(idx);geo.computeVertexNormals();
     if(geo.attributes.normal.getY(0)<0){geo.setIndex(idx.slice().reverse());geo.computeVertexNormals()}var rb=new T.Mesh(geo,(typeof M!=='undefined'&&M.road)||asp);rb.receiveShadow=true;G.add(rb)})();
   /* REAL bricks: kerbs along both edges of the pit road and a two-row brick wall (same pieces as the race track) */
@@ -6006,7 +6006,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
     var addBrick=function(x,y,zz,an,c,top){bricks.push([x,y,zz,an,c]);if(top)for(var sx=-1;sx<=1;sx+=2)for(var sz=0;sz<4;sz++){var lz=-.6+sz*.4,lx=sx*.2;studs.push([x+Math.cos(an)*lx+Math.sin(an)*lz,y+.3,zz-Math.sin(an)*lx+Math.cos(an)*lz,c])}};
     var st=Math.max(1,Math.round(1/DS)),ci=0;
     for(var d=-z.h;d<z.h;d+=st){var k=(z.kc+d+N)%N,k1=(z.kc+d+st+N)%N,r0=f1Rib(k,z),r1=f1Rib(k1,z);ci++;
-      [[-1],[1]].forEach(function(q){var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(l0<E[k]+.7||l1<E[k1]+.7)return;addKerb(k,k1,l0,l1,ci)})}
+      [[-1],[1]].forEach(function(q){if(q[0]<0&&Math.abs(d)>z.h-z.e-Math.round(8/DS))return;var l0=r0[0]+q[0]*(r0[1]+.4),l1=r1[0]+q[0]*(r1[1]+.4);if(l0<E[k]+1.2||l1<E[k1]+1.2)return;addKerb(k,k1,l0,l1,ci)})}
     /* the pit wall between the track and the pit road (along the core) and the outer wall on the entry/exit */
     var b16=Math.max(1,Math.round(1.6/DS)),cc=0;
     for(var d2=-z.h-Math.round(3/DS);d2<=z.h+Math.round(3/DS);d2+=b16){var k2=(z.kc+d2+N)%N,core=Math.abs(d2)<=z.h-z.e;cc++;if(core&&Math.abs(d2)>z.h-z.e-Math.round(8/DS))continue;
@@ -6062,7 +6062,7 @@ function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(
   /* pit lane speed limit lines across the lane where the limit starts and ends */
   [z.kc-(z.h-z.e),z.kc+(z.h-z.e)].forEach(function(kk){var k=(kk+N)%N;for(var q=0;q<8;q++){var sq=new T.Mesh(new T.BoxGeometry((z.rd1-z.rd0-1.2)/8,.02,.5),q%2?wl:SM(0x111111));put(sq,k,E[k]+z.rd0+.6+(q+.5)*(z.rd1-z.rd0-1.2)/8,.035)}});
   /* yellow blend lines: the pit entry/exit lane edge painted on the main track */
-  for(var d3=-z.h-m2(22);d3<=z.h+m2(22);d3+=2){var dd3=Math.abs(d3);if(dd3<z.h-z.e)continue;var k3=(z.kc+d3+N)%N,o3=dd3>z.h?E[k3]-(dd3-z.h)*DS*.12:f1Rib(k3,z)[0]-f1Rib(k3,z)[1]-.6;if(o3<E[k3]-2.6)continue;var yl=new T.Mesh(new T.BoxGeometry(.2,.02,DS*2+.02),yel);put(yl,k3,o3,.03)}
+  for(var d3=-z.h-m2(22);d3<=z.h+m2(22);d3+=2){var dd3=Math.abs(d3);if(dd3<z.h-z.e)continue;var k3=(z.kc+d3+N)%N,o3=dd3>z.h?E[k3]-(dd3-z.h)*DS*.12:f1Rib(k3,z)[0]-f1Rib(k3,z)[1]-.6;if(dd3>z.h||o3<E[k3]+.9)continue;var yl=new T.Mesh(new T.BoxGeometry(.2,.02,DS*2+.02),yel);put(yl,k3,o3,.03)}
   /* control tower at the far end of the garages + scoring pylon at the start */
   (function(){var kb=z.boxes[z.boxes.length-1].k,kt=(kb+m2(z.sp/2+5.5))%N,lt=E[kt]+z.ow+2.2,tw=new T.Group(),glass=new T.MeshStandardMaterial({color:0x7fd2ff,emissive:0x2aa8ff,emissiveIntensity:.6,roughness:.1});
     [[7,4.6,6,0],[6,3.4,5,4.6],[5,3,4,8],[3.8,2.6,3,11]].forEach(function(q,j){BX(tw,wallMat,q[0],q[1],q[2],0,q[3]+q[1]/2,0);BX(tw,glass,q[0]+.05,q[1]*.45,q[2]+.05,0,q[3]+q[1]*.6,0);BX(tw,dark,q[0]+1,.25,q[2]+1,0,q[3]+q[1],0)});
@@ -6172,7 +6172,7 @@ function f1Layout(on){if(!document.getElementById('f1LayCss')){var st=document.c
   document.body.classList.toggle('f1on',!!on)}
 
 /* centre + half width of the pit road ribbon at point k (narrow at the ends, full width along the boxes) */
-function f1Rib(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e),cf=(z.rd0+.6+z.rd1-.6)/2,hw=(z.rd1-z.rd0-1.2)/2;var c0=hw-.6;return [E[k]+c0+(cf-c0)*u,hw]}
+function f1Rib(k,z){var d=Math.abs(f1D(k,z)),u=d<=z.h-z.e?1:Math.max(0,(z.h-d)/z.e),cf=(z.rd0+.6+z.rd1-.6)/2,hw=(z.rd1-z.rd0-1.2)/2;var u2=u*u*(3-2*u),c0=.6-hw;return [E[k]+c0+(cf-c0)*u2,hw]}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
