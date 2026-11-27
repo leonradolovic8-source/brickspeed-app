@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795768409">
+<meta name="bs-build" content="1795769375">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5892,7 +5892,7 @@ function ringPlus(G,R,spots,place,cx,cz){var M=function(c,o){o=o||{};var m=new T
    A half-width road splits off the main straight on the right, runs behind a divider wall past the team garages,
    and joins the track again. Every car has its own garage and a box outlined in its colour.
    REAL RACE: tyres wear out, 40 km/h limit on the pit road, stop in YOUR box for the pit stop, 1–2 stops are compulsory. */
-var F1SIGN=F1SIGN||null,F1=null,F1Z=F1Z||null,F1MATS=F1MATS||[],F1WANT=F1WANT||[];
+var F1NAMES=F1NAMES||[],F1SIGN=F1SIGN||null,F1=null,F1Z=F1Z||null,F1MATS=F1MATS||[],F1WANT=F1WANT||[];
 var F1PAL=[0xe3322a,0x1d4fd8,0x2ecc40,0xffb020,0xb46bff,0x00c8d8,0xff6ad5,0xf2f2f2,0x8b5a2b,0x9be22d,0x3a3f8f,0xff7b00];
 function f1PitTime(){var lv=0;try{lv=(JSON.parse(localStorage.getItem('bs-store')||'{}').pit)|0}catch(e){}return [4,3.5,3,2.5,2][Math.max(0,Math.min(4,lv))]}
 /* one box per car: 12 boxes (enough for a full online grid); the zone grows to fit them along the longest straight */
@@ -5916,11 +5916,11 @@ function f1Wall(c,k,lat){var z=F1Z;if(!z||curMap!=='ring'||!f1InZ(k,z)||lat<=0){
 function f1Lane(c,k,lat){return !!F1Z&&curMap==='ring'&&f1InZ(k,F1Z)&&lat>E[k]+.4}
 function f1OnRoad(k,lat){var z=F1Z;return !!z&&f1InZ(k,z)&&lat>(f1Core(k,z)?E[k]+z.rd0-.3:E[k]+2.4)}
 function f1Z(){if(!(F1Z&&F1Z.map===curMap&&F1Z.n===N))F1Z=curMap==='ring'?f1Zone():null;return F1Z}
-function f1Init(o){F1=null;f1Z();window.BSF1=null;cars.forEach(function(c){c.pitUntil=0;c.inPit=false;f1Crew(c,false)});
+function f1Init(o){F1=null;f1Z();try{(F1Z?F1Z.boxes:[]).forEach(function(b,i){f1BoxName(i,'')})}catch(e){}window.BSF1=null;cars.forEach(function(c){c.pitUntil=0;c.inPit=false;f1Crew(c,false)});
   if(race.mode!=='race'||curMap!=='ring'||!o||!o.real||!F1Z)return;
   F1={z:F1Z,req:race.laps>=20?2:1,pt:f1PitTime()};window.BSF1=F1;
   cars.forEach(function(c,i){c.tyreL=0;c.stops=0;c.lap0=c.lap||0;c.wantPit=false;c.box=i%F1Z.boxes.length;c.pitPlan=c.me?f1MyPlan():f1BotPlan(c);
-    var col=(c.bch&&c.bch.col)||(c.d&&c.d.hex)||null;try{if(c.me&&race.ch)col=race.ch.col||col}catch(e){}try{f1BoxColor(c.box,col||F1Z.boxes[c.box].col)}catch(e){}});
+    var col=(c.bch&&c.bch.col)||(c.d&&c.d.hex)||null;try{if(c.me&&race.ch)col=race.ch.col||col}catch(e){}try{f1BoxColor(c.box,col||F1Z.boxes[c.box].col)}catch(e){}try{f1BoxName(c.box,f1NameOf(c))}catch(e){}});
   try{f1Hud(true)}catch(e){}toast3('REAL RACE','Pit at least '+F1.req+'× · pit road on the LEFT of the main straight · stop in YOUR coloured box')}
 function f1BoxColor(i,col){F1WANT[i]=col;var c=new T.Color(col);if(F1Z&&F1Z.boxes[i])F1Z.boxes[i].col=c.getHex();(F1MATS[i]||[]).forEach(function(m){m.color.copy(c);if(m.emissive)m.emissive.copy(c)})}
 function f1MyPlan(){var L=race.laps,req=race.laps>=20?2:1,out=[];for(var i=1;i<=req;i++)out.push(Math.max(1,Math.min(L-1,Math.round(L*i/(req+1)))));return out}
@@ -5956,30 +5956,58 @@ function f1Tick(){if(!F1||!race.on||race.phase==='done'){f1Hud(false);f1Sign(0);
   if(cl===2)txt='<div style="font-size:22px;color:'+(fl?'#ff4b4b':'#fff')+'">⚠ MISSED PIT · SPEED 50% · PIT NOW</div>'+txt;
   if(me.pitUntil)txt='🔧 PIT STOP · <b style="color:#ffd23c">'+Math.max(0,me.pitUntil-t).toFixed(1)+' s</b>';else if(me.inPit)txt='🚧 PIT ROAD · LIMIT 40 km/h · STOP IN THE <b style="color:'+bc+'">■</b> BOX';h.innerHTML=txt}
 /* ---- build the pit road: asphalt, entry/exit, divider + outer wall, coloured boxes, garages, signs ---- */
-function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(1,Math.round(x/DS))};if(!F1MATS)F1MATS=[];if(!F1WANT)F1WANT=[];var n0=G.children.length,asp=new T.MeshStandardMaterial({color:0x2c303a,roughness:.95}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),wallM=new T.MeshStandardMaterial({color:0x1d4fd8,roughness:.5}),wallW=new T.MeshStandardMaterial({color:0xe8ecf3,roughness:.5}),dark=new T.MeshStandardMaterial({color:0x101a33});
+function f1Paint(G){var z=f1Z();if(!z)return;var m2=function(x){return Math.max(1,Math.round(x/DS))};if(!F1MATS)F1MATS=[];if(!F1WANT)F1WANT=[];F1NAMES=[];
+  var n0=G.children.length,SM=function(c,o){var p={color:c,roughness:.42};for(var q in o)p[q]=o[q];return new T.MeshStandardMaterial(p)},
+    asp=SM(0x2c303a,{roughness:.95}),wl=new T.MeshBasicMaterial({color:0xe8ecf3}),bW=SM(0xeef1f6),bB=SM(0x1d4fd8),bR=SM(0xe3322a),dark=SM(0x101a33);
   var put=function(m,k,lat,y,rotExtra){m.position.set(P[k].x+NX[k]*lat,(H[k]||0)+y,P[k].z+NZ[k]*lat);m.rotation.y=ANG[k]+(rotExtra||0);G.add(m);return m};
+  var cvs=function(w,h,fn){var cv=document.createElement('canvas');cv.width=w;cv.height=h;fn(cv.getContext('2d'));var tx=new T.CanvasTexture(cv);return tx};
+  /* shared textures: white brick wall + roll-up door slats */
+  var brickTx=cvs(128,128,function(c){c.fillStyle='#f4f6fa';c.fillRect(0,0,128,128);c.strokeStyle='#c9d0dc';c.lineWidth=3;for(var r=0;r<4;r++){c.beginPath();c.moveTo(0,r*32);c.lineTo(128,r*32);c.stroke();for(var x=(r%2)*32;x<=128;x+=64){c.beginPath();c.moveTo(x,r*32);c.lineTo(x,r*32+32);c.stroke()}}});
+  brickTx.wrapS=brickTx.wrapT=T.RepeatWrapping;brickTx.repeat.set(z.sp/2.2,2.2);
+  var slatTx=cvs(64,128,function(c){c.fillStyle='#fff';c.fillRect(0,0,64,128);for(var y=0;y<128;y+=8){c.fillStyle='rgba(0,0,0,.28)';c.fillRect(0,y+6,64,2);c.fillStyle='rgba(255,255,255,.5)';c.fillRect(0,y,64,1)}});
+  var stud=new T.CylinderGeometry(.17,.17,.14,10);
+  /* asphalt, lines, the brick divider and (only on the ramps) the outer wall */
   for(var d=-z.h;d<=z.h;d++){var k=(z.kc+d+N)%N,core=Math.abs(d)<=z.h-z.e,rl=f1RoadLat(k,z);
-    if(core){var a=new T.Mesh(new T.BoxGeometry(z.rd1-z.rd0+.4,.24,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]+(z.rd0+z.rd1)/2,.08);var sh=new T.Mesh(new T.BoxGeometry(3.6,.24,DS+.06),asp);put(sh,k,E[k]+2.6,.08)}
+    if(core){var a=new T.Mesh(new T.BoxGeometry(z.rd1-z.rd0+1.6,.24,DS+.06),asp);a.receiveShadow=true;put(a,k,E[k]+(z.rd0+z.rd1)/2+.6,.08);var sh=new T.Mesh(new T.BoxGeometry(3.6,.24,DS+.06),asp);put(sh,k,E[k]+2.6,.08)}
     else{var a2=new T.Mesh(new T.BoxGeometry(rl-E[k]+2.1,.24,DS+.06),asp);a2.receiveShadow=true;put(a2,k,E[k]+(rl-E[k]+2.1)/2,.08)}
-    if(core&&d%2===0)[z.rd0-.1,z.rd1+.1].forEach(function(o){var l=new T.Mesh(new T.BoxGeometry(.16,.02,DS*.9),wl);put(l,k,E[k]+o,.21)});
-    if(core&&(d+z.h)%3===0){var dv=new T.Mesh(new T.BoxGeometry(1,1,DS*3+.02),(Math.floor((d+z.h)/3)%2)?wallM:wallW);put(dv,k,E[k]+5.2,.5)}
-    if((d+z.h)%3===0){var ow=new T.Mesh(new T.BoxGeometry(.8,1.4,DS*3+.02),(Math.floor((d+z.h)/3)%2)?wallM:wallW);put(ow,k,E[k]+z.ow,.7)}}
-  var gt=function(t2,bg){var cv=document.createElement('canvas');cv.width=256;cv.height=64;var c=cv.getContext('2d');c.fillStyle=bg;c.fillRect(0,0,256,64);c.fillStyle='#fff';c.font='900 italic 40px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(t2,128,34);return new T.CanvasTexture(cv)};
-  z.boxes.forEach(function(b,i){var k=b.k,lat=E[k]+z.mid,mats=[],L=4.6,Wd=3.4,col=b.col;
-    [[0,L/2,Wd,.22],[0,-L/2,Wd,.22],[Wd/2,0,.22,L],[-Wd/2,0,.22,L]].forEach(function(q){var mt=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.8});mats.push(mt);var s=new T.Mesh(new T.BoxGeometry(q[2],.03,q[3]),mt);var g=new T.Group();g.add(s);s.position.set(q[0],0,q[1]);put(g,k,lat,.22)});
-    var gm=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.25});mats.push(gm);
-    var gar=new T.Group(),body=new T.Mesh(new T.BoxGeometry(z.sp-.7,4.4,5),new T.MeshStandardMaterial({color:0xd8dde6}));body.position.set(0,2.2,2.5);gar.add(body);var door=new T.Mesh(new T.BoxGeometry(z.sp-1.9,3.4,.1),gm);door.position.set(0,1.8,-.02);gar.add(door);
-    var rf=new T.Mesh(new T.BoxGeometry(z.sp-.3,.4,5.4),dark);rf.position.set(0,4.6,2.5);gar.add(rf);var nb=new T.Mesh(new T.PlaneGeometry(2.6,.65),new T.MeshBasicMaterial({map:gt('BOX '+(i+1),'#101a33')}));nb.position.set(0,4,-.06);nb.rotation.y=Math.PI;gar.add(nb);
-    gar.position.set(P[k].x+NX[k]*(E[k]+z.ow+.6),(H[k]||0),P[k].z+NZ[k]*(E[k]+z.ow+.6));gar.rotation.y=Math.atan2(NX[k],NZ[k]);G.add(gar);F1MATS[i]=mats;if(F1WANT[i]!=null)f1BoxColor(i,F1WANT[i])});
-  var sign=function(k,lat,txt,bg){var g=new T.Group(),po=new T.Mesh(new T.CylinderGeometry(.08,.08,3,6),new T.MeshStandardMaterial({color:0x8a93a6}));po.position.y=1.5;g.add(po);var f=new T.Mesh(new T.PlaneGeometry(2.4,.6),new T.MeshBasicMaterial({map:gt(txt,bg),side:T.DoubleSide}));f.position.y=3;g.add(f);put(g,k,lat,0,Math.PI/2)};
-  var kG=(z.kc-z.h-m2(30)+N)%N,gc=document.createElement('canvas');gc.width=512;gc.height=128;var gtx=new T.CanvasTexture(gc),gm2=new T.MeshBasicMaterial({map:gtx,side:T.DoubleSide});
-  var gg=new T.Group(),gw=E[kG]*2+2;[-1,1].forEach(function(sd){var p=new T.Mesh(new T.BoxGeometry(.5,6.4,.5),new T.MeshStandardMaterial({color:0x1d4fd8}));p.position.set(sd*(gw/2),3.2,0);gg.add(p)});
-  var bd=new T.Mesh(new T.PlaneGeometry(Math.min(gw-1,13),2.6),gm2);bd.position.y=5.4;bd.rotation.y=Math.PI;gg.add(bd);gg.position.set(P[kG].x,(H[kG]||0),P[kG].z);gg.rotation.y=ANG[kG];G.add(gg);
-  F1SIGN={c:gc,tx:gtx,st:-1};f1Sign(0,true);
-  var kIn=(z.kc-z.h+N)%N,kOut=(z.kc+z.h)%N;sign(kIn,E[kIn]+z.ow+.8,'← PIT IN','#e3322a');sign(kOut,E[kOut]+z.ow+.8,'PIT OUT','#2ecc40');
-  var sc=document.createElement('canvas');sc.width=128;sc.height=128;var s2=sc.getContext('2d');s2.fillStyle='#fff';s2.beginPath();s2.arc(64,64,60,0,7);s2.fill();s2.lineWidth=14;s2.strokeStyle='#e3322a';s2.beginPath();s2.arc(64,64,52,0,7);s2.stroke();s2.fillStyle='#111';s2.font='900 56px Arial';s2.textAlign='center';s2.textBaseline='middle';s2.fillText('40',64,68);
-  var kq=(z.kc-z.h+z.e+N)%N,sg=new T.Group(),po2=new T.Mesh(new T.CylinderGeometry(.07,.07,2.4,6),new T.MeshStandardMaterial({color:0x8a93a6}));po2.position.y=1.2;sg.add(po2);var face=new T.Mesh(new T.CircleGeometry(.6,24),new T.MeshBasicMaterial({map:new T.CanvasTexture(sc),side:T.DoubleSide}));face.position.y=2.5;sg.add(face);put(sg,kq,E[kq]+z.rd1+.6,0,Math.PI);
+    if(core&&d%2===0){var l=new T.Mesh(new T.BoxGeometry(.18,.02,DS*.9),wl);put(l,k,E[k]+z.rd0-.1,.21)}
+    if(core&&(d+z.h)%3===0){var mm=[bB,bW,bR,bW][Math.floor((d+z.h)/3)%4],dv=new T.Mesh(new T.BoxGeometry(1.1,1,DS*3+.02),mm);put(dv,k,E[k]+5.2,.5);
+      [-.42,.42].forEach(function(o){var s=new T.Mesh(stud,mm);s.position.set(0,.57,o*DS*1.2);dv.add(s)})}
+    if(!core&&(d+z.h)%3===0){var ow=new T.Mesh(new T.BoxGeometry(.8,1.4,DS*3+.02),(Math.floor((d+z.h)/3)%2)?bB:bW);put(ow,k,E[k]+z.ow,.7)}}
+  /* one garage per box: white brick front, coloured roll-up door, lamp, name board, blue/white brick roof trim */
+  var wallMat=new T.MeshStandardMaterial({color:0xffffff,map:brickTx,roughness:.5});
+  z.boxes.forEach(function(b,i){var k=b.k,lat=E[k]+z.mid,mats=[],L=4.6,Wd=3.6,col=b.col,w=z.sp;
+    [[0,L/2,Wd,.24],[0,-L/2,Wd,.24],[Wd/2,0,.24,L],[-Wd/2,0,.24,L]].forEach(function(q){var mt=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.9});mats.push(mt);var s=new T.Mesh(new T.BoxGeometry(q[2],.03,q[3]),mt);var g=new T.Group();g.add(s);s.position.set(q[0],0,q[1]);put(g,k,lat,.22)});
+    var gm=new T.MeshStandardMaterial({color:col,map:slatTx,emissive:col,emissiveIntensity:.18,roughness:.35});mats.push(gm);
+    var gar=new T.Group(),body=new T.Mesh(new T.BoxGeometry(w,4.8,5),wallMat);body.position.set(0,2.4,2.5);gar.add(body);
+    var door=new T.Mesh(new T.PlaneGeometry(w-1.3,3.1),gm);door.position.set(0,1.55,-.03);door.rotation.y=Math.PI;gar.add(door);
+    var lamp=new T.Mesh(new T.BoxGeometry(.9,.12,.25),new T.MeshBasicMaterial({color:0xfff6d8}));lamp.position.set(0,3.25,-.12);gar.add(lamp);
+    var nc=document.createElement('canvas');nc.width=320;nc.height=96;var ntx=new T.CanvasTexture(nc);F1NAMES[i]={c:nc,tx:ntx};f1BoxName(i,'');
+    var nb=new T.Mesh(new T.PlaneGeometry(w-.6,(w-.6)*.3),new T.MeshBasicMaterial({map:ntx}));nb.position.set(0,4.05,-.06);nb.rotation.y=Math.PI;gar.add(nb);
+    for(var j=0;j<Math.round(w/1.2);j++){var bm=(j+i)%2?bW:bB,tb=new T.Mesh(new T.BoxGeometry(w/Math.round(w/1.2)-.04,.55,1.1),bm);tb.position.set(-w/2+(j+.5)*w/Math.round(w/1.2),5.07,.5);gar.add(tb);var s3=new T.Mesh(stud,bm);s3.position.y=.34;tb.add(s3)}
+    var gl=E[k]+z.ow-.5;gar.position.set(P[k].x+NX[k]*gl,(H[k]||0),P[k].z+NZ[k]*gl);gar.rotation.y=Math.atan2(NX[k],NZ[k]);G.add(gar);F1MATS[i]=mats;if(F1WANT[i]!=null)f1BoxColor(i,F1WANT[i])});
+  /* end walls of the garage row */
+  [-1,1].forEach(function(sd){var kb=z.boxes[sd<0?0:z.boxes.length-1].k,ke=(kb+sd*m2(z.sp/2+.6)+N)%N,ew=new T.Mesh(new T.BoxGeometry(1.2,5.4,6),wallMat);ew.position.set(P[ke].x+NX[ke]*(E[ke]+z.ow+2.6),(H[ke]||0)+2.7,P[ke].z+NZ[ke]*(E[ke]+z.ow+2.6));ew.rotation.y=Math.atan2(NX[ke],NZ[ke]);G.add(ew)});
+  /* road signs, facing the cars that drive towards them */
+  var plate=function(k,lat,w,h,draw){var tx=cvs(256,Math.round(256*h/w),draw),g=new T.Group(),po=new T.Mesh(new T.CylinderGeometry(.09,.09,2.2+h,8),SM(0xc9d0dc));po.position.y=(2.2+h)/2;g.add(po);
+    var f=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tx,side:T.DoubleSide}));f.position.y=2.2+h/2;f.rotation.y=Math.PI;g.add(f);var base=new T.Mesh(new T.BoxGeometry(.8,.4,.8),bW);base.position.y=.2;g.add(base);put(g,k,lat,0);return g};
+  var arrowSign=function(txt,bg){return function(c){c.fillStyle=bg;c.fillRect(0,0,256,64);c.strokeStyle='#fff';c.lineWidth=5;c.strokeRect(3,3,250,58);c.fillStyle='#fff';c.font='900 34px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,128,35)}};
+  var kIn=(z.kc-z.h+N)%N,kOut=(z.kc+z.h)%N;plate(kIn,E[kIn]+z.ow+.8,2.6,.65,arrowSign('← PIT IN','#e3322a'));plate((kOut-m2(6)+N)%N,E[kOut]+5.2,2.6,.65,arrowSign('PIT OUT →','#1fa83a'));
+  var kq=(z.kc-z.h+z.e-m2(2)+N)%N;plate(kq,E[kq]+z.rd1+1.2,1.3,1.3,function(c){c.fillStyle='#fff';c.fillRect(0,0,256,256);c.strokeStyle='#c9d0dc';c.lineWidth=8;c.strokeRect(4,4,248,248);c.lineWidth=26;c.strokeStyle='#e3322a';c.beginPath();c.arc(128,128,96,0,7);c.stroke();c.fillStyle='#111';c.font='900 100px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText('40',128,136)});
+  /* the BOX BOX gantry over the track before the pit entry: LED board with orange lamp blocks */
+  var kG=(z.kc-z.h-m2(30)+N)%N,gc=document.createElement('canvas');gc.width=640;gc.height=128;var gtx=new T.CanvasTexture(gc),gm2=new T.MeshBasicMaterial({map:gtx,side:T.DoubleSide});
+  var gg=new T.Group(),gw=E[kG]*2+2.4,bw=Math.min(gw-3.4,12),lampM=new T.MeshStandardMaterial({color:0xff9a1a,emissive:0xff8a00,emissiveIntensity:.3});
+  [-1,1].forEach(function(sd){var p=new T.Mesh(new T.BoxGeometry(.7,6.6,.7),SM(0xc9d0dc));p.position.set(sd*(gw/2),3.3,0);gg.add(p);
+    var lb=new T.Mesh(new T.BoxGeometry(1.4,2.2,.6),dark);lb.position.set(sd*(bw/2+.8),5.4,0);gg.add(lb);[[-.33,.5],[.33,.5],[-.33,-.5],[.33,-.5]].forEach(function(q){var l2=new T.Mesh(new T.CylinderGeometry(.27,.27,.2,14),lampM);l2.rotation.x=Math.PI/2;l2.position.set(sd*(bw/2+.8)+q[0],5.4+q[1],-.35);gg.add(l2)})});
+  var beam=new T.Mesh(new T.BoxGeometry(gw+.7,.5,.6),SM(0xc9d0dc));beam.position.y=6.85;gg.add(beam);
+  var bk=new T.Mesh(new T.BoxGeometry(bw,2.4,.4),dark);bk.position.y=5.4;gg.add(bk);
+  var bd=new T.Mesh(new T.PlaneGeometry(bw-.3,2.1),gm2);bd.position.set(0,5.4,-.21);bd.rotation.y=Math.PI;gg.add(bd);gg.position.set(P[kG].x,(H[kG]||0),P[kG].z);gg.rotation.y=ANG[kG];G.add(gg);
+  F1SIGN={c:gc,tx:gtx,st:-1,lamp:lampM};f1Sign(0,true);
   for(var i2=n0;i2<G.children.length;i2++)G.children[i2].userData.f1=1}
+/* the name board above a garage: the driver's name (or BOT), with the box number */
+function f1BoxName(i,name){var B=F1NAMES&&F1NAMES[i];if(!B)return;var c=B.c.getContext('2d');c.fillStyle='#101a33';c.fillRect(0,0,320,96);c.strokeStyle='#2b3a66';c.lineWidth=6;c.strokeRect(3,3,314,90);
+  var nm=String(name||'BOX '+(i+1)).toUpperCase().slice(0,12),fs=54;c.font='900 '+fs+'px Arial';while(c.measureText(nm).width>290&&fs>22){fs-=2;c.font='900 '+fs+'px Arial'}
+  c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText(nm,160,name?56:50);if(name){c.font='800 20px Arial';c.fillStyle='#8fa6e0';c.fillText('BOX '+(i+1),160,18)}B.tx.needsUpdate=true}
 /* remove scenery that landed on the pit road (called after all scenery is placed) */
 function f1Clean(G){var z=F1Z;if(!z)return;var inPit=function(x,zz){var k=ringNear(x,zz),lat=(x-P[k].x)*NX[k]+(zz-P[k].z)*NZ[k];return f1InZ(k,z)&&lat>E[k]+2.8&&lat<E[k]+z.ow+6.5};
   var M4=new T.Matrix4(),v=new T.Vector3(),Z0=new T.Matrix4().makeScale(0,0,0);
@@ -5987,9 +6015,14 @@ function f1Clean(G){var z=F1Z;if(!z)return;var inPit=function(x,zz){var k=ringNe
     if((o.isGroup||o.isMesh)&&o.position&&(o.position.x||o.position.z)){var bb=new T.Box3().setFromObject(o),sx=bb.max.x-bb.min.x,sz=bb.max.z-bb.min.z;if(sx<40&&sz<40&&inPit((bb.min.x+bb.max.x)/2,(bb.min.z+bb.max.z)/2))G.remove(o)}})}
 
 /* the gantry over the track before the pit entry: tells you when to box */
-function f1Sign(st,force){var S=F1SIGN;if(!S)return;var fl=st?Math.floor(t*3)%2:0,key=st*10+fl;if(!force&&key===S.st)return;S.st=key;var c=S.c.getContext('2d');
-  c.fillStyle=st===2?(fl?'#b3121a':'#3a0508'):st===1?(fl?'#ffd23c':'#2a2206'):'#0d1430';c.fillRect(0,0,512,128);c.strokeStyle=st?'#fff':'#3d6bff';c.lineWidth=8;c.strokeRect(4,4,504,120);
-  c.fillStyle=st===1&&fl?'#111':'#fff';c.font='900 italic 64px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(st===2?'← PIT NOW!':st===1?'← BOX BOX':'← PIT LANE',256,68);S.tx.needsUpdate=true}
+function f1Sign(st,force){var S=F1SIGN;if(!S)return;var fl=st?Math.floor(t*3)%2:0,key=st*10+fl;if(!force&&key===S.st)return;S.st=key;var c=S.c.getContext('2d'),W=S.c.width,Hh=S.c.height;
+  c.fillStyle='#07080c';c.fillRect(0,0,W,Hh);var col=st===2?(fl?'#ff3b30':'#8a1a14'):st===1?(fl?'#ffd23c':'#a8861c'):'#7fa8ff';
+  c.fillStyle=col;c.shadowColor=col;c.shadowBlur=st?18:8;c.font='900 78px Arial';c.textAlign='center';c.textBaseline='middle';c.fillText(st===2?'←  PIT NOW!':st===1?'←  BOX BOX':'←  PIT LANE',W/2,Hh/2+4);c.shadowBlur=0;
+  /* LED dot-matrix look */
+  c.fillStyle='rgba(7,8,12,.85)';for(var x=0;x<W;x+=6)c.fillRect(x,0,2,Hh);for(var y=0;y<Hh;y+=6)c.fillRect(0,y,W,2);
+  S.tx.needsUpdate=true;if(S.lamp)S.lamp.emissiveIntensity=st?(fl?2.4:.15):.35}
+
+function f1NameOf(c){var n='';try{if(c.me)n=(window.BSMyTagName?window.BSMyTagName():'')||(localStorage.getItem('bs-mp-name')||'')||'YOU';else if(c.human)n=(c.d&&c.d.name)||'PLAYER';else n='BOT'}catch(e){n=c.me?'YOU':'BOT'}return String(n).split('#')[0]||'BOT'}
 
 /* ================= ABILITY VISUAL EFFECTS: comic word, flash, shockwaves, beams, puffs, flames ================= */
 function hexOf(col){return new T.Color(col).getHex()}
