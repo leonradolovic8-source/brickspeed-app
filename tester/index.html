@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795852372">
+<meta name="bs-build" content="1795852670">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5269,7 +5269,7 @@ function step(dt){
   else{target=autopilot(me,RL[(me.k+Math.round((10+me.v*.5)/DS))%N]*.8);vT=Math.min(28,VSAFE[me.k]+1)}
   if(manual&&stFree())vT*=1+.04*stUp('engine');
   if(reduce)vT=Math.min(vT,16);
-  if(F1&&race.on)vT*=f1Mul(me);
+  if(F1&&race.on)vT*=f1Mul(me);if(race.ch&&race.ch.id==='x')vT*=.93;   /* X is a heavy rocket: a bit slower on the ground */
   if(race.on&&me.fx&&race.immuneUntil<=t){if(me.fx.mulUntil>t)vT*=me.fx.mul;if(me.fx.hop>t)vT*=.9+Math.sin(t*14)*.1;if(me.fx.stop>t){vT=0;me.v=0}if(me.fx.lock>t)target=me.fx.lockDir;if(me.fx.inv>t)target=-target}
   if(frozen){vT=0;me.v=0;target=0}
   if(race.on&&modeFrozen(me)){vT=0;me.v=0}if(race.on&&race.m2&&race.m2.wasted){vT=0;target=0;me.v*=Math.pow(.3,dt)}
@@ -5648,7 +5648,7 @@ function trackGlide(c){try{var DM=window.DeviceMotionEvent;if(DM&&typeof DM.requ
 function tgTick(c,dt){var G=c.tg,w=c.model.userData.wings;if(t-G.t0>25){tgEnd(c,0);return}
   if(G.ph==='up'){G.vy=Math.max(4,22*(1-c.flyAlt/G.apex)+4);c.flyAlt+=G.vy*dt;if(w)w.scale.setScalar(Math.max(.001,Math.min(1,(c.flyAlt/G.apex-.6)*2.5)));if(c.flyAlt>=G.apex-.8){G.ph='glide';G.vy=0;G.p0=pitchRaw;try{comic('WINGS OUT!','#3fd0ff');kick(.2,1)}catch(e){}}return}
   if(w)w.scale.setScalar(1);var ip=c.me&&race.on?glideInp(G):0,fast=c.v>16;
-  var tv=ip<0?-6+ip*16:(fast?ip*9-2.5*(1-ip):-4.5);G.vy+=(tv-G.vy)*Math.min(1,dt*2.5);
+  var tv=ip<0?-6+ip*16:(fast?ip*9-2.5*(1-ip):-4.5);G.vy+=(tv-G.vy)*Math.min(1,dt*2.5);if(G.fall)G.vy=Math.min(G.vy-dt*14,-9);
   if(G.vy<-3)c.v=Math.min(52,c.v+(-G.vy-3)*.55*dt);if(G.vy>0)c.v=Math.max(10,c.v-G.vy*1.1*dt);
   c.flyAlt=Math.min(G.apex+12,c.flyAlt+G.vy*dt);c.flyUntil=t+5;if(c.flyAlt<=1.25)tgEnd(c,-G.vy)}
 function tgEnd(c,imp){var w=c.model.userData.wings;if(w)w.scale.setScalar(.001);c.tg=null;c.glide=false;c.flyUntil=t;c.flyAlt=1.2;try{airLand(c,imp,9,true)}catch(e){}}
@@ -5933,14 +5933,15 @@ function xTick(c,dt){xMorphTick(c,dt);var R=c.xr;if(!R)return;
     /* launch pad shake + smoke */
     c.xSpin=Math.sin(t*60)*.03*k;if(Math.random()<dt*30)try{smokePuff&&smokePuff(c.x-Math.sin(c.a)*2.2,(c.y||0)+.4,c.z-Math.cos(c.a)*2.2)}catch(e){}
     if(c.me&&k>.2&&!R.k1){R.k1=1;try{kick(.15,1.1)}catch(e){}}
-    if(k>=1.2){R.ph='fly';R.tf=t;c.xSpin=0;c.fx.stop=0;c.v=Math.max(c.v,30);trackGlide(c);if(c.tg){c.tg.x=true;c.tg.apex=24}xRocket(c);
+    if(k>=1.2){R.ph='fly';R.tf=t;c.xSpin=0;c.fx.stop=0;c.v=Math.max(c.v,26);trackGlide(c);if(c.tg){c.tg.x=true;c.tg.apex=24}xRocket(c);
       try{shock(c.x,(c.y||0)+.3,c.z,0xff5a1f,20);if(c.me){flash('rgba(255,120,40,.35)');kick(.5,1.6);comic('LIFT OFF!',X_COL)}}catch(e){}
       if(c.me)toast3('🚀 X IS FLYING','Tilt (or ▲▼) to dive or climb · land near cars for a SHOCKWAVE')}
     return}
   if(R.ph==='fly'){if(!c.tg){xLand(c);return}
     /* massive speed + barrel roll while in the air */
-    /* the rocket boost lasts 5 s, then X glides like SKY DRIVE (dive for speed) */
-    if(t-(R.tf||t)<5){c.v=Math.min(78,Math.max(c.v,46)+dt*14);if(c.me&&t-(R.tf||t)>4.2&&!R.bw){R.bw=1;try{comic('BOOST OUT!','#ffd23c')}catch(e){}}}c.xSpin=(c.xSpin||0)+dt*7.5;var wg=c.model&&c.model.userData.wings;if(wg)wg.visible=false}}
+    /* the rocket boost lasts 5 s, then the fuel is gone and X drops back down */
+    if(t-(R.tf||t)<5){c.v=Math.min(60,Math.max(c.v,38)+dt*10);if(c.me&&t-(R.tf||t)>4.2&&!R.bw){R.bw=1;try{comic('BOOST OUT!','#ffd23c')}catch(e){}}}
+    else if(c.tg&&!c.tg.fall){c.tg.fall=true;if(c.me)toast3('🚀 OUT OF FUEL','Coming down for the shockwave!')}c.xSpin=(c.xSpin||0)+dt*7.5;var wg=c.model&&c.model.userData.wings;if(wg)wg.visible=false}}
 function xLand(c){c.xr=null;c.xSpin=0;var fx=Math.sin(c.a),fz=Math.cos(c.a),R2=16,n=0;
   try{shock(c.x,(c.y||0)+.2,c.z,0xff5a1f,26);setTimeout(function(){try{shock(c.x,(c.y||0)+.2,c.z,0xffd23c,34)}catch(e){}},120);if(c.me||Math.hypot(me.x-c.x,me.z-c.z)<40){kick(.6,1.4)}}catch(e){}
   cars.forEach(function(o){if(o===c||o.out||o.remote&&!race.mp)return;var dx=o.x-c.x,dz=o.z-c.z,d=Math.hypot(dx,dz);if(d>R2)return;var f=1-d/R2,ahead=dx*fx+dz*fz;n++;
@@ -5952,14 +5953,39 @@ function xLand(c){c.xr=null;c.xSpin=0;var fx=Math.sin(c.a),fz=Math.cos(c.a),R2=1
 /* car <-> rocket transformation: the car shrinks away into a burst while the rocket model grows out of it (and back on landing) */
 function xRocket(c){if(!c.model||c.xRk)return;var hold=new THREE.Group();hold.name='xrocket';hold.scale.setScalar(.001);c.model.add(hold);c.xRk=hold;
   try{window.BSGLB.get('xr',function(tpl){var m=tpl.clone();hold.add(m)})}catch(e){}
-  /* fallback flame while the model loads / if it can't */
   var fl=new THREE.Mesh(new THREE.ConeGeometry(.55,2.2,12),new THREE.MeshBasicMaterial({color:0xff8a2a,transparent:true,opacity:.85}));fl.rotation.x=Math.PI/2;fl.position.set(0,1.1,3.6);fl.name='xflame';hold.add(fl)}
-function xMorphTick(c,dt){if(!c.xRk||!c.model)return;var want=c.xr&&c.xr.ph==='fly'?1:0;c.xMo=(c.xMo==null?0:c.xMo)+(want-(c.xMo||0))*Math.min(1,dt*7);var m=c.xMo;
-  var car=Math.max(.001,1-m*1.15),rk=Math.max(.001,Math.min(1,m*1.15));c.model.children.forEach(function(ch){if(ch!==c.xRk&&ch.name!=='skin'&&!(c.model.userData.wings===ch))ch.scale.setScalar(car)});c.xRk.scale.setScalar(rk);
+/* a swarm of bricks bursts out, spins, and clicks back together into the new shape */
+function xParts(c){if(!c.model)return;var T=THREE,old=c.model.getObjectByName('xparts');if(old)c.model.remove(old);var g=new T.Group();g.name='xparts';c.model.add(g);
+  var geo=xParts.g||(xParts.g=new T.BoxGeometry(.5,.3,.7)),stud=xParts.s||(xParts.s=new T.CylinderGeometry(.11,.11,.1,8)),cols=[0xf4f6fa,0xff5a1f,0x1b1f2e,0xc9d0dc,0xffd23c];
+  for(var i=0;i<34;i++){var m=new T.MeshStandardMaterial({color:cols[i%cols.length],roughness:.35}),b=new T.Mesh(geo,m),s=new T.Mesh(stud,m);s.position.y=.2;b.add(s);
+    var a=Math.random()*Math.PI*2,zz=(Math.random()-.5)*4.6;b.userData={p0:new T.Vector3(Math.cos(a)*.8,.6+Math.random()*.8,zz),p1:new T.Vector3(Math.cos(a)*(2.5+Math.random()*2.5),1.5+Math.random()*3.5,zz*1.4+(Math.random()-.5)*3),
+      p2:new T.Vector3(Math.cos(a)*.55,1+Math.sin(a)*.55,zz*.9),r:new T.Vector3(Math.random()*9,Math.random()*9,Math.random()*9),d:Math.random()*.15};b.scale.setScalar(.001);g.add(b)}
+  g.userData.t0=t}
+function xPartsTick(c){var g=c.model&&c.model.getObjectByName('xparts');if(!g)return;var k=(t-g.userData.t0)/.95;if(k>=1){c.model.remove(g);return}
+  g.children.forEach(function(b){var u=b.userData,q=Math.max(0,Math.min(1,(k-u.d)/(1-u.d))),e=q<.5?q*2:2-q*2,w=q<.5?q*2:(q-.5)*2,A=q<.5?u.p0:u.p1,B=q<.5?u.p1:u.p2;
+    b.position.lerpVectors(A,B,q<.5?1-Math.pow(1-w,3):w*w*(3-2*w));b.rotation.set(u.r.x*q,u.r.y*q,u.r.z*q);b.scale.setScalar(Math.max(.001,Math.sin(q*Math.PI)*1.15))})}
+function xMorphTick(c,dt){xPartsTick(c);if(!c.xRk||!c.model)return;var want=c.xr&&c.xr.ph==='fly'?1:0;
+  if(want!==c.xWant){c.xWant=want;c.xMs=t;if(c.xMo>.05||want)xParts(c)}
+  /* car: stretches long and thin, then pops into bricks · rocket: grows out of the bricks with a twist */
+  var k=Math.min(1,(t-(c.xMs||t))/.85),m=want?k:1-k;c.xMo=m;var e=m*m*(3-2*m);
+  var cs=Math.max(.001,1-e*1.2),rs=Math.max(.001,Math.min(1,(e-.25)/.75));
+  c.model.children.forEach(function(ch){if(ch===c.xRk||ch.name==='xparts'||ch.name==='skin'||c.model.userData.wings===ch)return;ch.scale.set(cs*(1-e*.4),cs*(1-e*.5),cs*(1+e*.8))});
+  c.xRk.scale.set(rs,rs,rs*(1+(1-rs)*.6));c.xRk.rotation.z=(1-rs)*Math.PI*1.5;
   var fl=c.xRk.getObjectByName('xflame');if(fl)fl.scale.set(1,.7+Math.random()*.6,1);
-  if(!want&&m<.01){c.model.children.forEach(function(ch){if(ch!==c.xRk)ch.scale.setScalar(1)});c.model.remove(c.xRk);c.xRk=null;c.xMo=0}}
+  if(!want&&k>=1){c.model.children.forEach(function(ch){if(ch!==c.xRk&&ch.name!=='xparts')ch.scale.setScalar(1)});c.model.remove(c.xRk);c.xRk=null;c.xMo=0;c.xWant=null}}
+
 /* race reset: no leftover launch / spin / rocket from the last race */
-function xReset(){try{(cars||[]).forEach(function(c){c.xr=null;c.xSpin=0;c.xMo=0;if(c.xRk&&c.model){c.model.remove(c.xRk);c.model.children.forEach(function(ch){ch.scale.setScalar(1)})}c.xRk=null;if(c.tg&&c.tg.x){c.tg=null;c.glide=false;c.flyUntil=0;c.flyAlt=1.2}if(c.fx)c.fx.stop=0})}catch(e){}}
+function xReset(){try{(cars||[]).forEach(function(c){c.xr=null;c.xSpin=0;c.xMo=0;c.xWant=null;try{var xp=c.model&&c.model.getObjectByName('xparts');if(xp)c.model.remove(xp)}catch(e){}if(c.xRk&&c.model){c.model.remove(c.xRk);c.model.children.forEach(function(ch){ch.scale.setScalar(1)})}c.xRk=null;if(c.tg&&c.tg.x){c.tg=null;c.glide=false;c.flyUntil=0;c.flyAlt=1.2}if(c.fx)c.fx.stop=0})}catch(e){}}
+
+/* X models came from a picture, so their facing is unknown: turn them so the long side runs front-back
+   and the narrow pointy end (nose cone) is the front (-z); the wide end (wheels / engine) is the back */
+function xOrient(scene,p){var T=THREE,pts=[],v=new T.Vector3();
+  var grab=function(){pts=[];p.updateMatrixWorld(true);scene.traverse(function(o){if(!o.isMesh||!o.geometry||!o.geometry.attributes.position)return;var a=o.geometry.attributes.position,st=Math.max(1,Math.floor(a.count/1500));for(var i=0;i<a.count;i+=st){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);pts.push([v.x,v.y,v.z])}})};
+  grab();if(!pts.length)return;var ext=function(k){var lo=1e9,hi=-1e9;pts.forEach(function(q){lo=Math.min(lo,q[k]);hi=Math.max(hi,q[k])});return [lo,hi]};
+  var ex=ext(0),ez=ext(2);if(ex[1]-ex[0]>ez[1]-ez[0]){scene.rotation.y+=Math.PI/2;grab();ez=ext(2)}
+  var L=ez[1]-ez[0],wid=function(z0,z1){var lo=1e9,hi=-1e9,ylo=1e9,yhi=-1e9;pts.forEach(function(q){if(q[2]>=z0&&q[2]<=z1){lo=Math.min(lo,q[0]);hi=Math.max(hi,q[0]);ylo=Math.min(ylo,q[1]);yhi=Math.max(yhi,q[1])}});return hi>lo?(hi-lo)*(yhi-ylo):0};
+  var front=wid(ez[0],ez[0]+L*.18),back=wid(ez[1]-L*.18,ez[1]);if(front>back)scene.rotation.y+=Math.PI}
+try{window.xOrient=xOrient}catch(e){}
 
 /* ===== BRICK RING PIT ROAD + REAL RACE =====
    A half-width road splits off the main straight on the right, runs behind a divider wall past the team garages,
@@ -7427,7 +7453,7 @@ function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
  scene.traverse(function(o){if(o.isMesh){if(o.geometry&&!o.geometry.attributes.normal)o.geometry.computeVertexNormals();
   var ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(function(m){if(m&&'metalness' in m){m.metalness=0;m.roughness=Math.max(.45,m.roughness==null?.6:m.roughness)}});
   o.castShadow=o.receiveShadow=true}});
- scene.rotation.y=ROT[id]!=null?ROT[id]:Math.PI;p.add(scene);
+ scene.rotation.y=ROT[id]!=null?ROT[id]:Math.PI;p.add(scene);if((id==='x'||id==='xr')&&window.xOrient)try{window.xOrient(scene,p)}catch(e){console.warn('xOrient',e)}
  var b=new T.Box3().setFromObject(p),s=new T.Vector3();b.getSize(s);var k=Math.min(LEN/(s.z||1),WID/(s.x||1))*({x:1.22,xr:1.3}[id]||1);p.scale.setScalar(k);
  b.setFromObject(p);var c=new T.Vector3();b.getCenter(c);p.position.set(-c.x,-b.min.y,-c.z);root.add(p);try{glbSplit(root)}catch(e){console.warn('glbSplit',e)}return root}
 /* cut the real wheels out of a one-piece GLB car so they can spin: finds the 4 tyres from the shape, moves their triangles into their own meshes with the pivot on the axle */
