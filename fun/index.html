@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="bs-build" content="1795865247">
+<meta name="bs-build" content="1795865664">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -6793,6 +6793,35 @@ function fbGift(code,tok,cb){code=String(code||'').toUpperCase();var fin=false,d
    c.on('data',function(d){if(d&&(d.t==='giftok'||d.t==='giftno')){clearTimeout(tm);setTimeout(function(){try{c.close()}catch(e){}},200);done(d.t==='giftok')}});
    c.on('error',function(){clearTimeout(tm);done(null)})})}
 window.BSFriend={gift:fbGift,watch:fbWatch,live:fbLive,start:function(){if(!FB.started)fbStart()},probe:fbProbe,invite:fbInviteFast,online:function(){return FB.ok}};
+/* ===== FAST FRIEND STATUS through Firebase: every open game writes a tiny "presence" note; friends read all notes at once =====
+   This is quick and works on every network. The peer beacon above stays for invites and gifts. */
+var FPZ={db:'https://firestore.googleapis.com/v1/projects/brickspeed-web/databases/(default)/documents',key:'AIzaSyB2_M3tjJkIOrisUGoGOyFqsFheA5GnQ5I',ok:true,fail:0,last:'',lastW:0,watch:{},st:{},readAt:0,reading:false};
+function fpDoc(c){return 'projects/brickspeed-web/databases/(default)/documents/presence/'+c}
+function fpWrite(force,off){var code=window.BSMyCode&&window.BSMyCode();if(!code||!FPZ.ok)return;code=String(code).toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code))return;
+  var s=fbStatus(),f={room:{stringValue:s.room||''},race:{booleanValue:!!s.race},full:{booleanValue:!!s.full},qm:{booleanValue:!!s.qm},act:{stringValue:off?'off':String(s.act||'lobby').slice(0,10)},ic:{stringValue:String(s.ic||'').slice(0,10)}},js=JSON.stringify(f);
+  if(!force&&js===FPZ.last&&Date.now()-FPZ.lastW<25000)return;FPZ.last=js;FPZ.lastW=Date.now();
+  var body={writes:[{update:{name:fpDoc(code),fields:f},updateTransforms:[{fieldPath:'ts',setToServerValue:'REQUEST_TIME'}]}]};
+  try{if(off&&navigator.sendBeacon){navigator.sendBeacon(FPZ.db+':commit?key='+FPZ.key,new Blob([JSON.stringify(body)],{type:'application/json'}));return}}catch(e){}
+  fetch(FPZ.db+':commit?key='+FPZ.key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!off}).then(function(r){if(r.status===403||r.status===404){FPZ.fail++;if(FPZ.fail>=3)FPZ.ok=false}else if(r.ok)FPZ.fail=0}).catch(function(){})}
+/* write when something changes (checked every second), and a heartbeat every 25 s */
+setInterval(function(){if(document.visibilityState==='visible')fpWrite(false)},1000);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')fpWrite(true,true);else fpWrite(true)});
+window.addEventListener('pagehide',function(){fpWrite(true,true)});
+function fpRead(){var codes=Object.keys(FPZ.watch).filter(function(c){return Date.now()-FPZ.watch[c]<15000});if(!codes.length||FPZ.reading||!FPZ.ok)return;FPZ.reading=true;
+  fetch(FPZ.db+':batchGet?key='+FPZ.key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({documents:codes.map(fpDoc)})})
+  .then(function(r){if(r.status===403){FPZ.fail++;if(FPZ.fail>=3)FPZ.ok=false;throw 0}return r.json()}).then(function(rows){var now=Date.now();
+    (rows||[]).forEach(function(x){var nm=(x.found&&x.found.name)||x.missing||'',c=nm.split('/').pop();if(!c)return;var rt=Date.parse(x.readTime||'')||0;
+      if(!x.found){FPZ.st[c]={on:false,at:now};return}var F=x.found.fields||{},g=function(k){var v=F[k];return v?('stringValue' in v?v.stringValue:'booleanValue' in v?v.booleanValue:'timestampValue' in v?v.timestampValue:null):null};
+      var ts=Date.parse(g('ts')||'')||0,age=rt&&ts?rt-ts:1e9,on=age<65000&&g('act')!=='off';
+      FPZ.st[c]={on:on,at:now,s:on?fbParse({room:g('room'),race:g('race'),full:g('full'),qm:g('qm'),act:g('act'),ic:g('ic')}):null}})})
+  .catch(function(){}).then(function(){FPZ.reading=false;FPZ.readAt=Date.now()})}
+setInterval(function(){if(document.visibilityState==='visible')fpRead()},2500);
+/* hook the old functions: Firebase answers first, the peer beacon only when Firebase isn't available */
+(function(){var oWatch=fbWatch,oLive=fbLive,oProbe=fbProbe;
+  fbWatch=function(code){code=String(code||'').toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code))return;var first=!FPZ.watch[code];FPZ.watch[code]=Date.now();if(first)setTimeout(fpRead,50);if(!FPZ.ok)oWatch(code)};
+  fbLive=function(code){code=String(code||'').toUpperCase();var r=FPZ.st[code];if(FPZ.ok&&r&&Date.now()-r.at<12000)return r.on?r.s:null;if(!FPZ.ok)return oLive(code);return undefined};
+  fbProbe=function(code,cb){code=String(code||'').toUpperCase();if(!FPZ.ok){oProbe(code,cb);return}FPZ.watch[code]=Date.now();var t0=Date.now(),wait=function(){var r=FPZ.st[code];if(r&&r.at>=t0){if(r.on)cb(r.s);else oProbe(code,cb);return}if(Date.now()-t0>4000){oProbe(code,cb);return}setTimeout(wait,150)};FPZ.reading=false;fpRead();wait()};
+  window.BSFriend.watch=fbWatch;window.BSFriend.live=fbLive;window.BSFriend.probe=fbProbe})();
 
 function roomId(code){return 'brickspeed-fun-'+code.toLowerCase()}
 function send(conn,m){try{if(conn&&conn.open)conn.send(m)}catch(e){}}
@@ -10582,10 +10611,12 @@ function accFirebase(){if(ACC_FB)return ACC_FB;var b='https://www.gstatic.com/fi
     var fb=window.firebase;if(!fb.apps.length)fb.initializeApp({apiKey:ACC_KEY,authDomain:'brickspeed-web.firebaseapp.com',projectId:'brickspeed-web',appId:'1:827729278590:web:7c666b53afc480237a0a2f',messagingSenderId:'827729278590',storageBucket:'brickspeed-web.firebasestorage.app'});return fb});
   ACC_FB.catch(function(){ACC_FB=null});return ACC_FB}
 function accFromUser(u){return u.getIdToken().then(function(t){var a={email:u.email||'Google account',uid:u.uid,id:t,rt:u.refreshToken,exp:Date.now()+3300000,g:1};accSet(a);try{window.firebase.auth().signOut()}catch(e){}return a})}
-function accGoogle(){return accFirebase().then(function(fb){var p=new fb.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
-  return fb.auth().signInWithPopup(p).catch(function(e){if(e&&/popup-blocked|operation-not-supported|web-storage-unsupported/.test(e.code||'')){try{sessionStorage.setItem('bs-g-redir','1')}catch(x){}return fb.auth().signInWithRedirect(p).then(function(){return new Promise(function(){})})}throw e})})
-  .then(function(r){return accFromUser(r.user)})}
-function accGErr(e){var c=(e&&e.code)||'';if(/popup-closed|cancelled-popup/.test(c))return 'Google sign-in was closed.';if(/unauthorized-domain/.test(c))return 'This website is not allowed for Google sign-in yet.';if(/operation-not-allowed/.test(c))return 'Google sign-in is not turned on in Firebase yet.';if(/network/.test(c))return 'No internet connection.';return 'Google sign-in failed ('+(c||e.message||e)+')'}
+function accPop(fb){var p=new fb.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});return fb.auth().signInWithPopup(p).then(function(r){return accFromUser(r.user)})}
+function accGoogle(){var fb=window.firebase;if(fb&&fb.apps&&fb.apps.length&&fb.auth)return accPop(fb);   /* ready: the Google window opens right from the tap */
+  return accFirebase().then(function(){var e=new Error('ready');e.code='bs-ready';throw e})}
+/* load Google sign-in in the background as soon as the profile opens */
+function accPreload(){if(!accGet())accFirebase().catch(function(){})}
+function accGErr(e){var c=(e&&e.code)||'';if(c==='bs-ready')return 'Google sign-in is ready. Tap the button again.';if(/popup-blocked/.test(c))return 'Your browser blocked the Google window. Allow pop-ups for this site and tap again.';if(/operation-not-supported|web-storage/.test(c))return 'Google sign-in does not work inside this app view. Open BrickSpeed in Chrome or Safari, or use email.';if(/popup-closed|cancelled-popup/.test(c))return 'Google sign-in was closed.';if(/unauthorized-domain/.test(c))return 'This website is not allowed for Google sign-in yet.';if(/operation-not-allowed/.test(c))return 'Google sign-in is not turned on in Firebase yet.';if(/network/.test(c))return 'No internet connection.';return 'Google sign-in failed ('+(c||e.message||e)+')'}
 /* coming back from a redirect sign-in */
 (function(){var r=null;try{r=sessionStorage.getItem('bs-g-redir')}catch(e){}if(!r)return;try{sessionStorage.removeItem('bs-g-redir')}catch(e){}
   accFirebase().then(function(fb){return fb.auth().getRedirectResult()}).then(function(res){if(res&&res.user)return accFromUser(res.user).then(function(){return accAfterLogin()})}).catch(function(e){try{toast(accGErr(e))}catch(x){}})})();
@@ -10593,11 +10624,11 @@ function accHtml(){var a=accGet();
   if(a&&!a.synced)return '<label>ACCOUNT</label><div class="acc on"><div class="am"><b>✓ '+esc(a.email)+'</b><span style="color:#ffb86b">Logged in, but cloud save is not connected yet</span></div><button type="button" class="aRt">TRY AGAIN</button><button type="button" class="aOut">LOG OUT</button></div><p class="aMsg"></p>';
   if(a)return '<label>ACCOUNT</label><div class="acc on"><div class="am"><b>✓ '+esc(a.email)+'</b><span>'+(a.saved?'Saved '+new Date(a.saved).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Cloud save on')+'</span></div><button type="button" class="aSv">SAVE NOW</button><button type="button" class="aOut">LOG OUT</button></div><p class="phn">Your coins, drivers, story and maps are saved to this account. Log in on any device to keep playing.</p>';
   return '<label>ACCOUNT</label><div class="acc"><button type="button" class="aG"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>Sign in with Google</button><div class="aOr"><span>or use email</span></div><input class="aEm" type="email" placeholder="Email" autocomplete="email"><input class="aPw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password"><div class="row"><button type="button" class="aIn">LOG IN</button><button type="button" class="aUp">CREATE ACCOUNT</button></div><button type="button" class="aFg">Forgot password?</button><p class="aMsg"></p></div><p class="phn">Sign in with email to save your progress and play on any device.</p>'}
-function accBind(el){var q=function(x){return el.querySelector(x)},msg=function(t,ok){var m=q('.aMsg');if(m){m.textContent=t;m.style.color=ok?'#7dffb0':'#ff8a8a'}},busy=false;
+function accBind(el){try{accPreload()}catch(e){}var q=function(x){return el.querySelector(x)},msg=function(t,ok){var m=q('.aMsg');if(m){m.textContent=t;m.style.color=ok?'#7dffb0':'#ff8a8a'}},busy=false;
   function go(kind){if(busy)return;var em=(q('.aEm').value||'').trim(),pw=q('.aPw').value||'';if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email');return}if(pw.length<6){msg('Password needs at least 6 characters');return}
     busy=true;msg(kind==='signUp'?'Creating account…':'Logging in…',true);accAuth(kind,em,pw).then(function(){busy=false;return accAfterLogin().then(function(){try{profOpen()}catch(e){}},function(e){try{profOpen()}catch(x){}toast('Logged in, but cloud save failed ('+e.message+')')})},function(e){busy=false;msg(accErr(e.message))})}
   el.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
-    if(b.classList.contains('aG')){if(busy)return;busy=true;msg('Opening Google…',true);accGoogle().then(function(){busy=false;return accAfterLogin().then(function(){try{profOpen()}catch(e){}},function(e){try{profOpen()}catch(x){}toast('Logged in, but cloud save failed ('+e.message+')')})},function(e){busy=false;msg(accGErr(e))});return}
+    if(b.classList.contains('aG')){if(busy)return;busy=true;msg('Opening Google…',true);accGoogle().then(function(){busy=false;msg('Loading your save…',true);return accAfterLogin().then(function(){try{profOpen()}catch(e){}},function(e){try{profOpen()}catch(x){}toast('Logged in, but cloud save failed ('+e.message+')')})},function(e){busy=false;var ok=e&&e.code==='bs-ready';msg(accGErr(e),ok)});return}
     if(b.classList.contains('aIn'))go('signInWithPassword');else if(b.classList.contains('aUp'))go('signUp');
     else if(b.classList.contains('aFg')){var em=(q('.aEm').value||'').trim();if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email first');return}
       accPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+ACC_KEY,{requestType:'PASSWORD_RESET',email:em}).then(function(){msg('Reset email sent. Check your inbox.',true)},function(e){msg(accErr(e.message))})}
