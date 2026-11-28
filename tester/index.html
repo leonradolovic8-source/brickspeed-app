@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795849536">
+<meta name="bs-build" content="1795850648">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -7378,7 +7378,7 @@ starter:'c5f2bae9-cba2-4804-b422-97fd9e19f105',chase:'87ff27f1-9e56-4df9-9332-06
 snowman:'960552b1-976f-4be8-9a2f-e906b73312e5',techno:'ba9d24ec-2c4e-4988-b8a7-6e64f823fc79',rewind:'c6847258-9ebe-4a99-9391-8cc870f54fb0',
 swap:'767a578c-8380-4cc0-8ef4-4b410359edff',chrono:'https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261126_213139_57a86034-c95f-4b8d-9c36-f25307b74a9f.glb'};
 // which way each model faces: the SAM models face +z, Blaze (Meshy) faces -x. The game wants front = -z.
-var ROT={blaze:-Math.PI/2,skydrive:Math.PI/2,chrono:Math.PI/2};
+var ROT={blaze:-Math.PI/2,skydrive:Math.PI/2,chrono:Math.PI/2};U.sk3='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071415_344c7b61-8233-42bc-a400-be50e99668e3.glb';ROT.sk3=Math.PI/2;U.sk9='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071417_0b2cb1d1-992a-4232-8f1e-1f7fe612da14.glb';ROT.sk9=Math.PI/2;U.sk11='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071419_9d6e93f5-d664-4415-bed0-8e25ab1072a0.glb';ROT.sk11=Math.PI/2;U.sk15='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071420_9e4582a4-9566-4a4a-8866-a719369c654b.glb';ROT.sk15=Math.PI/2;U.sk20='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071859_06bdcf9c-33ca-4aee-92fb-34ba3e78336b.glb';ROT.sk20=Math.PI/2;U.sk22='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071901_a2d5ac5a-d22f-4d23-9d5f-c2ab00bf1d85.glb';ROT.sk22=Math.PI/2;U.sk25='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071903_600f709b-7728-4f91-9ca7-86fc64baed22.glb';ROT.sk25=Math.PI/2;U.sk29='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071905_121cf6a2-365d-4ed1-9714-2ad4cbbe1d41.glb';ROT.sk29=Math.PI/2;
 var LEN=4.9,WID=3.2,cache={},wait={},loader=null;
 function L(){if(!loader&&window.THREE&&THREE.GLTFLoader)loader=new THREE.GLTFLoader();return loader}
 function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
@@ -7441,9 +7441,9 @@ function glbWheels(w,m){var T=THREE,bx=new T.Box3().setFromObject(m),s=new T.Vec
    var hub=new T.Mesh(tyre,dm);hub.scale.set(r*.18,r*.7,r*.18);hub.rotation.z=Math.PI/2;rim.add(hub);
    var cal=new T.Mesh(new T.BoxGeometry(.12,r*.5,r*.35),cm);cal.position.set(-q[0]*r*.05,r*.35,-r*.25);wg.add(cal);
    w.add(wg);w.wheels.push(wg)})}
-window.BSGLB={ids:Object.keys(U),wrap:wrap,split:glbSplit,load:function(id){load(id,function(){})}};
+window.BSGLB={ids:Object.keys(U),hasSkin:function(s){return !!U['sk'+s]},wrap:wrap,split:glbSplit,load:function(id){load(id,function(){})}};
 })();
-window.BSMakeCar=function(c){var g=null;if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.skin==null&&window.BSGLB){try{g=window.BSGLB.wrap(c.id,g)||g}catch(e){console.error(e)}}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
+window.BSMakeCar=function(c){var g=null;if(c&&c.skin!=null&&window.BSGLB&&window.BSGLB.hasSkin&&window.BSGLB.hasSkin(c.skin)){try{var w2=window.BSGLB.wrap('sk'+c.skin,makeCar(c));if(w2){if(c.glow!=null&&window.BSGlow)window.BSGlow(w2,c.glow,T);return w2}}catch(e){console.error(e)}g=null}if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.skin==null&&window.BSGLB){try{g=window.BSGLB.wrap(c.id,g)||g}catch(e){console.error(e)}}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
 /* after a race: one clean car for the character shown on the card, no half-finished animations */
 window.BSSelectReset=function(){
   clearTimeout(lockIn.tm);lockT=-1;nextCar=null;trans=1;fxT=9;pMat.opacity=0;wave.material.opacity=0;
