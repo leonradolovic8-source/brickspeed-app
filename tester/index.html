@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795848856">
+<meta name="bs-build" content="1795849065">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -9732,7 +9732,7 @@ function paintHex(i){var p=PAINTS[i];return p&&p.c?parseInt(p.c.slice(1),16):nul
 window.BSMe=function(){return {ti:PROF?PROF.ti:0,sp:PROF?PROF.sp:0,lv:level,kk:function(id){return skinIdx(id)+1}}};
 /* upgrade card: what exactly gets better (label · ability, old → new, +change) and the price, red when you can't afford it */
 function upInfo(c){var lv=level(c.id),b=parseFloat(c.cd),k=osLvCost(lv),pp=storeData().pp||0,w=0;try{w=wallet()}catch(e){}
-  var row=function(l,a,n,d){return '<span style="display:flex;justify-content:space-between;gap:6px;align-items:center;box-sizing:border-box;width:100%;background:rgba(5,10,30,.35);border-radius:8px;padding:6px 10px;margin-top:5px;font:800 12px system-ui;letter-spacing:.02em;font-style:normal;text-align:left;line-height:1.15"><span style="color:#cfe0ff;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l+'</span><span style="white-space:nowrap;flex:none;font:800 13px system-ui;font-style:normal">'+a+' <span style="opacity:.7">→</span> <b style="font:900 14px system-ui;font-style:normal;color:#3dff8a">'+n+'</b> <b style="font:900 12px system-ui;font-style:normal;color:#ffd23c">'+d+'</b></span></span>'};
+  var row=function(l,a,n,d){return '<span style="display:block;box-sizing:border-box;width:100%;background:rgba(5,10,30,.35);border-radius:9px;padding:5px 9px;margin-top:5px;font-style:normal;text-align:center;line-height:1.2"><span style="display:block;font:800 10px system-ui;letter-spacing:.06em;color:#cfe0ff">'+l+'</span><span style="display:block;white-space:nowrap;font:800 13px system-ui">'+a+' <span style="opacity:.7">→</span> <b style="font:900 14px system-ui;font-style:normal;color:#3dff8a">'+n+'</b> <b style="font:900 12px system-ui;font-style:normal;color:#ffd23c">'+d+'</b></span></span>'};
   var h='<span style="display:block;margin-top:4px">';
   if(!isNaN(b)){var a=b*(1-.03*(lv-1)),n=b*(1-.03*lv);h+=row('⏱ '+String(c.ab||'').toUpperCase()+' COOLDOWN',a.toFixed(1)+' s',n.toFixed(1)+' s','−'+(a-n).toFixed(1)+' s')}
   h+=row('TOTAL BONUS','−'+(3*(lv-1))+'%','−'+(3*lv)+'%','+3%');if(lv+1===5||lv+1===10)h+=row('BADGE','—','LV '+(lv+1),'★');
