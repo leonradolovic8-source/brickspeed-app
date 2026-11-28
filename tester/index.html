@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795851599">
+<meta name="bs-build" content="1795852372">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -5795,7 +5795,7 @@ function botChar(c){if(c.me||c.remote||c.human||!botRaceOn()||!window.BSChars)re
   if(!c.model0)c.model0=c.model;if(!c.d0)c.d0=c.d;
   try{var m=makeCarExt?makeCarExt(spec):null;if(m){if(c.model!==c.model0)scene.remove(c.model);c.model0.visible=false;scene.remove(c.model0);c.model=m;scene.add(m)}}catch(e){console.warn('botChar',e)}
   c.bch=ch;c.d=Object.assign({},c.d0,{name:ch.name,hex:ch.col,color:ch.body});c.bcd=4+Math.random()*6;c.bthink=0;c.starterGo=ch.id==='starter'}
-function botReset(){BOTPOOL=[];try{f1Hud(false);f1Sign(0);cars.forEach(function(c){f1Crew(c,false)})}catch(e){}cars.forEach(function(c){if(c.me||!c.model0)return;if(c.model!==c.model0){scene.remove(c.model);c.model=c.model0;c.model.visible=true;scene.add(c.model)}if(c.d0)c.d=c.d0;c.bch=null;c.driftIn=false})}
+function botReset(){BOTPOOL=[];try{xReset()}catch(e){}try{f1Hud(false);f1Sign(0);cars.forEach(function(c){f1Crew(c,false)})}catch(e){}cars.forEach(function(c){if(c.me||!c.model0)return;if(c.model!==c.model0){scene.remove(c.model);c.model=c.model0;c.model.visible=true;scene.add(c.model)}if(c.d0)c.d=c.d0;c.bch=null;c.driftIn=false})}
 function botAbil(c,dt){if(!c.bch||!botRaceOn()||c.finished||c.left)return;
   /* drifting like a player: slide through the tighter bends, let go on the straights */
   var p=c.pers||{agg:1};c.driftIn=c.v>14&&Math.abs(c.steer)>(p.agg>.9?.3:.42)&&!c.falling;
@@ -5928,18 +5928,19 @@ function ringPlus(G,R,spots,place,cx,cz){var M=function(c,o){o=o||{};var m=new T
 var X_COL='#ff5a1f';
 function xLaunch(c){if(c.xr||c.tg)return;c.xr={ph:'prep',t0:t};c.v=0;c.fx=c.fx||{};c.fx.stop=t+1.25;
   tag(c,'3… 2… 1…',X_COL,1.3);if(c.me){toast3('🚀 LAUNCH SEQUENCE','3… 2… 1… hold on!');try{comic('3… 2… 1…',X_COL)}catch(e){}}}
-function xTick(c,dt){var R=c.xr;if(!R)return;
+function xTick(c,dt){xMorphTick(c,dt);var R=c.xr;if(!R)return;
   if(R.ph==='prep'){c.v=0;var k=t-R.t0;
     /* launch pad shake + smoke */
     c.xSpin=Math.sin(t*60)*.03*k;if(Math.random()<dt*30)try{smokePuff&&smokePuff(c.x-Math.sin(c.a)*2.2,(c.y||0)+.4,c.z-Math.cos(c.a)*2.2)}catch(e){}
     if(c.me&&k>.2&&!R.k1){R.k1=1;try{kick(.15,1.1)}catch(e){}}
-    if(k>=1.2){R.ph='fly';c.xSpin=0;c.fx.stop=0;c.v=Math.max(c.v,30);trackGlide(c);if(c.tg){c.tg.x=true;c.tg.apex=24}
+    if(k>=1.2){R.ph='fly';R.tf=t;c.xSpin=0;c.fx.stop=0;c.v=Math.max(c.v,30);trackGlide(c);if(c.tg){c.tg.x=true;c.tg.apex=24}xRocket(c);
       try{shock(c.x,(c.y||0)+.3,c.z,0xff5a1f,20);if(c.me){flash('rgba(255,120,40,.35)');kick(.5,1.6);comic('LIFT OFF!',X_COL)}}catch(e){}
       if(c.me)toast3('🚀 X IS FLYING','Tilt (or ▲▼) to dive or climb · land near cars for a SHOCKWAVE')}
     return}
   if(R.ph==='fly'){if(!c.tg){xLand(c);return}
     /* massive speed + barrel roll while in the air */
-    c.v=Math.min(78,Math.max(c.v,46)+dt*14);c.xSpin=(c.xSpin||0)+dt*7.5}}
+    /* the rocket boost lasts 5 s, then X glides like SKY DRIVE (dive for speed) */
+    if(t-(R.tf||t)<5){c.v=Math.min(78,Math.max(c.v,46)+dt*14);if(c.me&&t-(R.tf||t)>4.2&&!R.bw){R.bw=1;try{comic('BOOST OUT!','#ffd23c')}catch(e){}}}c.xSpin=(c.xSpin||0)+dt*7.5;var wg=c.model&&c.model.userData.wings;if(wg)wg.visible=false}}
 function xLand(c){c.xr=null;c.xSpin=0;var fx=Math.sin(c.a),fz=Math.cos(c.a),R2=16,n=0;
   try{shock(c.x,(c.y||0)+.2,c.z,0xff5a1f,26);setTimeout(function(){try{shock(c.x,(c.y||0)+.2,c.z,0xffd23c,34)}catch(e){}},120);if(c.me||Math.hypot(me.x-c.x,me.z-c.z)<40){kick(.6,1.4)}}catch(e){}
   cars.forEach(function(o){if(o===c||o.out||o.remote&&!race.mp)return;var dx=o.x-c.x,dz=o.z-c.z,d=Math.hypot(dx,dz);if(d>R2)return;var f=1-d/R2,ahead=dx*fx+dz*fz;n++;
@@ -5947,6 +5948,18 @@ function xLand(c){c.xr=null;c.xSpin=0;var fx=Math.sin(c.a),fz=Math.cos(c.a),R2=1
     else{/* you landed in front of them: knocked back */o.v*=1-.8*f;o.kx=(o.kx||0)-fx*12*f;o.kz=(o.kz||0)-fz*12*f;o.spin=(o.spin||0)+(Math.random()<.5?-1:1)*3*f;tag(o,'SHOCKWAVE!',X_COL,1.4)}
     if(o.remote)try{hit(o,'mul',ahead>=0?1.3:.5,1.2)}catch(e){}});
   if(c.me){try{comic(n?'SHOCKWAVE x'+n+'!':'TOUCHDOWN!',X_COL)}catch(e){}}}
+
+/* car <-> rocket transformation: the car shrinks away into a burst while the rocket model grows out of it (and back on landing) */
+function xRocket(c){if(!c.model||c.xRk)return;var hold=new THREE.Group();hold.name='xrocket';hold.scale.setScalar(.001);c.model.add(hold);c.xRk=hold;
+  try{window.BSGLB.get('xr',function(tpl){var m=tpl.clone();hold.add(m)})}catch(e){}
+  /* fallback flame while the model loads / if it can't */
+  var fl=new THREE.Mesh(new THREE.ConeGeometry(.55,2.2,12),new THREE.MeshBasicMaterial({color:0xff8a2a,transparent:true,opacity:.85}));fl.rotation.x=Math.PI/2;fl.position.set(0,1.1,3.6);fl.name='xflame';hold.add(fl)}
+function xMorphTick(c,dt){if(!c.xRk||!c.model)return;var want=c.xr&&c.xr.ph==='fly'?1:0;c.xMo=(c.xMo==null?0:c.xMo)+(want-(c.xMo||0))*Math.min(1,dt*7);var m=c.xMo;
+  var car=Math.max(.001,1-m*1.15),rk=Math.max(.001,Math.min(1,m*1.15));c.model.children.forEach(function(ch){if(ch!==c.xRk&&ch.name!=='skin'&&!(c.model.userData.wings===ch))ch.scale.setScalar(car)});c.xRk.scale.setScalar(rk);
+  var fl=c.xRk.getObjectByName('xflame');if(fl)fl.scale.set(1,.7+Math.random()*.6,1);
+  if(!want&&m<.01){c.model.children.forEach(function(ch){if(ch!==c.xRk)ch.scale.setScalar(1)});c.model.remove(c.xRk);c.xRk=null;c.xMo=0}}
+/* race reset: no leftover launch / spin / rocket from the last race */
+function xReset(){try{(cars||[]).forEach(function(c){c.xr=null;c.xSpin=0;c.xMo=0;if(c.xRk&&c.model){c.model.remove(c.xRk);c.model.children.forEach(function(ch){ch.scale.setScalar(1)})}c.xRk=null;if(c.tg&&c.tg.x){c.tg=null;c.glide=false;c.flyUntil=0;c.flyAlt=1.2}if(c.fx)c.fx.stop=0})}catch(e){}}
 
 /* ===== BRICK RING PIT ROAD + REAL RACE =====
    A half-width road splits off the main straight on the right, runs behind a divider wall past the team garages,
@@ -7407,7 +7420,7 @@ starter:'c5f2bae9-cba2-4804-b422-97fd9e19f105',chase:'87ff27f1-9e56-4df9-9332-06
 snowman:'960552b1-976f-4be8-9a2f-e906b73312e5',techno:'ba9d24ec-2c4e-4988-b8a7-6e64f823fc79',rewind:'c6847258-9ebe-4a99-9391-8cc870f54fb0',
 swap:'767a578c-8380-4cc0-8ef4-4b410359edff',chrono:'https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261126_213139_57a86034-c95f-4b8d-9c36-f25307b74a9f.glb'};
 // which way each model faces: the SAM models face +z, Blaze (Meshy) faces -x. The game wants front = -z.
-U.x='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_073611_8082da76-34c3-45cd-814f-6fd4907e36ae.glb';var ROT={x:Math.PI/2,blaze:-Math.PI/2,skydrive:Math.PI/2,chrono:Math.PI/2};U.sk3='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071415_344c7b61-8233-42bc-a400-be50e99668e3.glb';ROT.sk3=Math.PI/2;U.sk9='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071417_0b2cb1d1-992a-4232-8f1e-1f7fe612da14.glb';ROT.sk9=Math.PI/2;U.sk11='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071419_9d6e93f5-d664-4415-bed0-8e25ab1072a0.glb';ROT.sk11=Math.PI/2;U.sk15='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071420_9e4582a4-9566-4a4a-8866-a719369c654b.glb';ROT.sk15=Math.PI/2;U.sk20='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071859_06bdcf9c-33ca-4aee-92fb-34ba3e78336b.glb';ROT.sk20=Math.PI/2;U.sk22='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071901_a2d5ac5a-d22f-4d23-9d5f-c2ab00bf1d85.glb';ROT.sk22=Math.PI/2;U.sk25='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071903_600f709b-7728-4f91-9ca7-86fc64baed22.glb';ROT.sk25=Math.PI/2;U.sk29='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071905_121cf6a2-365d-4ed1-9714-2ad4cbbe1d41.glb';ROT.sk29=Math.PI/2;
+U.x='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_073611_8082da76-34c3-45cd-814f-6fd4907e36ae.glb';U.xr='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_074448_4efba47e-6157-4d60-871b-a9fc0655164b.glb';var ROT={x:0,xr:0,blaze:-Math.PI/2,skydrive:Math.PI/2,chrono:Math.PI/2};U.sk3='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071415_344c7b61-8233-42bc-a400-be50e99668e3.glb';ROT.sk3=Math.PI/2;U.sk9='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071417_0b2cb1d1-992a-4232-8f1e-1f7fe612da14.glb';ROT.sk9=Math.PI/2;U.sk11='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071419_9d6e93f5-d664-4415-bed0-8e25ab1072a0.glb';ROT.sk11=Math.PI/2;U.sk15='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071420_9e4582a4-9566-4a4a-8866-a719369c654b.glb';ROT.sk15=Math.PI/2;U.sk20='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071859_06bdcf9c-33ca-4aee-92fb-34ba3e78336b.glb';ROT.sk20=Math.PI/2;U.sk22='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071901_a2d5ac5a-d22f-4d23-9d5f-c2ab00bf1d85.glb';ROT.sk22=Math.PI/2;U.sk25='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071903_600f709b-7728-4f91-9ca7-86fc64baed22.glb';ROT.sk25=Math.PI/2;U.sk29='https://d8j0ntlcm91z4.cloudfront.net/user_3Kpa9BCh8GgR0zYlkYjQ8JNSBnk/hf_20261128_071905_121cf6a2-365d-4ed1-9714-2ad4cbbe1d41.glb';ROT.sk29=Math.PI/2;
 var LEN=4.9,WID=3.2,cache={},wait={},loader=null;
 function L(){if(!loader&&window.THREE&&THREE.GLTFLoader)loader=new THREE.GLTFLoader();return loader}
 function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
@@ -7415,7 +7428,7 @@ function prep(id,scene){var T=THREE,p=new T.Group(),root=new T.Group();
   var ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(function(m){if(m&&'metalness' in m){m.metalness=0;m.roughness=Math.max(.45,m.roughness==null?.6:m.roughness)}});
   o.castShadow=o.receiveShadow=true}});
  scene.rotation.y=ROT[id]!=null?ROT[id]:Math.PI;p.add(scene);
- var b=new T.Box3().setFromObject(p),s=new T.Vector3();b.getSize(s);var k=Math.min(LEN/(s.z||1),WID/(s.x||1));p.scale.setScalar(k);
+ var b=new T.Box3().setFromObject(p),s=new T.Vector3();b.getSize(s);var k=Math.min(LEN/(s.z||1),WID/(s.x||1))*({x:1.22,xr:1.3}[id]||1);p.scale.setScalar(k);
  b.setFromObject(p);var c=new T.Vector3();b.getCenter(c);p.position.set(-c.x,-b.min.y,-c.z);root.add(p);try{glbSplit(root)}catch(e){console.warn('glbSplit',e)}return root}
 /* cut the real wheels out of a one-piece GLB car so they can spin: finds the 4 tyres from the shape, moves their triangles into their own meshes with the pivot on the axle */
 function glbSplit(root){var T=THREE;root.updateMatrixWorld(true);var inv=new T.Matrix4().copy(root.matrixWorld).invert(),parts=[],v=new T.Vector3();
@@ -7470,7 +7483,7 @@ function glbWheels(w,m){var T=THREE,bx=new T.Box3().setFromObject(m),s=new T.Vec
    var hub=new T.Mesh(tyre,dm);hub.scale.set(r*.18,r*.7,r*.18);hub.rotation.z=Math.PI/2;rim.add(hub);
    var cal=new T.Mesh(new T.BoxGeometry(.12,r*.5,r*.35),cm);cal.position.set(-q[0]*r*.05,r*.35,-r*.25);wg.add(cal);
    w.add(wg);w.wheels.push(wg)})}
-window.BSGLB={ids:Object.keys(U),hasSkin:function(s){return !!U['sk'+s]},wrap:wrap,split:glbSplit,load:function(id){load(id,function(){})}};
+window.BSGLB={get:function(id,cb){load(id,cb)},ids:Object.keys(U),hasSkin:function(s){return !!U['sk'+s]},wrap:wrap,split:glbSplit,load:function(id){load(id,function(){})}};
 })();
 window.BSMakeCar=function(c){var g=null;if(c&&c.skin!=null&&window.BSGLB&&window.BSGLB.hasSkin&&window.BSGLB.hasSkin(c.skin)){try{var w2=window.BSGLB.wrap('sk'+c.skin,makeCar(c));if(w2){if(c.glow!=null&&window.BSGlow)window.BSGlow(w2,c.glow,T);return w2}}catch(e){console.error(e)}g=null}if(window.BSGarage&&c&&window.BSGarage.ids.indexOf(c.id)>=0){try{g=window.BSGarage.gameCar(c.id,c.skin!=null?(c.skin&1):-1)}catch(e){console.error(e);g=null}}if(!g){g=makeCar(c);if(c&&c.skin!=null&&window.BSSkinDeco)window.BSSkinDeco(g,c.skin,T)}if(c&&c.skin==null&&window.BSGLB){try{g=window.BSGLB.wrap(c.id,g)||g}catch(e){console.error(e)}}if(c&&c.glow!=null&&window.BSGlow)window.BSGlow(g,c.glow,T);return g};mk3d=window.BSMakeCar;
 /* after a race: one clean car for the character shown on the card, no half-finished animations */
