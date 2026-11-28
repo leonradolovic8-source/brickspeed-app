@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795858887">
+<meta name="bs-build" content="1795859626">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -8780,6 +8780,7 @@ html:has(body.bsl-on),body.bsl-on{overflow:hidden;overscroll-behavior:none}body.
 #bsProf .hd{display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(90deg,rgba(42,123,255,.35),rgba(122,92,255,.18) 60%,transparent);border-bottom:1px solid rgba(255,255,255,.08)}
 #bsProf .av{width:72px;height:72px;border-radius:20px;overflow:hidden;flex:0 0 auto;box-shadow:0 0 0 3px #ffd23c,0 10px 26px rgba(0,0,0,.5)}#bsProf .nm b{display:block;font:900 italic 26px/1 system-ui;letter-spacing:.03em}#bsProf .nm b i{font-style:normal;color:#ffd23c;font-size:18px;margin-left:4px}#bsProf .nm span{display:block;margin-top:5px;font:800 11px system-ui;letter-spacing:.18em;color:#ffd23c}
 #bsProf .x{margin-left:auto;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font:800 15px system-ui;cursor:pointer}
+#bsProf .acc{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14)}#bsProf .acc input{padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);color:#fff;font:700 15px system-ui;min-width:0}#bsProf .acc .row button{flex:1}#bsProf .acc button{padding:11px 10px;border-radius:12px;border:0;font:900 13px system-ui;letter-spacing:.06em;cursor:pointer;color:#0b1230;background:#ffd23c}#bsProf .acc .aUp,#bsProf .acc .aOut{background:rgba(255,255,255,.14);color:#fff}#bsProf .acc .aFg{background:none;color:#9fc0ff;font:700 12px system-ui;padding:2px;align-self:flex-start;text-decoration:underline}#bsProf .acc .aMsg{margin:0;font:700 12px system-ui;min-height:14px}#bsProf .acc.on{flex-direction:row;flex-wrap:wrap;align-items:center}#bsProf .acc .am{flex:1 1 180px;min-width:0}#bsProf .acc .am b{display:block;font:900 15px system-ui;color:#7dffb0;overflow:hidden;text-overflow:ellipsis}#bsProf .acc .am span{font:700 11px system-ui;opacity:.65}
 #bsProf .bd{padding:14px 18px 18px;overflow:auto}#bsProf label{display:block;margin:14px 0 7px;font:900 11px/1 system-ui;letter-spacing:.18em;color:#9fc0ff}#bsProf label:first-child{margin-top:0}
 #bsProf .row{display:flex;gap:8px;align-items:center}#bsProf .ni{flex:1;min-width:0;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);color:#fff;font:900 18px system-ui;text-transform:uppercase}#bsProf .tg{font:900 18px system-ui;color:#ffd23c}
 #bsProf .row button{padding:10px 16px;border-radius:12px;border:0;background:#ffd23c;color:#1a1200;font:900 13px system-ui;cursor:pointer}#bsProf code{flex:1;font:900 22px/1 ui-monospace,monospace;letter-spacing:.2em;background:rgba(0,0,0,.35);padding:10px 12px;border-radius:12px}
@@ -10511,13 +10512,54 @@ function profOpen(){var old=document.getElementById('bsProf');if(old)old.remove(
    '<div class="bd"><label>NAME</label><div class="row"><input class="ni" maxlength="11" value="'+esc(myBase())+'" autocomplete="off"><span class="tg">#'+myTag()+'</span><button type="button" class="sv">SAVE</button></div><p class="phn">The #number is yours and stays the same, so nobody can look exactly like you.</p>'+
    '<div class="st"><div><b>'+wallet().toLocaleString()+'</b><span>ONLINE COINS</span></div><div><b>'+((PROF?PROF.t:0)).toLocaleString()+'</b><span>PAD COINS</span></div><div><b>'+own+'/'+CH.length+'</b><span>DRIVERS</span></div><div><b>'+sd+'/'+ST_COUNT()+'</b><span>STORY JOBS</span></div></div>'+
    '<label>PLAYER CODE</label><div class="row"><code>'+myCode()+'</code><button type="button" class="cp">COPY</button></div><p class="phn">Friends add you with this code, and gifts are sent to it.</p>'+
-   '<label>ICON</label><div class="ics">'+ics.map(function(ic){var o=typeof osIconOwned==='function'?osIconOwned(ic,d):true;return '<button type="button" class="ic'+(o?'':' lk')+(ic.id===cur?' on':'')+'" data-ic="'+ic.id+'" title="'+esc(ic.n||'')+'">'+(typeof osIconHtml==='function'?osIconHtml(ic,46):'★')+(o?'':'<em>🔒</em>')+'</button>'}).join('')+'</div></div></div>';
-  document.body.appendChild(el);var q=function(x){return el.querySelector(x)};
+   (typeof accHtml==='function'?accHtml():'')+'<label>ICON</label><div class="ics">'+ics.map(function(ic){var o=typeof osIconOwned==='function'?osIconOwned(ic,d):true;return '<button type="button" class="ic'+(o?'':' lk')+(ic.id===cur?' on':'')+'" data-ic="'+ic.id+'" title="'+esc(ic.n||'')+'">'+(typeof osIconHtml==='function'?osIconHtml(ic,46):'★')+(o?'':'<em>🔒</em>')+'</button>'}).join('')+'</div></div></div>';
+  document.body.appendChild(el);try{accBind(el)}catch(x){}var q=function(x){return el.querySelector(x)};
   el.addEventListener('click',function(e){var b=e.target.closest('button');if(e.target===el||(b&&b.classList.contains('x'))){el.remove();return}if(!b)return;
     if(b.classList.contains('sv')){var v=cleanName(q('.ni').value).replace(/#.*$/,'').trim().slice(0,11);if(!v){toast('Type a name');return}store('bs-mp-name',v);try{draw()}catch(x){}toast('You are '+myName());profOpen();return}
     if(b.classList.contains('cp')){try{navigator.clipboard.writeText(myCode()).then(function(){toast('Code copied')},function(){})}catch(x){}return}
     if(b.dataset.ic){if(b.classList.contains('lk')){el.remove();osGo('icons');return}var dd=storeData();dd.icon=b.dataset.ic;jset('bs-store',dd);try{draw()}catch(x){}profOpen()}})}
 function ST_COUNT(){return 15}
+
+/* ===== BrickSpeed account: email sign-in + cloud save (Firebase Auth + Firestore REST, no SDK) ===== */
+var ACC_KEY='AIzaSyB2_M3tjJkIOrisUGoGOyFqsFheA5GnQ5I',ACC_DB='https://firestore.googleapis.com/v1/projects/brickspeed-web/databases/(default)/documents';
+var ACC_SYNC=['bs-store','bs-earn','bsStory','bs-maps','bs-mp-name','bs-tag','bs-friends','bs-hangar','bsSteer','bsTut'];
+function accGet(){try{return JSON.parse(localStorage.getItem('bs-acc')||'null')}catch(e){return null}}
+function accSet(a){try{a?localStorage.setItem('bs-acc',JSON.stringify(a)):localStorage.removeItem('bs-acc')}catch(e){}}
+function accErr(m){m=String(m||'');var M={EMAIL_EXISTS:'That email already has an account. Log in instead.',EMAIL_NOT_FOUND:'No account with that email.',INVALID_PASSWORD:'Wrong password.',INVALID_LOGIN_CREDENTIALS:'Wrong email or password.',INVALID_EMAIL:'That email does not look right.',MISSING_PASSWORD:'Type a password.',USER_DISABLED:'This account is disabled.'};
+  if(/WEAK_PASSWORD/.test(m))return 'Password needs at least 6 characters.';if(/TOO_MANY_ATTEMPTS/.test(m))return 'Too many tries. Wait a minute.';return M[m.split(' ')[0]]||('Could not sign in ('+m+')')}
+function accPost(url,body){return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j&&j.error&&j.error.message||('HTTP '+r.status));return j})})}
+function accAuth(kind,email,pw){return accPost('https://identitytoolkit.googleapis.com/v1/accounts:'+kind+'?key='+ACC_KEY,{email:email,password:pw,returnSecureToken:true}).then(function(j){
+  var a={email:j.email,uid:j.localId,id:j.idToken,rt:j.refreshToken,exp:Date.now()+(+j.expiresIn||3600)*1000-60000};accSet(a);return a})}
+function accTok(){var a=accGet();if(!a)return Promise.reject(new Error('signed out'));if(Date.now()<a.exp)return Promise.resolve(a);
+  return fetch('https://securetoken.googleapis.com/v1/token?key='+ACC_KEY,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(a.rt)})
+   .then(function(r){return r.json()}).then(function(j){if(!j.id_token){accSet(null);throw new Error('Please log in again')}a.id=j.id_token;a.rt=j.refresh_token;a.exp=Date.now()+(+j.expires_in||3600)*1000-60000;accSet(a);return a})}
+function accSnap(){var o={};ACC_SYNC.forEach(function(k){try{var v=localStorage.getItem(k);if(v!=null)o[k]=v}catch(e){}});return JSON.stringify(o)}
+var ACC_LAST='';
+function accSave(force){var s=accSnap();if(!force&&s===ACC_LAST)return Promise.resolve(false);
+  return accTok().then(function(a){return fetch(ACC_DB+'/users/'+a.uid,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.id},
+    body:JSON.stringify({fields:{d:{stringValue:s},t:{integerValue:String(Date.now())},em:{stringValue:a.email}}})}).then(function(r){if(!r.ok)throw new Error('save '+r.status);ACC_LAST=s;a.saved=Date.now();accSet(a);return true})})}
+function accLoad(){return accTok().then(function(a){return fetch(ACC_DB+'/users/'+a.uid,{headers:{Authorization:'Bearer '+a.id}}).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error('load '+r.status);return r.json()})})
+  .then(function(j){if(!j||!j.fields||!j.fields.d)return null;try{return JSON.parse(j.fields.d.stringValue)}catch(e){return null}})}
+function accApply(o){ACC_SYNC.forEach(function(k){try{if(o[k]!=null)localStorage.setItem(k,o[k])}catch(e){}});ACC_LAST=accSnap()}
+/* after logging in: cloud save wins if it exists, otherwise this device's progress is uploaded */
+function accAfterLogin(){return accLoad().then(function(o){if(o&&Object.keys(o).length){accApply(o);toast('Cloud save loaded');setTimeout(function(){location.reload()},700);return}
+  return accSave(true).then(function(){toast('Progress saved to your account')})})}
+setInterval(function(){if(accGet())accSave().catch(function(){})},45000);
+document.addEventListener('visibilitychange',function(){if(document.hidden&&accGet())accSave().catch(function(){})});
+function accHtml(){var a=accGet();
+  if(a)return '<label>ACCOUNT</label><div class="acc on"><div class="am"><b>✓ '+esc(a.email)+'</b><span>'+(a.saved?'Saved '+new Date(a.saved).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Cloud save on')+'</span></div><button type="button" class="aSv">SAVE NOW</button><button type="button" class="aOut">LOG OUT</button></div><p class="phn">Your coins, drivers, story and maps are saved to this account. Log in on any device to keep playing.</p>';
+  return '<label>ACCOUNT</label><div class="acc"><input class="aEm" type="email" placeholder="Email" autocomplete="email"><input class="aPw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password"><div class="row"><button type="button" class="aIn">LOG IN</button><button type="button" class="aUp">CREATE ACCOUNT</button></div><button type="button" class="aFg">Forgot password?</button><p class="aMsg"></p></div><p class="phn">Sign in with email to save your progress and play on any device.</p>'}
+function accBind(el){var q=function(x){return el.querySelector(x)},msg=function(t,ok){var m=q('.aMsg');if(m){m.textContent=t;m.style.color=ok?'#7dffb0':'#ff8a8a'}},busy=false;
+  function go(kind){if(busy)return;var em=(q('.aEm').value||'').trim(),pw=q('.aPw').value||'';if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email');return}if(pw.length<6){msg('Password needs at least 6 characters');return}
+    busy=true;msg(kind==='signUp'?'Creating account…':'Logging in…',true);accAuth(kind,em,pw).then(function(){return accAfterLogin()}).then(function(){busy=false;try{profOpen()}catch(e){}},function(e){busy=false;msg(accErr(e.message))})}
+  el.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    if(b.classList.contains('aIn'))go('signInWithPassword');else if(b.classList.contains('aUp'))go('signUp');
+    else if(b.classList.contains('aFg')){var em=(q('.aEm').value||'').trim();if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email first');return}
+      accPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+ACC_KEY,{requestType:'PASSWORD_RESET',email:em}).then(function(){msg('Reset email sent. Check your inbox.',true)},function(e){msg(accErr(e.message))})}
+    else if(b.classList.contains('aSv')){accSave(true).then(function(){toast('Saved to cloud');profOpen()},function(e){toast(String(e.message||e))})}
+    else if(b.classList.contains('aOut')){accSave(true).catch(function(){}).then(function(){accSet(null);toast('Logged out');profOpen()})}});
+  el.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('aPw'))go('signInWithPassword')})}
+window.BSAccount={get:accGet,save:accSave,load:accLoad};
 
 // ================= 🛠 MAP MAKER: draw your own track, pick a look, test drive it, save it on this device =================
 var MM_THEMES=[{id:'ring',n:'NIGHT STADIUM',c:'#2a7bff'},{id:'sunset',n:'SUNSET',c:'#ff8a3d'},{id:'frost',n:'SNOW',c:'#9fd8ff'}];
