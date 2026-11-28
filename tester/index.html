@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795849267">
+<meta name="bs-build" content="1795849536">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -9799,7 +9799,7 @@ function storeData(){var d=jget('bs-store')||{};d.up=d.up||{};d.own=d.own||{};re
 window.BSStore=function(){return storeData()};
 function coinsAll(){var w=0;try{w=wallet()}catch(e){}var p=PROF?PROF.t:0,n=$('bslCoinN');if(n)n.textContent=(p+w).toLocaleString();var b=$('bslCoins');if(b)b.title='Pad '+p.toLocaleString()+' + online '+w.toLocaleString();try{$('bslOnN').textContent=w.toLocaleString()}catch(e){}}
 function wallet(){var E=earn(),w=E.cur.t+(storeData().test||0);(E.gq||[]).forEach(function(b){w+=b.t});return w}
-function spend(n){var E=earn();if(wallet()<n)return false;var sd0=storeData();if(sd0.test){var tk0=Math.min(sd0.test,n);sd0.test-=tk0;n-=tk0;jset('bs-store',sd0)}if(!n){draw();return true}var take=Math.min(E.cur.t,n);E.cur.t-=take;n-=take;var q=E.gq||[];for(var i=q.length-1;i>=0&&n>0;i--){var tk=Math.min(q[i].t,n);q[i].t-=tk;n-=tk}E.gq=q.filter(function(b){return b.t>0||b.x>0});saveEarn(E);draw();return true}
+function spend(n){setTimeout(function(){try{coinsSync()}catch(e){}},0);var E=earn();if(wallet()<n)return false;var sd0=storeData();if(sd0.test){var tk0=Math.min(sd0.test,n);sd0.test-=tk0;n-=tk0;jset('bs-store',sd0)}if(!n){draw();return true}var take=Math.min(E.cur.t,n);E.cur.t-=take;n-=take;var q=E.gq||[];for(var i=q.length-1;i>=0&&n>0;i--){var tk=Math.min(q[i].t,n);q[i].t-=tk;n-=tk}E.gq=q.filter(function(b){return b.t>0||b.x>0});saveEarn(E);draw();return true}
 var ST_CHP={Base:500};function chPrice(c){return c.only?1200:(c.set==='Base'?500:800)}
 function storeChars(d,w){var L=chars(),h='';L.forEach(function(c){if(c.id==='chrono'){if(!owned('chrono'))h+='<div class="bsl-si" style="opacity:.75"><b>??? SECRET DRIVER</b><small>'+secretHint('chrono')+'</small></div>';return}if(c.id==='skydrive'&&!owned('skydrive')){h+='<div class="bsl-si" style="opacity:.75"><b>??? SECRET DRIVER</b><small>Hidden somewhere in Story mode. Look closely around town…</small></div>';return}var pad=PROF&&(function(){var i=padIdx(c.id);return i>=0&&((PROF.m>>>i)&1)})(),onl=d.chars&&d.chars[c.id],free=!PROF&&c.id==='blaze',p=chPrice(c);
     h+='<button class="bsl-si'+(!pad&&!onl&&!free&&w<p?' no':'')+(pad||onl||free?' eq':'')+'" data-ch="'+c.id+'"><span class="sw" style="background:'+c.col+'"></span><b>'+c.name+'</b><small>'+(c.ab||'')+'</small><span class="pr">'+(pad?'ON YOUR PAD':onl?'OWNED ONLINE':free?'FREE':'🪙 '+p)+'</span></button>'});
@@ -9930,7 +9930,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('bslDrvP
 function drvDraw(){var L=chars(),c0=cur(),c=(dvView&&L.filter(function(x){return x.id===dvView})[0])||c0,box=$('bslDrvList'),ban=$('bslDrvBan');
  ban.hidden=!!PROF;if(!PROF)ban.textContent='🎮 Press ONLINE on your BrickSpeed pad to bring your drivers, levels, coins and paints here. Without a pad you drive BLAZE.';
  var inf=$('bslDrvInfo'),pi=padIdx(c.id),L3=pi>=0?[-1,pi*2,pi*2+1]:[-1];if(dvSel[c.id]==null)dvSel[c.id]=skinIdx(c.id);var sv=dvSel[c.id];
- var ik=c.id+'|'+sv+'|'+skinIdx(c.id)+'|'+(PROF?PROF.kn:0)+'|'+level(c.id);
+ var ik=c.id+'|'+sv+'|'+skinIdx(c.id)+'|'+(PROF?PROF.kn:0)+'|'+level(c.id)+'|'+(function(){try{return wallet()+'/'+(storeData().pp||0)}catch(e){return ''}})();
  if(inf.__k!==ik){inf.__k=ik;
   var own=sv<0||skinOwned(sv),on=sv===skinIdx(c.id),fr=sv<0?'#8ea5cc':FRC[SKN[sv][1]];
   inf.style.setProperty('--dc',FRC[rarOf(c.id)]);inf.classList.toggle('sec',isSecret(c.id));
@@ -10409,7 +10409,12 @@ function opOpen(mode){var o=opKeyGet(),act=!!(o&&OP_PUB&&o.pub===OP_PUB),el=docu
         function(){b.disabled=false;out.textContent='Could not sign. Is this the operator device?'})}});}
 /* open: 7 taps on the BRICKSPEED logo (operator), the 🎁 button or Settings → Gift code (inbox) */
 (function(){var n=0,t0=0;document.addEventListener('click',function(e){if(!e.target.closest)return;if(e.target.closest('#bslGift')||e.target.closest('#bslInbox')){opOpen('inbox');return}if(e.target.closest('#bslOpB')){opOpen();return}if(!e.target.closest('.bsl-logo'))return;var now=Date.now();if(now-t0>2500)n=0;t0=now;n++;if(n>=7){n=0;opOpen()}},true)})();
-setInterval(function(){try{coinsAll()}catch(x){}},2000);
+/* keep every coin counter on screen in sync: top chip, store wallet, box-shop wallet, prices */
+function coinsSync(){var w=0;try{w=wallet()}catch(e){return}try{coinsAll()}catch(e){}
+  var o=$('osWal');if(o&&o.textContent!==w.toLocaleString())o.textContent=w.toLocaleString();
+  var sw=$('bslWallet');if(sw){var b=sw.querySelector('b');if(b&&b.textContent!==w.toLocaleString())b.textContent=w.toLocaleString()}
+  try{priceRed()}catch(e){}}
+setInterval(function(){try{coinsSync()}catch(x){}},400);
 
 function osGo(sec){osShow();var n=0;(function f(){var b=document.querySelector('#osTabs button[data-s="'+sec+'"]');if(b){b.click();return}if(++n<20)setTimeout(f,100)})()}
 
