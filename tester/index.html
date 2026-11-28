@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795847620">
+<meta name="bs-build" content="1795848358">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -9723,6 +9723,18 @@ window.BSSkinDeco=function(g,s,T){try{skinDeco(g,s,T)}catch(e){}return g};
 window.BSSkinOf=function(ch,s){return (s>=0&&s<32&&PADIDS[s>>1]===ch.id)?Object.assign({},ch,{body:SKN[s][2],skin:s}):ch};
 function paintHex(i){var p=PAINTS[i];return p&&p.c?parseInt(p.c.slice(1),16):null}
 window.BSMe=function(){return {ti:PROF?PROF.ti:0,sp:PROF?PROF.sp:0,lv:level,kk:function(id){return skinIdx(id)+1}}};
+/* upgrade card: what exactly gets better (label · ability, old → new, +change) and the price, red when you can't afford it */
+function upInfo(c){var lv=level(c.id),b=parseFloat(c.cd),k=osLvCost(lv),pp=storeData().pp||0,w=0;try{w=wallet()}catch(e){}
+  var row=function(l,a,n,d){return '<span style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;background:rgba(5,10,30,.35);border-radius:9px;padding:5px 9px;margin-top:5px;font:800 12px system-ui;letter-spacing:.03em;font-style:normal;text-align:left"><span style="color:#cfe0ff">'+l+'</span><span style="white-space:nowrap">'+a+' <span style="opacity:.7">→</span> <b style="color:#3dff8a">'+n+'</b> <b style="color:#ffd23c">'+d+'</b></span></span>'};
+  var h='<span style="display:block;margin-top:4px">';
+  if(!isNaN(b)){var a=b*(1-.03*(lv-1)),n=b*(1-.03*lv);h+=row('COOLDOWN · '+String(c.ab||'').toUpperCase(),a.toFixed(1)+' s',n.toFixed(1)+' s','−'+(a-n).toFixed(1)+' s')}
+  h+=row('TOTAL COOLDOWN BONUS','−'+(3*(lv-1))+'%','−'+(3*lv)+'%','+3%');if(lv+1===5||lv+1===10)h+=row('BADGE','—','LV '+(lv+1),'★');
+  var okP=pp>=k.pp,okC=w>=k.c,cl=function(ok){return ok?'#fff':'#ff4b4b'};
+  h+='<span style="display:block;margin-top:7px;font:900 15px system-ui;font-style:normal;letter-spacing:.03em"><span style="color:'+cl(okP)+'">'+k.pp+' ⚡</span> + <span style="color:'+cl(okC)+'">'+k.c+' 🪙</span></span>';
+  h+='<span style="display:block;font:700 11px system-ui;font-style:normal;opacity:.85;margin-top:2px">YOU HAVE <span style="color:'+cl(okP)+'">'+pp+' ⚡</span> · <span style="color:'+cl(okC)+'">'+w.toLocaleString()+' 🪙</span></span></span>';return h}
+/* every price tag in the shops turns red when you can't afford it */
+function priceRed(){var w=0;try{w=wallet()}catch(e){return}[].forEach.call(document.querySelectorAll('.pr,.pb2'),function(el){var t=el.textContent||'';if(/MAX|BOUGHT|OWNED|ON |FREE|PAD|USE|✓/i.test(t)){el.style.color='';return}var n=parseInt(t.replace(/[^\d]/g,''),10);if(isNaN(n)){el.style.color='';return}el.style.color=n>w?'#ff4b4b':''})}
+setInterval(function(){try{priceRed()}catch(e){}},400);
 function lvGain(c){var lv=level(c.id),b=parseFloat(c.cd);if(isNaN(b))return lv+1===5||lv+1===10?'STRONGER ABILITY + LEVEL '+(lv+1)+' BADGE':'STRONGER ABILITY · LEVEL '+(lv+1);var a=b*(1-.03*(lv-1)),n=b*(1-.03*lv);return 'COOLDOWN '+a.toFixed(1)+' s → '+n.toFixed(1)+' s · ABILITY READY 3% SOONER'}
 window.BSLvK=function(id){return 1-0.03*(level(id)-1)};          // LV 10: 27% shorter cooldown
 // paint = the glow under the car + the light trail behind it (the body keeps the driver's own colour or skin)
@@ -9915,7 +9927,7 @@ function drvDraw(){var L=chars(),c0=cur(),c=(dvView&&L.filter(function(x){return
  if(inf.__k!==ik){inf.__k=ik;
   var own=sv<0||skinOwned(sv),on=sv===skinIdx(c.id),fr=sv<0?'#8ea5cc':FRC[SKN[sv][1]];
   inf.style.setProperty('--dc',FRC[rarOf(c.id)]);inf.classList.toggle('sec',isSecret(c.id));
-  inf.innerHTML='<span class="bslart"></span><div class="dvCar'+(own?'':' lock')+'" style="--fr:'+fr+'"><button class="kArr l" type="button" aria-label="Previous skin">‹</button><button class="kArr r" type="button" aria-label="Next skin">›</button><div class="kNm"><b>'+(sv<0?'NORMAL':SKN[sv][0])+'</b><small>'+(sv<0?'THE CLASSIC CAR':RNAME[SKN[sv][1]])+' · '+(L3.indexOf(sv)+1)+'/'+L3.length+'</small></div><button class="dvAct'+(own?'':' buy')+'" type="button"'+(on?' disabled':'')+'>'+(on?'IN USE ✓':own?'USE THIS SKIN':'🔒 PAD SHOP BUNDLES')+'</button></div><div class="dvTx"><b></b><span class="ab"></span><p></p><button class="bsl-btn dvGo'+(owned(c.id)?'':' lock')+'" type="button">'+(owned(c.id)?(c===c0?'RACE WITH IT':'PICK &amp; RACE'):'🔒 GET IT ON YOUR PAD')+'</button>'+(owned(c.id)&&pi>=0?'<button class="bsl-btn dvUp" type="button" style="flex-direction:column;white-space:normal;height:auto;padding-top:9px;padding-bottom:9px;line-height:1.1">'+(level(c.id)>=10?'⚡ ABILITY MAXED · LV 10':'⚡ UPGRADE TO LV '+(level(c.id)+1)+'<small style="display:block;font:800 12px system-ui;letter-spacing:.03em;margin-top:4px;font-style:normal;color:#d9ffe6">'+lvGain(c)+'</small><small style="display:block;font:800 12px system-ui;letter-spacing:.04em;opacity:.92;margin-top:3px;font-style:normal">'+osLvCost(level(c.id)).pp+' ⚡ + '+osLvCost(level(c.id)).c+' 🪙 · YOU HAVE '+(storeData().pp||0)+' ⚡</small>')+'</button>':'')+'</div>';
+  inf.innerHTML='<span class="bslart"></span><div class="dvCar'+(own?'':' lock')+'" style="--fr:'+fr+'"><button class="kArr l" type="button" aria-label="Previous skin">‹</button><button class="kArr r" type="button" aria-label="Next skin">›</button><div class="kNm"><b>'+(sv<0?'NORMAL':SKN[sv][0])+'</b><small>'+(sv<0?'THE CLASSIC CAR':RNAME[SKN[sv][1]])+' · '+(L3.indexOf(sv)+1)+'/'+L3.length+'</small></div><button class="dvAct'+(own?'':' buy')+'" type="button"'+(on?' disabled':'')+'>'+(on?'IN USE ✓':own?'USE THIS SKIN':'🔒 PAD SHOP BUNDLES')+'</button></div><div class="dvTx"><b></b><span class="ab"></span><p></p><button class="bsl-btn dvGo'+(owned(c.id)?'':' lock')+'" type="button">'+(owned(c.id)?(c===c0?'RACE WITH IT':'PICK &amp; RACE'):'🔒 GET IT ON YOUR PAD')+'</button>'+(owned(c.id)&&pi>=0?'<button class="bsl-btn dvUp" type="button" style="flex-direction:column;white-space:normal;height:auto;padding-top:9px;padding-bottom:9px;line-height:1.1">'+(level(c.id)>=10?'⚡ ABILITY MAXED · LV 10':'⚡ UPGRADE TO LV '+(level(c.id)+1)+upInfo(c))+'</button>':'')+'</div>';
   var dc=inf.querySelector('.dvCar');dc.insertBefore(dvCanvas(),dc.firstChild);dvSet(c,sv);
   inf.querySelector('.kArr.l').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i-1+L3.length)%L3.length];vib(6);drvDraw()};
   inf.querySelector('.kArr.r').onclick=function(){var i=L3.indexOf(sv);dvSel[c.id]=L3[(i+1)%L3.length];vib(6);drvDraw()};
