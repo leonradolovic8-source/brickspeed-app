@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="bs-build" content="1795859626">
+<meta name="bs-build" content="1795860748">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -10537,26 +10537,29 @@ var ACC_LAST='';
 function accSave(force){var s=accSnap();if(!force&&s===ACC_LAST)return Promise.resolve(false);
   return accTok().then(function(a){return fetch(ACC_DB+'/users/'+a.uid,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.id},
     body:JSON.stringify({fields:{d:{stringValue:s},t:{integerValue:String(Date.now())},em:{stringValue:a.email}}})}).then(function(r){if(!r.ok)throw new Error('save '+r.status);ACC_LAST=s;a.saved=Date.now();accSet(a);return true})})}
-function accLoad(){return accTok().then(function(a){return fetch(ACC_DB+'/users/'+a.uid,{headers:{Authorization:'Bearer '+a.id}}).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error('load '+r.status);return r.json()})})
+function accLoad(){return accTok().then(function(a){return fetch(ACC_DB+'/users/'+a.uid,{headers:{Authorization:'Bearer '+a.id}}).then(function(r){if(r.status===404)return null;if(r.status===403)throw new Error('blocked by Firestore rules');if(!r.ok)throw new Error('load '+r.status);return r.json()})})
   .then(function(j){if(!j||!j.fields||!j.fields.d)return null;try{return JSON.parse(j.fields.d.stringValue)}catch(e){return null}})}
 function accApply(o){ACC_SYNC.forEach(function(k){try{if(o[k]!=null)localStorage.setItem(k,o[k])}catch(e){}});ACC_LAST=accSnap()}
 /* after logging in: cloud save wins if it exists, otherwise this device's progress is uploaded */
-function accAfterLogin(){return accLoad().then(function(o){if(o&&Object.keys(o).length){accApply(o);toast('Cloud save loaded');setTimeout(function(){location.reload()},700);return}
+function accSynced(){var a=accGet();if(a){a.synced=1;accSet(a)}}
+function accAfterLogin(){return accLoad().then(function(o){accSynced();if(o&&Object.keys(o).length){accApply(o);toast('Cloud save loaded');setTimeout(function(){location.reload()},700);return}
   return accSave(true).then(function(){toast('Progress saved to your account')})})}
-setInterval(function(){if(accGet())accSave().catch(function(){})},45000);
-document.addEventListener('visibilitychange',function(){if(document.hidden&&accGet())accSave().catch(function(){})});
+setInterval(function(){var a=accGet();if(a&&a.synced)accSave().catch(function(){})},45000);
+document.addEventListener('visibilitychange',function(){if(document.hidden&&accGet()&&accGet().synced)accSave().catch(function(){})});
 function accHtml(){var a=accGet();
+  if(a&&!a.synced)return '<label>ACCOUNT</label><div class="acc on"><div class="am"><b>✓ '+esc(a.email)+'</b><span style="color:#ffb86b">Logged in, but cloud save is not connected yet</span></div><button type="button" class="aRt">TRY AGAIN</button><button type="button" class="aOut">LOG OUT</button></div><p class="aMsg"></p>';
   if(a)return '<label>ACCOUNT</label><div class="acc on"><div class="am"><b>✓ '+esc(a.email)+'</b><span>'+(a.saved?'Saved '+new Date(a.saved).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Cloud save on')+'</span></div><button type="button" class="aSv">SAVE NOW</button><button type="button" class="aOut">LOG OUT</button></div><p class="phn">Your coins, drivers, story and maps are saved to this account. Log in on any device to keep playing.</p>';
   return '<label>ACCOUNT</label><div class="acc"><input class="aEm" type="email" placeholder="Email" autocomplete="email"><input class="aPw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password"><div class="row"><button type="button" class="aIn">LOG IN</button><button type="button" class="aUp">CREATE ACCOUNT</button></div><button type="button" class="aFg">Forgot password?</button><p class="aMsg"></p></div><p class="phn">Sign in with email to save your progress and play on any device.</p>'}
 function accBind(el){var q=function(x){return el.querySelector(x)},msg=function(t,ok){var m=q('.aMsg');if(m){m.textContent=t;m.style.color=ok?'#7dffb0':'#ff8a8a'}},busy=false;
   function go(kind){if(busy)return;var em=(q('.aEm').value||'').trim(),pw=q('.aPw').value||'';if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email');return}if(pw.length<6){msg('Password needs at least 6 characters');return}
-    busy=true;msg(kind==='signUp'?'Creating account…':'Logging in…',true);accAuth(kind,em,pw).then(function(){return accAfterLogin()}).then(function(){busy=false;try{profOpen()}catch(e){}},function(e){busy=false;msg(accErr(e.message))})}
+    busy=true;msg(kind==='signUp'?'Creating account…':'Logging in…',true);accAuth(kind,em,pw).then(function(){busy=false;return accAfterLogin().then(function(){try{profOpen()}catch(e){}},function(e){try{profOpen()}catch(x){}toast('Logged in, but cloud save failed ('+e.message+')')})},function(e){busy=false;msg(accErr(e.message))})}
   el.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
     if(b.classList.contains('aIn'))go('signInWithPassword');else if(b.classList.contains('aUp'))go('signUp');
     else if(b.classList.contains('aFg')){var em=(q('.aEm').value||'').trim();if(!/^\S+@\S+\.\S+$/.test(em)){msg('Type your email first');return}
       accPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+ACC_KEY,{requestType:'PASSWORD_RESET',email:em}).then(function(){msg('Reset email sent. Check your inbox.',true)},function(e){msg(accErr(e.message))})}
+    else if(b.classList.contains('aRt')){msg('Connecting…',true);accAfterLogin().then(function(){profOpen()},function(e){msg('Cloud save failed ('+e.message+'). Check the Firestore rules.')})}
     else if(b.classList.contains('aSv')){accSave(true).then(function(){toast('Saved to cloud');profOpen()},function(e){toast(String(e.message||e))})}
-    else if(b.classList.contains('aOut')){accSave(true).catch(function(){}).then(function(){accSet(null);toast('Logged out');profOpen()})}});
+    else if(b.classList.contains('aOut')){(accGet().synced?accSave(true):Promise.resolve()).catch(function(){}).then(function(){accSet(null);toast('Logged out');profOpen()})}});
   el.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('aPw'))go('signInWithPassword')})}
 window.BSAccount={get:accGet,save:accSave,load:accLoad};
 
