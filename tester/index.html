@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="bs-build" content="1795792201">
+<meta name="bs-build" content="1795847152">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}</style>
@@ -6165,8 +6165,9 @@ function f1PitStart(until){f1PitEnd(true);var o=document.createElement('div');o.
     F1PIT.s=Math.max(F1PIT.s,pr[0]);if(F1PIT.s>=F1PIT.path.L-16){F1PIT.done++;F1PIT.drag=false;try{vib&&vib(25)}catch(x){}try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}document.getElementById('f1PitN').textContent=F1PIT.done;F1PIT.flash=t;f1PitNew()}f1PitDraw()});
   cv.addEventListener('pointerup',function(){if(F1PIT)F1PIT.drag=false})}
 /* a new trail: straight, slope, zigzag or wave (the ball starts at one end) */
-function f1PitNew(){var W=520,H=280,ty=[0,3,2,4][Math.min(3,F1PIT.done)],p=[];
+function f1PitNew(){var W=520,H=280,ty=F1PIT.done%2?5:0,p=[];
   if(ty===0)p=[[440,140],[80,140]];
+  else if(ty===5)p=Math.random()<.5?[[430,55],[90,225]]:[[430,225],[90,55]];
   else if(ty===1)p=[[420,60],[300,110],[200,170],[90,240]];
   else if(ty===2)p=[[440,55],[90,55],[420,140],[110,140],[430,225],[100,225]];
   else if(ty===3)for(var i=0;i<=24;i++)p.push([450-i*15,140+Math.sin(i/24*Math.PI*3)*80]);
